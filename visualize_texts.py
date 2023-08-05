@@ -24,7 +24,6 @@ def word_cloud(tokens, file_name):
     This function plots a word cloud of the tokens.
     cf. https://towardsdatascience.com/end-to-end-topic-modeling-in-python-latent-dirichlet-allocation-lda-35ce4ed6b3e0
     '''
-    print(tokens)
     wordcloud = WordCloud(width=800, height=500, random_state=21, contour_width=3, max_font_size=110, background_color='white', max_words=5000).generate(','.join(tokens))
     plt.figure(figsize=(15, 10))
     plt.imshow(wordcloud, interpolation="bilinear")
