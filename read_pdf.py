@@ -6,19 +6,6 @@ from nltk.corpus import stopwords
 import matplotlib.pyplot as plt
 import glob
 
-def term_frequency(tokens, file_name):
-    '''
-    :param tokens: list of tokens
-    :return: None
-
-    This function plots the term frequency of the tokens.
-    '''
-    plt.figure(figsize=(15, 10))
-    plt.title('Term frequency in ' + file_name)
-    plt.hist(tokens, bins=100, orientation='vertical', color='green')
-    plt.xticks(rotation=90, fontsize=5)
-    plt.show()
-
 def pdf_to_str(path):
     '''
     :param path: path to pdf file
@@ -85,4 +72,3 @@ if __name__ == '__main__':
         tokens = tokenize(text)
         filtered_tokens = remove_stop_words(tokens)
         stemmed_filtered_tokens = stemming(filtered_tokens)
-        term_frequency(stemmed_filtered_tokens, file_name=path.split('/')[-1])
