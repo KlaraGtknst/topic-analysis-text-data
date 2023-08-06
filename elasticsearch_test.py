@@ -1,5 +1,8 @@
 from elasticsearch import Elasticsearch
 import base64
+import json
+
+print('-' * 80)
 
 # Create the client instance
 client = Elasticsearch("http://localhost:9200")
@@ -38,5 +41,12 @@ print(client.create(index='bahamas', id='1', document={
     "image": str(base64.b64encode(b"base64-encoded-image")),
 }))
 '''
-print('Hello World!')
-print(client.get(index='bahamas', id='1'))
+# print(client.get(index='bahamas', id='1'))
+result = client.search(index='bahamas', knn={
+    "field": "embedding",
+    "query_vector": [1, 2, 3, 4, 6],
+    "k": 10,
+    "num_candidates": 100
+})
+for hit in result['hits']['hits']:
+    print(hit['_score'], hit['_source'])
