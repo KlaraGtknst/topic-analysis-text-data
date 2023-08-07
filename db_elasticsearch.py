@@ -217,7 +217,7 @@ if __name__ == '__main__':
     
     # assess the model
     # here: using training corpus -> overfitting, not representative
-    assess_model(model, train_corpus)
+    # assess_model(model, train_corpus)
     
     try:
         insert_documents(src_path, model, client)  
@@ -227,6 +227,6 @@ if __name__ == '__main__':
     # alternatively, use AsyncElasticsearch or time.sleep(1)
     client.indices.refresh(index="bahamas")
 
-    for path in glob.glob(src_path):
-       print('\n' + '-' * 40, path, '-' * 40)
-       search_in_db(client, model, path)
+    # for path in glob.glob(src_path):
+    #   print('\n' + '-' * 40, path, '-' * 40)
+    #   search_in_db(client, model, path)
