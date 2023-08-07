@@ -1,8 +1,7 @@
 import collections
-from elasticsearch import Elasticsearch
+from elasticsearch import ConflictError, Elasticsearch
 import base64
 from read_pdf import *
-import gensim
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 from gensim.utils import simple_preprocess
 
@@ -98,17 +97,14 @@ def search_in_db(client: Elasticsearch, model: Doc2Vec, path: str):
 
     cf. https://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html#search-api-knn for information about knn in elasticsearch.
     '''
-    #print(infer_embedding_vector(model, path))
     result = client.search(index='bahamas', knn={
             "field": "embedding",
             "query_vector": infer_embedding_vector(model, path),
             "k": 10,
             "num_candidates": 100
         }, source_excludes=['image'])
-    #print(result)
-    # TODO: why does print no longer work?
     for hit in result['hits']['hits']:
-        print(hit['_score'], hit['_source'])
+        print(hit['_score'], hit['_source']['path'].split('/')[-1])
 
 def infer_embedding_vector(model: Elasticsearch, path: str):
     '''
@@ -194,8 +190,9 @@ if __name__ == '__main__':
     client = Elasticsearch("http://localhost:9200")
 
     # delete old index and create new one
-    client.options(ignore_status=[400,404]).indices.delete(index='bahamas')
-    init_db(client, num_dimensions=NUM_DIMENSIONS)
+    if client.indices.get_mapping(index='bahamas')['bahamas']['mappings']['properties']['embedding']['dims'] != NUM_DIMENSIONS:
+        client.options(ignore_status=[400,404]).indices.delete(index='bahamas')
+        init_db(client, num_dimensions=NUM_DIMENSIONS)
     
     # training corpus
     train_corpus = list(get_tagged_input_documents(src_path))
@@ -206,11 +203,11 @@ if __name__ == '__main__':
     model = Doc2Vec(train_corpus, vector_size=NUM_DIMENSIONS, window=2, min_count=2, workers=4, epochs=40)
 
     # build a vocabulary (i.e. list of unique words); accessable via model.wv.index_to_key
-    #model.build_vocab(train_corpus)
+    # model.build_vocab(train_corpus)
 
     # additonal information about each word
-    #word = 'credit'
-    #print(f"Word '{word}' appeared {model.wv.get_vecattr(word, 'count')} times in the training corpus.")
+    # word = 'credit'
+    # print(f"Word '{word}' appeared {model.wv.get_vecattr(word, 'count')} times in the training corpus.")
 
     # train the model
     model.train(train_corpus, total_examples=model.corpus_count, epochs=model.epochs)
@@ -220,10 +217,16 @@ if __name__ == '__main__':
     
     # assess the model
     # here: using training corpus -> overfitting, not representative
-    #assess_model(model, train_corpus)
+    assess_model(model, train_corpus)
     
-    insert_documents(src_path, model, client)    
+    try:
+        insert_documents(src_path, model, client)  
+    except ConflictError as err:
+        print(err)
+
+    # alternatively, use AsyncElasticsearch or time.sleep(1)
+    client.indices.refresh(index="bahamas")
 
     for path in glob.glob(src_path):
-        print('\n' + '-' * 40, path, '-' * 40)
-        search_in_db(client, model, path)
+       print('\n' + '-' * 40, path, '-' * 40)
+       search_in_db(client, model, path)
