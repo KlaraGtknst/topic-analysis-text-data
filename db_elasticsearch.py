@@ -1,3 +1,4 @@
+import collections
 from elasticsearch import Elasticsearch
 import base64
 from read_pdf import *
@@ -121,7 +122,7 @@ def get_tagged_input_documents(src_path: str, tokens_only: bool = False):
 
     The gensim function converts a document into a list of tokens (cf. https://tedboy.github.io/nlps/generated/generated/gensim.utils.simple_preprocess.html).
     The resulting list of unicode strings is lowercased and tokenized.
-    
+
     cf. https://radimrehurek.com/gensim/auto_examples/tutorials/run_doc2vec_lee.html#sphx-glr-auto-examples-tutorials-run-doc2vec-lee-py
     for the original code
     '''
@@ -141,9 +142,47 @@ if __name__ == '__main__':
     client = Elasticsearch("http://localhost:9200")
 
     # init_db(client)
-    documents = list(get_tagged_input_documents(src_path))
-    print(documents)
-    #model = Doc2Vec(documents, vector_size=5, window=2, min_count=1, workers=4)
+    train_corpus = list(get_tagged_input_documents(src_path))
+
+    # model 
+    # infrequent words are discarded, since retaining them can make model worse
+    # iteration for 10s-of-thousands of documents: 10-20; more for smaller datasets
+    model = Doc2Vec(train_corpus, vector_size=50, window=2, min_count=2, workers=4, epochs=40)
+
+    # build a vocabulary (i.e. list of unique words); accessable via model.wv.index_to_key
+    model.build_vocab(train_corpus)
+
+    # additonal information about each word
+    word = 'credit'
+    print(f"Word '{word}' appeared {model.wv.get_vecattr(word, 'count')} times in the training corpus.")
+
+    # train the model
+    model.train(train_corpus, total_examples=model.corpus_count, epochs=model.epochs)
+
+    # infer a vector of a new document (not a string, but a tokenized list of words)
+    vector = model.infer_vector(simple_preprocess("This is a new document to be searched for."))
+    print(f'This is the numerical representation of the document: \n{vector}')
+
+    # assessing the model
+    # (1) infer a vector of a new document (here: from training corpus -> overfitting, not representative)
+    # (2) compare inferred vector with the vector of the document in the training corpus
+    # (3) return rank of the document based on self-similarity (i.e. the document itself should be ranked first)
+    ranks = []
+    second_ranks = []
+    for doc_id in range(len(train_corpus)):
+        inferred_vector = model.infer_vector(train_corpus[doc_id].words)
+        sims = model.dv.most_similar([inferred_vector], topn=len(model.dv)) # topn: number of most similar documents to be returned
+        rank = [docid for docid, sim in sims].index(doc_id) # rank of the document via id
+        ranks.append(rank)  # saves the rank of the document in terms of self-similarity
+        second_ranks.append(sims[1])    # saves the similarity of the second most similar document
+    counter = collections.Counter(ranks)
+    print(f'{counter[0]} documents are most self-similar to themselves.\n{counter[1]} documents were not ranked first.')
+
+    print('Document ({}): «{}»\n'.format(doc_id, ' '.join(train_corpus[doc_id].words)))
+    print(u'SIMILAR/DISSIMILAR DOCS PER MODEL %s:\n' % model)
+    for label, index in [('MOST', 0), ('SECOND-MOST', 1), ('MEDIAN', len(sims)//2), ('LEAST', len(sims) - 1)]:
+        print(u'%s %s: «%s»\n' % (label, sims[index], ' '.join(train_corpus[sims[index][0]].words)))
+    
     # insert_documents(src_path, model, client)    
 
     #for path in glob.glob(src_path):
