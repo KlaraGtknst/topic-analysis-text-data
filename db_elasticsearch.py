@@ -3,6 +3,7 @@ import base64
 from read_pdf import *
 import gensim
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
+from gensim.utils import simple_preprocess
 
 
 def init_db(client: Elasticsearch):
@@ -39,9 +40,11 @@ def init_db(client: Elasticsearch):
         },
     })
 
-def insert_documents(src_path: str):
+def insert_documents(src_path: str, model: Doc2Vec, client: Elasticsearch):
     '''
     :param src_path: path to the documents to be inserted into the database
+    :param model: Doc2Vec model
+    :param client: Elasticsearch client
     :return: None
 
     This function inserts the documents into the database 'bahamas'. The documents are inserted as follows:
@@ -71,7 +74,7 @@ def insert_documents(src_path: str):
             "image": str(b64_image),
         })
 
-def search_in_db(client, model, path):
+def search_in_db(client: Elasticsearch, model: Doc2Vec, path: str):
     '''
     :param client: Elasticsearch client
     :param model: Doc2Vec model
@@ -99,7 +102,7 @@ def search_in_db(client, model, path):
     for hit in result['hits']['hits']:
         print(hit['_score'], hit['_source'])
 
-def infer_embedding_vector(model, path):
+def infer_embedding_vector(model: Elasticsearch, path: str):
     '''
     :param model: trained Doc2Vec model
     :param path: path to the document to be searched for
@@ -110,14 +113,24 @@ def infer_embedding_vector(model, path):
     # TODO: tokenize ok? how is doc2vec trained? Tokenizing/lower casing?
     return model.infer_vector(tokenize(pdf_to_str(path)))
 
-def get_tagged_input_documents(src_path):
+def get_tagged_input_documents(src_path: str, tokens_only: bool = False):
     '''
     :param src_path: path to the documents to be inserted into the database
-    :return: list of TaggedDocument objects
+    :param tokens_only: if True, only the tokens of the document are returned, else tagged tokens are returned
+    :return: tagged tokens or only the tokens (depending on tokens_only)
+
+    The gensim function converts a document into a list of tokens (cf. https://tedboy.github.io/nlps/generated/generated/gensim.utils.simple_preprocess.html).
+    The resulting list of unicode strings is lowercased and tokenized.
+    
+    cf. https://radimrehurek.com/gensim/auto_examples/tutorials/run_doc2vec_lee.html#sphx-glr-auto-examples-tutorials-run-doc2vec-lee-py
+    for the original code
     '''
-    texts = [pdf_to_str(path) for path in glob.glob(src_path)]
-    documents = [TaggedDocument(doc, [i]) for i, doc in enumerate(texts)]
-    return documents
+    for i, path in enumerate(glob.glob(src_path)):
+        tokens = simple_preprocess(pdf_to_str(path))
+        if tokens_only:
+            yield tokens
+        else:
+            yield TaggedDocument(tokens, [i])
 
 
 if __name__ == '__main__':
@@ -128,10 +141,11 @@ if __name__ == '__main__':
     client = Elasticsearch("http://localhost:9200")
 
     # init_db(client)
-    documents = get_tagged_input_documents(src_path)
-    model = Doc2Vec(documents, vector_size=5, window=2, min_count=1, workers=4)
-    # insert_documents(src_path)    
+    documents = list(get_tagged_input_documents(src_path))
+    print(documents)
+    #model = Doc2Vec(documents, vector_size=5, window=2, min_count=1, workers=4)
+    # insert_documents(src_path, model, client)    
 
-    for path in glob.glob(src_path):
-        print('\n' + '-' * 40, path, '-' * 40)
-        search_in_db(client, model, path)
+    #for path in glob.glob(src_path):
+     #   print('\n' + '-' * 40, path, '-' * 40)
+     #   search_in_db(client, model, path)
