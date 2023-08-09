@@ -1,12 +1,19 @@
+from cli import *
 from PyPDF2 import PdfReader
 import nltk
 from nltk.tokenize import word_tokenize
 from nltk.stem import PorterStemmer
 from nltk.corpus import stopwords
 import matplotlib.pyplot as plt
-import glob
 
-def pdf_to_str(path):
+'''------Code to extract text from PDF files and preprocess it-------
+run this code by typing and altering the path:
+    python3 code_file.py -i '/Users/klara/Downloads/SAC2-12.pdf'
+    python3 code_file.py -i '/Users/klara/Downloads/SAC2-12.pdf' '/Users/klara/Downloads/SAC1-6.pdf'
+    python3 code_file.py -d '/Users/klara/Downloads/*.pdf'
+'''
+
+def pdf_to_str(path: str) -> str:
     '''
     :param path: path to pdf file
     :return: text from pdf file
@@ -22,7 +29,7 @@ def pdf_to_str(path):
 
     return text
 
-def tokenize(text):
+def tokenize(text: str) -> list:
     '''
     :param text: text to be tokenized
     :return: list of tokens
@@ -33,7 +40,7 @@ def tokenize(text):
     tokens = word_tokenize(text)
     return tokens
 
-def remove_stop_words(tokens):
+def remove_stop_words(tokens: list) -> list:
     '''
     :param tokens: list of tokens
     :return: list of lower case tokens without stop words
@@ -46,7 +53,7 @@ def remove_stop_words(tokens):
     filtered_tokens = [w for w in tokens if not w.lower() in stop_words]
     return filtered_tokens
 
-def stemming(tokens):
+def stemming(tokens: list) -> list:
     '''
     :param tokens: list of tokens
     :return: list of stemmed tokens
@@ -66,7 +73,10 @@ def stemming(tokens):
 
 
 if __name__ == '__main__':
-    for path in glob.glob('/Users/klara/Downloads/*.pdf'):
+    args = arguments()
+    file_paths = get_filepath(args)
+
+    for path in file_paths:
         text = pdf_to_str(path)
 
         tokens = tokenize(text)

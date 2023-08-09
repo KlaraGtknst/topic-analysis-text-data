@@ -1,7 +1,15 @@
 from read_pdf import *
+from cli import *
 from wordcloud import WordCloud
 
-def term_frequency(tokens, file_name):
+'''------Code for visualization-------
+run this code by typing and altering the path:
+    python3 visualize_texts.py -i '/Users/klara/Downloads/SAC2-12.pdf'
+    python3 visualize_texts.py -i '/Users/klara/Downloads/SAC2-12.pdf' '/Users/klara/Downloads/SAC1-6.pdf'
+    python3 visualize_texts.py -d '/Users/klara/Downloads/*.pdf'
+'''
+
+def term_frequency(tokens: list, file_name: str) -> None:
     '''
     :param tokens: list of tokens
     :return: None
@@ -15,7 +23,7 @@ def term_frequency(tokens, file_name):
     plt.show()
 
 
-def word_cloud(tokens, file_name):
+def word_cloud(tokens: list, file_name: str) -> None:
     '''
     :param tokens: list of tokens
     :param file_name: name of the file
@@ -34,7 +42,12 @@ def word_cloud(tokens, file_name):
 
 
 if __name__ == '__main__':
-    for path in glob.glob('/Users/klara/Downloads/*.pdf'):
+    args = arguments()
+    print(args)
+
+    file_paths = get_filepath(args)
+
+    for path in file_paths:
         text = pdf_to_str(path)
 
         tokens = tokenize(text)

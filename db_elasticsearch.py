@@ -2,9 +2,16 @@ import collections
 from elasticsearch import ConflictError, Elasticsearch
 import base64
 from read_pdf import *
+from cli import *
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 from gensim.utils import simple_preprocess
 
+'''------initiate, fill and search in database-------
+run this code by typing and altering the path:
+    python3 code_file.py -i '/Users/klara/Downloads/SAC2-12.pdf'
+    python3 code_file.py -i '/Users/klara/Downloads/SAC2-12.pdf' '/Users/klara/Downloads/SAC1-6.pdf'
+    python3 code_file.py -d '/Users/klara/Downloads/*.pdf'
+'''
 
 def init_db(client: Elasticsearch, num_dimensions: int):
     '''
@@ -182,9 +189,11 @@ def infer_embedding_for_single_document(model: Doc2Vec, text: str):
     return vector
 
 if __name__ == '__main__':
+    args = arguments()
+    src_path = get_filepath(args)
+    
     NUM_DIMENSIONS = 50
     print('-' * 80)
-    src_path = '/Users/klara/Downloads/*.pdf'
 
     # Create the client instance
     client = Elasticsearch("http://localhost:9200")
@@ -217,7 +226,7 @@ if __name__ == '__main__':
     
     # assess the model
     # here: using training corpus -> overfitting, not representative
-    # assess_model(model, train_corpus)
+    assess_model(model, train_corpus)
     
     try:
         insert_documents(src_path, model, client)  
@@ -227,6 +236,6 @@ if __name__ == '__main__':
     # alternatively, use AsyncElasticsearch or time.sleep(1)
     client.indices.refresh(index="bahamas")
 
-    # for path in glob.glob(src_path):
-    #   print('\n' + '-' * 40, path, '-' * 40)
-    #   search_in_db(client, model, path)
+    for path in glob.glob(src_path):
+       print('\n' + '-' * 40, path, '-' * 40)
+       search_in_db(client, model, path)

@@ -2,6 +2,8 @@ from elasticsearch import Elasticsearch
 import base64
 import json
 
+'''------Code to test functionality of ElasticSearch-------'''
+
 print('-' * 80)
 
 # Create the client instance
