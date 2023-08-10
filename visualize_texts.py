@@ -4,7 +4,7 @@ from wordcloud import WordCloud
 
 '''------Code for visualization-------
 run this code by typing and altering the path:
-    python3 visualize_texts.py -i '/Users/klara/Downloads/SAC2-12.pdf'
+    python3 visualize_texts.py -i '/Users/klara/Downloads/SAC2-12.pdf' -o '/Users/klara/Downloads/'
     python3 visualize_texts.py -i '/Users/klara/Downloads/SAC2-12.pdf' '/Users/klara/Downloads/SAC1-6.pdf'
     python3 visualize_texts.py -d '/Users/klara/Downloads/*.pdf'
 '''
