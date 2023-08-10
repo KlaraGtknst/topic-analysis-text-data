@@ -80,7 +80,7 @@ def get_output_filepath(args: argparse.Namespace) -> str:
     if args.output_path:
         return args.output_path[0]
     else:
-        exit()
+        return None
 
 def get_input_filepath(args: argparse.Namespace) -> list:
     """
