@@ -27,18 +27,12 @@ def arguments():
     #========== C O M M O N ==========#
     parser = argparse.ArgumentParser(description=desc, add_help=True, formatter_class=argparse.RawTextHelpFormatter)
 
-    outfile_help = """file to write result to in json format.
-        Supports token replacement for the current date and search_result token replacement.
-        Date string: {%%Y-%%m-%%H-%%M}
-        Token string: {$.key1.key2} 
-        Random id: {+RRR}
-        If multiple input files are present (depending on the subcommand) multiple outfiles are written,
-        therefore the token support.
-        """
+    output_help = """path to directory to write the result to. 
+    If not set, the result is printed to stdout."""
     common_options = parser.add_argument_group("Common Options", description="Common options for subcommands")
-    common_options.add_argument("-o", "--outfile", help=outfile_help)
+    common_options.add_argument("-o", "--output", help=output_help, dest="output_path", required=False, nargs='*', metavar="PATH",
+                    type=lambda x: is_valid_file(parser, x))
     #common_options.add_argument("-j", "--n_jobs", type=int, default=1, help="number of jobs for parallel execution.")
-    common_options.add_argument("-u", "--update", action='store_true', default=False, help="Update files/ inplace from path if the subcommand supports it.")
     common_options.add_argument("-i", "--infile", dest="filename", required=False, nargs='+',
                     help="input file(s).", metavar="FILE",
                     type=lambda x: is_valid_file(parser, x))
@@ -57,7 +51,7 @@ def write_results(result, path, args):
     """
     Write results to screen or to file. Depends on args.
 
-    If args.update is set the output is written to path.
+    If args.outpath is set the output is written to path.
     If args.outfile is set the output is written to outfile.
     If neither is set, the result is printed.
 
@@ -70,7 +64,7 @@ def write_results(result, path, args):
     args : Namespace
         The programm arguments.
      """
-    if args.update and path is not None:
+    if args.outpath and path is not None:
         with open(path, 'w') as f:
             json.dump(result, f)
     elif args.outfile is not None:
@@ -79,7 +73,19 @@ def write_results(result, path, args):
     else:
         print(result)
 
-def get_filepath(args):
+def get_output_filepath(args: argparse.Namespace) -> str:
+    """
+    Get the output filepath from the arguments.
+    """
+    if args.output_path:
+        return args.output_path[0]
+    else:
+        exit()
+
+def get_input_filepath(args: argparse.Namespace) -> list:
+    """
+    Get a list of input filepaths from the arguments.
+    """
     if args.directory:
         file_paths = glob.glob(args.directory)
     elif args.filename:

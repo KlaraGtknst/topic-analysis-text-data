@@ -13,7 +13,7 @@ run this code by typing and altering the path:
 if __name__ == '__main__':
     # https://www.geeksforgeeks.org/python-word-embedding-using-word2vec/
     args = arguments()
-    file_paths = get_filepath(args)
+    file_paths = get_input_filepath(args)
     
     lower_case_tokens = []
     for path in file_paths:

@@ -9,7 +9,7 @@ run this code by typing and altering the path:
     python3 visualize_texts.py -d '/Users/klara/Downloads/*.pdf'
 '''
 
-def term_frequency(tokens: list, file_name: str) -> None:
+def term_frequency(tokens: list, file_name: str, outpath: str = None) -> None:
     '''
     :param tokens: list of tokens
     :return: None
@@ -17,13 +17,16 @@ def term_frequency(tokens: list, file_name: str) -> None:
     This function plots the term frequency of the tokens.
     '''
     plt.figure(figsize=(15, 10))
-    plt.title('Term frequency in ' + file_name)
     plt.hist(tokens, bins=100, orientation='vertical', color='green')
     plt.xticks(rotation=90, fontsize=5)
+    title = 'Term frequency in ' + file_name
+    plt.title(title)
+    if outpath:
+        plt.savefig(outpath + '/' + title, format="pdf", bbox_inches="tight")
     plt.show()
 
 
-def word_cloud(tokens: list, file_name: str) -> None:
+def word_cloud(tokens: list, file_name: str, outpath: str = None) -> None:
     '''
     :param tokens: list of tokens
     :param file_name: name of the file
@@ -37,7 +40,10 @@ def word_cloud(tokens: list, file_name: str) -> None:
     plt.figure(figsize=(15, 10))
     plt.imshow(wordcloud, interpolation="bilinear") # displays image, interpolation: smoother image
     plt.axis('off')
-    plt.title('Word cloud in ' + file_name)
+    title = 'Word cloud in ' + file_name
+    plt.title(title)
+    if outpath:
+        plt.savefig(outpath + '/' + title, format="pdf", bbox_inches="tight")
     plt.show()
 
 
@@ -45,7 +51,8 @@ if __name__ == '__main__':
     args = arguments()
     print(args)
 
-    file_paths = get_filepath(args)
+    file_paths = get_input_filepath(args)
+    out_file = get_output_filepath(args)
 
     for path in file_paths:
         text = pdf_to_str(path)
@@ -55,5 +62,5 @@ if __name__ == '__main__':
         stemmed_filtered_tokens = stemming(filtered_tokens)
 
         # visualize the texts
-        term_frequency(stemmed_filtered_tokens, file_name=path.split('/')[-1])
-        word_cloud(stemmed_filtered_tokens, file_name=path.split('/')[-1])
+        term_frequency(stemmed_filtered_tokens, file_name=path.split('/')[-1], outpath=out_file)
+        word_cloud(stemmed_filtered_tokens, file_name=path.split('/')[-1], outpath=out_file)

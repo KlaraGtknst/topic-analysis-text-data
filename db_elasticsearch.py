@@ -190,7 +190,7 @@ def infer_embedding_for_single_document(model: Doc2Vec, text: str):
 
 if __name__ == '__main__':
     args = arguments()
-    src_path = get_filepath(args)
+    src_path = get_input_filepath(args)
     
     NUM_DIMENSIONS = 50
     print('-' * 80)

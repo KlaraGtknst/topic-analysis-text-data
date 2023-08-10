@@ -10,7 +10,7 @@ run this code by typing and altering the path:
 
 if __name__ == '__main__':
     args = arguments()
-    file_paths = get_filepath(args)
+    file_paths = get_input_filepath(args)
 
     for path in file_paths:
         pages = convert_from_path(path, dpi=75, output_folder='/'.join(path.split('/')[:-1]), output_file=path.split('.')[0], fmt='png')
