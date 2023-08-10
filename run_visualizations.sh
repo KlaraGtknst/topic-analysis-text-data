@@ -9,5 +9,5 @@
 #SBATCH --error=/mnt/stud/home/kgutekunst/error_logs/%j.err     # Datei für stderr
 # (%N: Nodename, %j: Job-Nr.)
 source /mnt/stud/work/kgutekunst/bsc-py/bin/activate    # virtuelle Umgebung aktivieren
-srun /mnt/stud/work/kgutekunst/topic-analysis-text-data/visualize_texts.py -i '/mnt/datasets/Bahamas/SAC/0/SAC2-12.pdf' -o '/mnt/stud/home/kgutekunst/visualizations/'    # Programm ausfuehren
+srun python /mnt/stud/work/kgutekunst/topic-analysis-text-data/visualize_texts.py -i '/mnt/datasets/Bahamas/SAC/0/SAC2-12.pdf' -o '/mnt/stud/home/kgutekunst/visualizations/'    # Programm ausfuehren
 echo "Hello from `hostname`"    # Programm ausfuehren
