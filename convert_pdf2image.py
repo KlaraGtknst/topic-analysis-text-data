@@ -18,6 +18,8 @@ def pdf_to_png(file_path: str, outpath: str = None) -> None:
     The name of the PNG file is the same as the PDF file with .png instead of .pdf.
     '''
     for path in file_paths:
+        print(path)
+        print(path.split('.')[0])
         file_name = (path.split('.')[0]).split('/')[-1]
         outpath = outpath if outpath else '/'.join(path.split('/')[:-1])
         pages = convert_from_path(pdf_path=path, dpi=75, output_folder=outpath, output_file=file_name, fmt='png')
