@@ -17,7 +17,7 @@ def pdf_to_png(file_path: str, outpath: str = None) -> None:
     This function converts a PDF file to a PNG file.
     The name of the PNG file is the same as the PDF file with .png instead of .pdf.
     '''
-    for path in file_paths:
+    for path in file_path:
         print(path)
         print(path.split('.')[0])
         file_name = (path.split('.')[0]).split('/')[-1]
