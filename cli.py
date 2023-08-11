@@ -30,7 +30,7 @@ def arguments():
     output_help = """path to directory to write the result to. 
     If not set, the result is printed to stdout."""
     common_options = parser.add_argument_group("Common Options", description="Common options for subcommands")
-    common_options.add_argument("-o", "--output", help=output_help, dest="output_path", required=False, nargs='*', metavar="PATH",
+    common_options.add_argument("-o", "--output", help=output_help, dest="output_path", required=False, metavar="PATH",
                     type=lambda x: is_valid_file(parser, x))
     #common_options.add_argument("-j", "--n_jobs", type=int, default=1, help="number of jobs for parallel execution.")
     common_options.add_argument("-i", "--infile", dest="filename", required=False, nargs='+',
@@ -93,9 +93,9 @@ def get_filepath(args: argparse.Namespace, option: str = 'output') -> str:
     """
     arg = args.output_path if option=='output' else args.input_image_directory
     if arg:
-        if (not (arg[0]).endswith('/')) and (not '.' in arg[0]):
-            return arg[0] + '/'
-        return arg[0]
+        if (not (arg).endswith('/')) and (not '.' in arg):
+            return arg + '/'
+        return arg
     else:
         return None
 
@@ -105,6 +105,7 @@ def get_input_filepath(args: argparse.Namespace) -> list:
     """
     if args.directory:
         file_paths = glob.glob(args.directory)
+        #return args.directory if args.directory.endswith('/') else args.directory + '/'
     elif args.filename:
         file_paths = args.filename
     else:
