@@ -38,10 +38,12 @@ def arguments():
                     type=lambda x: is_valid_file(parser, x))
     common_options.add_argument("-d", "--directory", dest="directory", required=False,
                                 help="directory, which contains input files.", metavar="DIRECTORY")
+    common_options.add_argument("-D", "--imgDir", dest="input_image_directory", required=False,
+                                help="directory, which contains input iamge files. Used for, e.g., db_elasticsearch.py", metavar="DIRECTORY")
     common_options.add_argument("-c", "--cluster", dest="cluster", required=False, default=False,
-                                help="whether the script runs on the IES cluster. Necessary to configure path to poppler for run_pdf2image.",)
+                                help="whether the script runs on the IES cluster. Necessary to configure path to poppler for run_pdf2image.py.",)
     common_options.add_argument("-n", "--number", dest="number", required=False, type=int,
-                                help="custom number which may influence programm. For instance, if set for pdf_matrix, it determines number of dimensions.",)
+                                help="custom number which may influence programm. For instance, if set for pdf_matrix.py, it determines number of dimensions.",)
 
 
     return parser.parse_args()
@@ -82,14 +84,18 @@ def write_results(result, path, args):
     else:
         print(result)
 
-def get_output_filepath(args: argparse.Namespace) -> str:
+def get_filepath(args: argparse.Namespace, option: str = 'output') -> str:
     """
-    Get the output filepath from the arguments.
+    :param args: The programm arguments.
+    :param option: 'output' or 'image'
+
+    Get the filepath to the output or image input from the arguments.
     """
-    if args.output_path:
-        if (not (args.output_path[0]).endswith('/')) and (not '.' in args.output_path[0]):
-            return args.output_path[0] + '/'
-        return args.output_path[0]
+    arg = args.output_path if option=='output' else args.input_image_directory
+    if arg:
+        if (not (arg[0]).endswith('/')) and (not '.' in arg[0]):
+            return arg[0] + '/'
+        return arg[0]
     else:
         return None
 

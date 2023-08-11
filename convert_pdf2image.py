@@ -30,7 +30,7 @@ def pdf_to_png(file_path: str, outpath: str = None, cluster: bool = False) -> No
 if __name__ == '__main__':
     args = arguments()
     file_paths = get_input_filepath(args)
-    outpath = get_output_filepath(args)
+    outpath = get_filepath(args, option='output')
 
     #print('3' + file_paths[0])
     #print('4' + outpath)

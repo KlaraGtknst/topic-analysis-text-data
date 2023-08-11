@@ -10,7 +10,7 @@ from gensim.utils import simple_preprocess
 run this code by typing and altering the path:
     python3 code_file.py -i '/Users/klara/Downloads/SAC2-12.pdf'
     python3 code_file.py -i '/Users/klara/Downloads/SAC2-12.pdf' '/Users/klara/Downloads/SAC1-6.pdf'
-    python3 code_file.py -d '/Users/klara/Downloads/*.pdf'
+    python3 db_elasticsearch.py -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/'
 '''
 
 def init_db(client: Elasticsearch, num_dimensions: int):
@@ -48,7 +48,7 @@ def init_db(client: Elasticsearch, num_dimensions: int):
         },
     })
 
-def insert_documents(src_path: str, model: Doc2Vec, client: Elasticsearch):
+def insert_documents(src_path: str, model: Doc2Vec, client: Elasticsearch, image_path: str = None):
     '''
     :param src_path: path to the documents to be inserted into the database
     :param model: Doc2Vec model
@@ -70,13 +70,14 @@ def insert_documents(src_path: str, model: Doc2Vec, client: Elasticsearch):
     '''
     
     for path in glob.glob(src_path):
-        image_path = path.split('.')[0] + '0001-1.png'
+        id = path.split('/')[-1].split('.')[0]
+
+        image_path = image_path + id  + '0001-1.png' if image_path else path.split('.')[0] + '0001-1.png'
         with open(image_path, "rb") as img_file:
             b64_image = base64.b64encode(img_file.read())
 
         text = pdf_to_str(path)
 
-        id = path.split('/')[-1].split('.')[0]
         client.create(index='bahamas', id=id, document={
             "embedding": model.infer_vector(simple_preprocess(pdf_to_str(path))),
             "text": text,
@@ -191,6 +192,7 @@ def infer_embedding_for_single_document(model: Doc2Vec, text: str):
 if __name__ == '__main__':
     args = arguments()
     src_path = get_input_filepath(args)
+    image_src_path = get_filepath(args, option='image')
     
     NUM_DIMENSIONS = 50
     print('-' * 80)
@@ -226,16 +228,16 @@ if __name__ == '__main__':
     
     # assess the model
     # here: using training corpus -> overfitting, not representative
-    assess_model(model, train_corpus)
+    #assess_model(model, train_corpus)
     
     try:
-        insert_documents(src_path, model, client)  
+        insert_documents(src_path, model, client, image_path=image_src_path)  
     except ConflictError as err:
         print(err)
 
     # alternatively, use AsyncElasticsearch or time.sleep(1)
     client.indices.refresh(index="bahamas")
 
-    for path in glob.glob(src_path):
+    '''for path in glob.glob(src_path):
        print('\n' + '-' * 40, path, '-' * 40)
-       search_in_db(client, model, path)
+       search_in_db(client, model, path)'''

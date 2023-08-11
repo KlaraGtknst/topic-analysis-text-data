@@ -54,7 +54,7 @@ if __name__ == '__main__':
     args = arguments()
 
     file_paths = get_input_filepath(args)
-    out_file = get_output_filepath(args)
+    out_file = get_filepath(args, option='output')
 
     for path in file_paths:
         text = pdf_to_str(path)
