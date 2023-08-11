@@ -8,7 +8,7 @@ run this code by typing and altering the path:
     python3 code_file.py -d '/Users/klara/Downloads/*.pdf'
 '''
 
-def pdf_to_png(file_path: str, outpath: str = None) -> None:
+def pdf_to_png(file_path: str, outpath: str = None, cluster: bool = False) -> None:
     '''
     :param file_path: path to file
     :param outpath: path to output folder; if not set, the output folder is the same as the input folder.
@@ -22,7 +22,10 @@ def pdf_to_png(file_path: str, outpath: str = None) -> None:
         print('6' + path.split('.')[0])
         file_name = (path.split('.')[0]).split('/')[-1]
         outpath = outpath if outpath else '/'.join(path.split('/')[:-1])
-        pages = convert_from_path(pdf_path=path, dpi=75, output_folder=outpath, output_file=file_name, fmt='png')
+        if cluster:
+            pages = convert_from_path(pdf_path=path, dpi=75, output_folder=outpath, output_file=file_name, fmt='png', poppler_path='/mnt/stud/work/kgutekunst/bsc-py/lib/python3.9/site-packages')
+        else:
+            pages = convert_from_path(pdf_path=path, dpi=75, output_folder=outpath, output_file=file_name, fmt='png')
 
 if __name__ == '__main__':
     args = arguments()
@@ -31,7 +34,7 @@ if __name__ == '__main__':
 
     print('3' + file_paths[0])
     print('4' + outpath)
-    pdf_to_png(file_paths, outpath=outpath)
+    pdf_to_png(file_paths, outpath=outpath, cluster=args.cluster)
 
     # TODO: 100 pdf a 64x64 pixel/dpi, in 10x10 matrix -> erkennen -> CNN Ähnlichkeiten erkennen
     # erste seite reivht

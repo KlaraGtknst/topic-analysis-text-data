@@ -38,6 +38,8 @@ def arguments():
                     type=lambda x: is_valid_file(parser, x))
     common_options.add_argument("-d", "--directory", dest="directory", required=False,
                                 help="directory, which contains input files.", metavar="DIRECTORY")
+    common_options.add_argument("-c", "--cluster", dest="cluster", required=False, default=False, type=bool,
+                                help="whether the script runs on the IES cluster. Necessary to configure path to poppler for run_pdf2image.",)
 
     return parser.parse_args()
 
