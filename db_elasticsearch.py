@@ -71,13 +71,21 @@ def insert_documents(src_path: str, model: Doc2Vec, client: Elasticsearch, image
     for path in src_path:#glob.glob(src_path):
         try:
             id = path.split('/')[-1].split('.')[0]  # document title
-            print(image_path)
+            #print(image_path)
             image = image_path + id  + '0001-1.png' if image_path else path.split('.')[0] + '0001-1.png'
-            print(image)
-            with open(image, "rb") as img_file:
-                b64_image = base64.b64encode(img_file.read())
-
-            text = pdf_to_str(path)
+            #print(image)
+            try:
+                with open(image, "rb") as img_file:
+                    b64_image = base64.b64encode(img_file.read())
+            except FileNotFoundError:
+                image = image_path + id  + '0001-01.png' if image_path else path.split('.')[0] + '0001-01.png'
+                with open(image, "rb") as img_file:
+                    b64_image = base64.b64encode(img_file.read())
+            try:
+                text = pdf_to_str(path)
+            except:
+                # missing EOF marker in pdf
+                continue
 
             client.create(index='bahamas', id=id, document={
                 "embedding": model.infer_vector(simple_preprocess(pdf_to_str(path))),
