@@ -45,8 +45,8 @@ def arguments():
 
 def is_valid_file(parser, arg):
     if '*' in arg:  # wildcard
-        print('1' + arg)
-        print('2' + arg.split('*')[0])
+        #print('1' + arg)
+        #print('2' + arg.split('*')[0])
         return os.path.exists(arg.split('*')[0])
     elif not os.path.exists(arg):
         parser.error("The file %s does not exist!" % arg)
@@ -84,6 +84,8 @@ def get_output_filepath(args: argparse.Namespace) -> str:
     Get the output filepath from the arguments.
     """
     if args.output_path:
+        if (not (args.output_path[0]).endswith('/')) and (not '.' in args.output_path[0]):
+            return args.output_path[0] + '/'
         return args.output_path[0]
     else:
         return None
