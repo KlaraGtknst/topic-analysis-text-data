@@ -8,8 +8,6 @@ from gensim.utils import simple_preprocess
 
 '''------initiate, fill and search in database-------
 run this code by typing and altering the path:
-    python3 code_file.py -i '/Users/klara/Downloads/SAC2-12.pdf'
-    python3 code_file.py -i '/Users/klara/Downloads/SAC2-12.pdf' '/Users/klara/Downloads/SAC1-6.pdf'
     python3 db_elasticsearch.py -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/'
 '''
 
@@ -53,6 +51,7 @@ def insert_documents(src_path: str, model: Doc2Vec, client: Elasticsearch, image
     :param src_path: path to the documents to be inserted into the database
     :param model: Doc2Vec model
     :param client: Elasticsearch client
+    :param image_path: path to the images of the documents to be inserted into the database; if not set, assumes the images are in the same folder as the documents.
     :return: None
 
     This function inserts the documents into the database 'bahamas'. The documents are inserted as follows:
@@ -69,21 +68,26 @@ def insert_documents(src_path: str, model: Doc2Vec, client: Elasticsearch, image
     cf. https://www.codespeedy.com/convert-image-to-base64-string-in-python/ for information about converting images to base64
     '''
     
-    for path in glob.glob(src_path):
-        id = path.split('/')[-1].split('.')[0]
+    for path in src_path:#glob.glob(src_path):
+        try:
+            id = path.split('/')[-1].split('.')[0]  # document title
+            print(image_path)
+            image = image_path + id  + '0001-1.png' if image_path else path.split('.')[0] + '0001-1.png'
+            print(image)
+            with open(image, "rb") as img_file:
+                b64_image = base64.b64encode(img_file.read())
 
-        image_path = image_path + id  + '0001-1.png' if image_path else path.split('.')[0] + '0001-1.png'
-        with open(image_path, "rb") as img_file:
-            b64_image = base64.b64encode(img_file.read())
+            text = pdf_to_str(path)
 
-        text = pdf_to_str(path)
-
-        client.create(index='bahamas', id=id, document={
-            "embedding": model.infer_vector(simple_preprocess(pdf_to_str(path))),
-            "text": text,
-            "path": path,
-            "image": str(b64_image),
-        })
+            client.create(index='bahamas', id=id, document={
+                "embedding": model.infer_vector(simple_preprocess(pdf_to_str(path))),
+                "text": text,
+                "path": path,
+                "image": str(b64_image),
+            })
+        except ConflictError as err:
+            continue
+            #print(err)
 
 def search_in_db(client: Elasticsearch, model: Doc2Vec, path: str):
     '''
@@ -140,6 +144,7 @@ def get_tagged_input_documents(src_path: str, tokens_only: bool = False):
     for the original code
     '''
     for i, path in enumerate(glob.glob(src_path)):
+        
         tokens = simple_preprocess(pdf_to_str(path))
         if tokens_only:
             yield tokens
@@ -193,6 +198,7 @@ if __name__ == '__main__':
     args = arguments()
     src_path = get_input_filepath(args)
     image_src_path = get_filepath(args, option='image')
+    print('image src: ' + image_src_path)
     
     NUM_DIMENSIONS = 50
     print('-' * 80)
@@ -206,7 +212,7 @@ if __name__ == '__main__':
         init_db(client, num_dimensions=NUM_DIMENSIONS)
     
     # training corpus
-    train_corpus = list(get_tagged_input_documents(src_path))
+    train_corpus = list(get_tagged_input_documents(src_path[0]))
 
     # model 
     # infrequent words are discarded, since retaining them can make model worse
@@ -230,10 +236,8 @@ if __name__ == '__main__':
     # here: using training corpus -> overfitting, not representative
     #assess_model(model, train_corpus)
     
-    try:
-        insert_documents(src_path, model, client, image_path=image_src_path)  
-    except ConflictError as err:
-        print(err)
+    
+    insert_documents(src_path, model, client, image_path=image_src_path)  
 
     # alternatively, use AsyncElasticsearch or time.sleep(1)
     client.indices.refresh(index="bahamas")
@@ -241,3 +245,7 @@ if __name__ == '__main__':
     '''for path in glob.glob(src_path):
        print('\n' + '-' * 40, path, '-' * 40)
        search_in_db(client, model, path)'''
+    
+    path = src_path[50]
+    print('\n' + '-' * 40, path, '-' * 40)
+    search_in_db(client, model, path)
