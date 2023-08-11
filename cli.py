@@ -42,7 +42,9 @@ def arguments():
     return parser.parse_args()
 
 def is_valid_file(parser, arg):
-    if not os.path.exists(arg):
+    if '*' in arg:
+        return os.path.exists(arg.split('*')[0])
+    elif not os.path.exists(arg):
         parser.error("The file %s does not exist!" % arg)
     else:
         return arg
