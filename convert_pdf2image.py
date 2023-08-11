@@ -22,7 +22,7 @@ def pdf_to_png(file_path: list, outpath: str = None, cluster: bool = False) -> N
         file_name = (path.split('.')[0]).split('/')[-1]
         outpath = outpath if outpath else '/'.join(path.split('/')[:-1])
         if cluster:
-            pages = convert_from_path(pdf_path=path, dpi=75, last_page=1, output_folder=outpath, output_file=file_name, fmt='png', poppler_path='/mnt/stud/work/kgutekunst/bsc-py/lib/python3.9/site-packages')
+            pages = convert_from_path(pdf_path=path, dpi=75, last_page=1, output_folder=outpath, output_file=file_name, fmt='png', poppler_path='/mnt/stud/work/kgutekunst/bsc-py/lib/python3.9/site-packages/poppler')
         else:
             pages = convert_from_path(pdf_path=path, dpi=75, last_page=1, output_folder=outpath, output_file=file_name, fmt='png')
 
