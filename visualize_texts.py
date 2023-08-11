@@ -47,36 +47,51 @@ def word_cloud(tokens: list, file_name: str, outpath: str = None) -> None:
         plt.savefig(outpath + '/' + title, format="pdf", bbox_inches="tight")
     plt.show()
 
+def alter_axes(ax: plt.axes) -> None:
+    '''
+    :param ax: axis
+    :return: None
+    
+    This function alters the axis (makes ticks and spines/ frames invisible) of the plot.'''
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+
 def create_image_matrix(dim: int, input_files: str, output_path: str = None) -> None:
+    '''
+    :param dim: dimension of the image matrix, i.e. number of images in one row/ column
+    :param input_files: list of input files; must have at least dim*dim elements
+    :param output_path: path to save the image
+    :return: None
+
+    This function creates a matrix of the first dim x dim images from input_files.
+    '''
     # python3 visualize_texts.py -d '/Users/klara/Documents/uni/bachelorarbeit/images/*.png'
-    fig, axs = plt.subplots(10,10)#, figsize=(100, 100))
-    fig.set_figheight(10)
-    fig.set_figwidth(10)
+    if len(input_files) < dim*dim:
+        raise ValueError('Input files must have at least dim*dim elements.')
+    fig, axs = plt.subplots(10,10, figsize=(10, 10))
     fig.subplots_adjust(hspace = .00, wspace= .00)
-    for i, img in enumerate(input_files):
+    for i, img in enumerate(input_files[:dim*dim]):
         image = cv2.imread(img, cv2.IMREAD_COLOR)
-        axs[i//dim, i%dim].axis('off')
         ax = fig.add_subplot(dim, dim, i+1)
-        ax.set_xticks([])
-        ax.set_yticks([])
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
-        ax.spines['bottom'].set_visible(False)
-        ax.spines['left'].set_visible(False)
         plt.imshow(image)
-        if i == dim*dim-1:
-            break
+        axs[i//dim, i%dim].axis('off')
+        alter_axes(ax)
     plt.axis('off')
+    if output_path:
+        plt.savefig(output_path + 'image_matrix.pdf', format="pdf", bbox_inches="tight")
     plt.show()
 
 if __name__ == '__main__':
     args = arguments()
-    print(args)
 
     file_paths = get_input_filepath(args)
     out_file = get_output_filepath(args)
 
-    create_image_matrix(dim=10, input_files=file_paths, output_path=None)
+    create_image_matrix(dim=10, input_files=file_paths, output_path=out_file)
 
     '''for path in file_paths:
         text = pdf_to_str(path)
