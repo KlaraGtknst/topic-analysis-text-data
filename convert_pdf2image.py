@@ -18,8 +18,8 @@ def pdf_to_png(file_path: str, outpath: str = None, cluster: bool = False) -> No
     The name of the PNG file is the same as the PDF file with .png instead of .pdf.
     '''
     for path in file_path:
-        print('5' + path)
-        print('6' + path.split('.')[0])
+        #print('5' + path)
+        #print('6' + path.split('.')[0])
         file_name = (path.split('.')[0]).split('/')[-1]
         outpath = outpath if outpath else '/'.join(path.split('/')[:-1])
         if cluster:
@@ -32,10 +32,6 @@ if __name__ == '__main__':
     file_paths = get_input_filepath(args)
     outpath = get_output_filepath(args)
 
-    print('3' + file_paths[0])
-    print('4' + outpath)
-    pdf_to_png(file_paths, outpath=outpath, cluster=args.cluster)
-
-    # TODO: 100 pdf a 64x64 pixel/dpi, in 10x10 matrix -> erkennen -> CNN Ähnlichkeiten erkennen
-    # erste seite reivht
-
+    #print('3' + file_paths[0])
+    #print('4' + outpath)
+    pdf_to_png(file_paths[0], outpath=outpath, cluster=args.cluster)
