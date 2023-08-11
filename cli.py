@@ -43,8 +43,8 @@ def arguments():
 
 def is_valid_file(parser, arg):
     if '*' in arg:  # wildcard
-        print(arg)
-        print(arg.split('*')[0])
+        print('1' + arg)
+        print('2' + arg.split('*')[0])
         return os.path.exists(arg.split('*')[0])
     elif not os.path.exists(arg):
         parser.error("The file %s does not exist!" % arg)
