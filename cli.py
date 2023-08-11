@@ -40,6 +40,9 @@ def arguments():
                                 help="directory, which contains input files.", metavar="DIRECTORY")
     common_options.add_argument("-c", "--cluster", dest="cluster", required=False, default=False,
                                 help="whether the script runs on the IES cluster. Necessary to configure path to poppler for run_pdf2image.",)
+    common_options.add_argument("-n", "--number", dest="number", required=False, type=int,
+                                help="custom number which may influence programm. For instance, if set for pdf_matrix, it determines number of dimensions.",)
+
 
     return parser.parse_args()
 
