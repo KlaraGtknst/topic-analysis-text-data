@@ -3,7 +3,7 @@
 #SBATCH --job-name=vis-text      # Job-Name
 #SBATCH --nodes=1       # 1 Node wird benötigt
 #SBATCH --cpus-per-task=20
-#SBATCH --mem=100gb       # 100 MB Hauptspeicher
+#SBATCH --mem=100gb       # 100 GB Hauptspeicher
 #SBATCH --time=16:00:00  # max. Laufzeit 5 min
 #SBATCH --output=/mnt/stud/home/kgutekunst/visualizations/%j.out        # Datei für stdout
 #SBATCH --error=/mnt/stud/home/kgutekunst/error_logs/%j.err     # Datei für stderr
