@@ -36,7 +36,6 @@ Pillow==10.0.0
 protobuf==4.23.4
 prov==2.0.0
 pydot==1.4.2
-Pygments @ file:///private/tmp/pygments-20230630-5530-1s8evfm/Pygments-2.15.1
 PyMuPDF==1.22.5
 pyparsing==3.0.9
 PyPDF2==3.0.1
