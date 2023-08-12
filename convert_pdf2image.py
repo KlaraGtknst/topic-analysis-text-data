@@ -23,7 +23,6 @@ def pdf_to_png(file_path: list, outpath: str = None, cluster: bool = False) -> N
         #print('6' + path.split('.')[0])
         file_name = (path.split('.')[0]).split('/')[-1]
         outpath = outpath if outpath else '/'.join(path.split('/')[:-1])
-        print(path)
         doc = fitz.open(path)  # open document
         pix = doc[0].get_pixmap()  # render page to an image
         pix.save(f"{outpath}/{file_name}.png")
