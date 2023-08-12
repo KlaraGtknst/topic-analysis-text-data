@@ -21,7 +21,7 @@ def alter_axes(ax: plt.axes) -> None:
     ax.spines['bottom'].set_visible(False)
     ax.spines['left'].set_visible(False)
 
-def create_image_matrix(input_files: str, dim: int= 10, output_path: str = None) -> None:
+def create_image_matrix(input_files: list, dim: int= 10, output_path: str = None) -> None:
     '''
     :param dim: dimension of the image matrix, i.e. number of images in one row/ column
     :param input_files: list of input files; must have at least dim*dim elements

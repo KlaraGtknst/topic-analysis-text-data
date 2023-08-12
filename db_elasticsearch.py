@@ -3,6 +3,7 @@ from elasticsearch import ConflictError, Elasticsearch
 import base64
 from read_pdf import *
 from cli import *
+from pdf_matrix import *
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 from gensim.utils import simple_preprocess
 
@@ -80,7 +81,7 @@ def insert_documents(src_path: str, model: Doc2Vec, client: Elasticsearch, image
             except FileNotFoundError:
                 # bc i did not copy all images from cluster to local machine
                 continue
-            
+
             try:
                 text = pdf_to_str(path)
             except:
@@ -123,8 +124,11 @@ def search_in_db(client: Elasticsearch, model: Doc2Vec, path: str):
             "k": 10,
             "num_candidates": 100
         }, source_excludes=['image'])
+    
+    scores = {}
     for hit in result['hits']['hits']:
-        print(hit['_score'], hit['_source']['path'].split('/')[-1])
+        scores[hit['_score']] = hit['_source']['path'].split('/')[-1]
+    return scores
 
 def infer_embedding_vector(model: Elasticsearch, path: str):
     '''
@@ -254,6 +258,14 @@ if __name__ == '__main__':
        print('\n' + '-' * 40, path, '-' * 40)
        search_in_db(client, model, path)'''
     
+    
+    # sample query for a document
     path = src_path[50]
     print('\n' + '-' * 40, path, '-' * 40)
-    search_in_db(client, model, path)
+    scores = search_in_db(client, model, path)
+    for score in list(scores.keys()):
+        print(score, scores[score])
+
+    # create image matrix of 9 most similar images for query image
+    image_paths = [image_src_path + id.split('.')[0]  + '.png' if image_src_path else src_path.split('.')[0] + '.png' for id in scores.values()]
+    create_image_matrix(input_files=image_paths, dim=3, output_path=None)
