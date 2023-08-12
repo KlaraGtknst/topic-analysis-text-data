@@ -22,6 +22,7 @@ def pdf_to_png(file_path: list, outpath: str = None) -> None:
         outpath = outpath if outpath else '/'.join(path.split('/')[:-1])
         doc = fitz.open(path)  # open document
         pix = doc[0].get_pixmap()  # render page to an image
+        pix.set_dpi(75, 75) # image resolution
         pix.save(f"{outpath}/{file_name}.png")
 
 if __name__ == '__main__':
