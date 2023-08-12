@@ -16,12 +16,16 @@ def pdf_to_png(file_path: list, outpath: str = None) -> None:
 
     This function converts a PDF file to a PNG file.
     The name of the PNG file is the same as the PDF file with .png instead of .pdf.
+
+    cf. for more information: 
+    https://stackoverflow.com/questions/69643954/converting-pdf-to-png-with-python-without-pdf2image
+    https://pymupdf.readthedocs.io/en/latest/pixmap.html#Pixmap.set_dpi
     '''
     for path in file_path:
         file_name = (path.split('.')[0]).split('/')[-1]
         outpath = outpath if outpath else '/'.join(path.split('/')[:-1])
         doc = fitz.open(path)  # open document
-        pix = doc[0].get_pixmap()  # render page to an image
+        pix = doc[0].get_pixmap()  # render first page to an image
         pix.set_dpi(75, 75) # image resolution
         pix.save(f"{outpath}/{file_name}.png")
 
