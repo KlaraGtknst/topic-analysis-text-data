@@ -8,7 +8,7 @@ from gensim.utils import simple_preprocess
 
 '''------initiate, fill and search in database-------
 run this code by typing and altering the path:
-    python3 db_elasticsearch.py -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/'
+    python3 db_elasticsearch.py -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/images/'
 '''
 
 def init_db(client: Elasticsearch, num_dimensions: int):
@@ -72,15 +72,15 @@ def insert_documents(src_path: str, model: Doc2Vec, client: Elasticsearch, image
         try:
             id = path.split('/')[-1].split('.')[0]  # document title
             #print(image_path)
-            image = image_path + id  + '0001-1.png' if image_path else path.split('.')[0] + '0001-1.png'
+            image = image_path + id  + '.png' if image_path else path.split('.')[0] + '.png'
             #print(image)
             try:
                 with open(image, "rb") as img_file:
                     b64_image = base64.b64encode(img_file.read())
             except FileNotFoundError:
-                image = image_path + id  + '0001-01.png' if image_path else path.split('.')[0] + '0001-01.png'
-                with open(image, "rb") as img_file:
-                    b64_image = base64.b64encode(img_file.read())
+                # bc i did not copy all images from cluster to local machine
+                continue
+            
             try:
                 text = pdf_to_str(path)
             except:
@@ -208,7 +208,7 @@ if __name__ == '__main__':
     image_src_path = get_filepath(args, option='image')
     print('image src: ' + image_src_path)
     
-    NUM_DIMENSIONS = 50
+    NUM_DIMENSIONS = 55
     print('-' * 80)
 
     # Create the client instance
