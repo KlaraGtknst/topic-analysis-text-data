@@ -40,8 +40,6 @@ def arguments():
                                 help="directory, which contains input files.", metavar="DIRECTORY")
     common_options.add_argument("-D", "--imgDir", dest="input_image_directory", required=False,
                                 help="directory, which contains input iamge files. Used for, e.g., db_elasticsearch.py", metavar="DIRECTORY")
-    common_options.add_argument("-c", "--cluster", dest="cluster", required=False, default=False,
-                                help="whether the script runs on the IES cluster. Necessary to configure path to poppler for run_pdf2image.py.",)
     common_options.add_argument("-n", "--number", dest="number", required=False, type=int,
                                 help="custom number which may influence programm. For instance, if set for pdf_matrix.py, it determines number of dimensions.",)
 
