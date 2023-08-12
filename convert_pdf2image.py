@@ -1,10 +1,12 @@
 from cli import *
-from pdf2image import convert_from_path
+#from pdf2image import convert_from_path
+import fitz 
 
 '''------Convert PDF files to PNG files-------
 run this code by typing and altering the path:
     python3 convert_pdf2image.py -i '/Users/klara/Documents/uni/bachelorarbeit/data/0/SAC29-14.pdf' -o '/Users/klara/Downloads/'
     python3 convert_pdf2image.py -d '/Users/klara/Documents/uni/bachelorarbeit/data/0/*.pdf' -o '/Users/klara/Documents/uni/bachelorarbeit/images/'
+    python3 convert_pdf2image.py -d'/Users/klara/Downloads/*.pdf' -o '/Users/klara/Downloads/'
 '''
 
 def pdf_to_png(file_path: list, outpath: str = None, cluster: bool = False) -> None:
@@ -21,10 +23,14 @@ def pdf_to_png(file_path: list, outpath: str = None, cluster: bool = False) -> N
         #print('6' + path.split('.')[0])
         file_name = (path.split('.')[0]).split('/')[-1]
         outpath = outpath if outpath else '/'.join(path.split('/')[:-1])
-        if cluster:
+        print(path)
+        doc = fitz.open(path)  # open document
+        pix = doc[0].get_pixmap()  # render page to an image
+        pix.save(f"{outpath}/{file_name}.png")
+        '''if cluster:
             pages = convert_from_path(pdf_path=path, dpi=75, last_page=1, output_folder=outpath, output_file=file_name, fmt='png', poppler_path='/mnt/stud/work/kgutekunst/bsc-py/lib/python3.9/site-packages/poppler')
         else:
-            pages = convert_from_path(pdf_path=path, dpi=75, last_page=1, output_folder=outpath, output_file=file_name, fmt='png')
+            pages = convert_from_path(pdf_path=path, dpi=75, last_page=1, output_folder=outpath, output_file=file_name, fmt='png')'''
 
 if __name__ == '__main__':
     args = arguments()
