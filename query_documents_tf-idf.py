@@ -3,20 +3,9 @@ from cli import *
 from gensim.utils import simple_preprocess
 import pandas as pd
 import numpy as np
-import os 
-import re
-import operator
-import nltk 
-from nltk.tokenize import word_tokenize
-from nltk import pos_tag
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
-from collections import defaultdict
 from nltk.corpus import wordnet as wn
 from sklearn.feature_extraction.text import TfidfVectorizer
-import seaborn as sns
 import itertools
-from itertools import product
 from sklearn.metrics.pairwise import cosine_similarity
 
 '''------Code to find documents most fitting for input query-------
