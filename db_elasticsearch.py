@@ -47,7 +47,7 @@ def init_db(client: Elasticsearch, num_dimensions: int):
         },
     })
 
-def insert_documents(src_path: str, model: Doc2Vec, client: Elasticsearch, image_path: str = None):
+def insert_documents(src_path: list, model: Doc2Vec, client: Elasticsearch, image_path: str = None):
     '''
     :param src_path: path to the documents to be inserted into the database
     :param model: Doc2Vec model
@@ -69,12 +69,10 @@ def insert_documents(src_path: str, model: Doc2Vec, client: Elasticsearch, image
     cf. https://www.codespeedy.com/convert-image-to-base64-string-in-python/ for information about converting images to base64
     '''
     
-    for path in src_path:#glob.glob(src_path):
+    for path in src_path:
         try:
             id = path.split('/')[-1].split('.')[0]  # document title
-            #print(image_path)
             image = image_path + id  + '.png' if image_path else path.split('.')[0] + '.png'
-            #print(image)
             try:
                 with open(image, "rb") as img_file:
                     b64_image = base64.b64encode(img_file.read())
@@ -86,7 +84,7 @@ def insert_documents(src_path: str, model: Doc2Vec, client: Elasticsearch, image
                 text = pdf_to_str(path)
             except:
                 # missing EOF marker in pdf
-                continue
+                continue 
 
             client.create(index='bahamas', id=id, document={
                 "embedding": model.infer_vector(simple_preprocess(pdf_to_str(path))),

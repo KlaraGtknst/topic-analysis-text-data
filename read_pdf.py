@@ -21,13 +21,17 @@ def pdf_to_str(path: str) -> str:
     This function extracts the text from a pdf file.
     cf. https://pypi.org/project/PyPDF2/
     '''
-    reader = PdfReader(path)
+    try:
+        reader = PdfReader(path)
 
-    text = ''
-    for page in reader.pages:
-        text += page.extract_text()
+        text = ''
+        for page in reader.pages:
+            text += page.extract_text()
 
-    return text
+        return text
+    except:
+        # missing EOF marker in pdf
+        return ''
 
 def tokenize(text: str) -> list:
     '''
@@ -50,7 +54,7 @@ def remove_stop_words(tokens: list) -> list:
     '''
     nltk.download('stopwords')
     stop_words = set(stopwords.words('english'))
-    filtered_tokens = [w for w in tokens if not w.lower() in stop_words]
+    filtered_tokens = [w.lower() for w in tokens if not w.lower() in stop_words]
     return filtered_tokens
 
 def stemming(tokens: list) -> list:
