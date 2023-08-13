@@ -17,6 +17,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 import seaborn as sns
 import itertools
 from itertools import product
+from sklearn.metrics.pairwise import cosine_similarity
 
 '''------Code to find documents most fitting for input query-------
 run this code by typing and altering the path:
@@ -123,6 +124,35 @@ def get_preprocessed_tokens_from_file_paths(file_paths: list) -> dict:
         df_clean_token[path] = preprocess_text(path)
     return df_clean_token
 
+def print_cosine_similarity_examples(transformed_query: np.ndarray, document_term_matrix: np.ndarray):
+    '''
+    :param transformed_query: tf-idf vector of query string
+    :param document_term_matrix: document term matrix, entries are tf-idf values of tokens per document
+    :return: None
+
+    prints the cosine similarity between documents in the training corpus and the query string, as well as between documents in the training corpus.
+    '''
+    # similarity between documents (https://goodboychan.github.io/python/datacamp/natural_language_processing/2020/07/17/04-TF-IDF-and-similarity-scores.html)
+    kernel_matrix = cosine_similarity(document_term_matrix, document_term_matrix)   
+    print('similarity between documents in trainings corpus:\n',kernel_matrix)
+    kernel_matrix = cosine_similarity(document_term_matrix, transformed_query)
+    # TODO: do not understand matrix below
+    print('similarity between documents in trainings corpus and query:\n',kernel_matrix)
+
+def print_tfidf_transformation_example(tfidf: TfidfVectorizer,query: str = 'human readable Bahamas credit system'):
+    '''
+    :param tfidf: trained tf-idf model
+    :param query: query string
+    :return: None
+    
+    prints the transformation of the query string to a tf-idf vector.
+    The default query string is 'human readable Bahamas credit system'.
+    It contains tokens that are not in the vocabulary'''
+    t = tfidf.transform([query])
+    print('transformation to (document number, token encoding) tf-idf score\n', t)
+    return t
+    
+
 if __name__ == '__main__':
     args = arguments()
     file_paths = get_input_filepath(args)
@@ -147,5 +177,8 @@ if __name__ == '__main__':
     # returns tf-idf values for the first document with token NOT human readable
     #print('tf-idf of first document: ', D[0])
 
-    # document search engine using TF-IDF
+    # document search engine using TF-IDF and cosine similarity
+    #transformed_query = print_tfidf_transformation_example(tfidf=tfidf, query='human readable Bahamas credit system')
+ 
+    #print_cosine_similarity_examples(transformed_query=transformed_query, document_term_matrix=document_term_matrix)
 
