@@ -60,6 +60,8 @@ def get_tfidf_per_doc(tfidf: TfidfVectorizer, doc_num: int, document_term_matrix
     :param doc_num: document number (starting at index 0)
     :param document_term_matrix: document term matrix, entries are tf-idf values of tokens per document
     :return: pandas data frame with tf-idf values for each token in a specific document doc_num, whereas the tokens are sorted by their tf-idf value. The row's name is the token.
+    
+    for more information cf. https://kavita-ganesan.com/tfidftransformer-tfidfvectorizer-usage-differences/
     '''
     # place tf-idf values in a pandas data frame 
     tfidf_first_document_vector = document_term_matrix[doc_num]
@@ -79,6 +81,8 @@ def get_tfidf_matrix(file_paths: list, tfidf: TfidfVectorizer, document_term_mat
         - rows: documents (first index in access tuple))
         - columns: tokens (second index in access tuple))
         - entries: tf-idf value of tokens
+
+    for more information cf. https://towardsdatascience.com/tf-idf-for-document-ranking-from-scratch-in-python-on-real-world-dataset-796d339a4089
     '''
     D = np.zeros((len(file_paths), len(list(tfidf.vocabulary_.values()))))  
     for comb in itertools.product(list(range(len(file_paths))), list(tfidf.vocabulary_.values())):
