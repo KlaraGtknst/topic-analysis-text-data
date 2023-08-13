@@ -100,42 +100,57 @@ def get_tfidf_per_doc(tfidf, doc_num):
     df.sort_values(by=["tfidf"],ascending=False, inplace=True)
     return df
 
+def get_tf_idf_per_doc(file_paths, tfidf, document_term_matrix):
+    # document vectorization using tf-idf model's token encoding
+    # tf-idf matrix; entry: tf-idf value of token (collumn/ second entry in access tuple) in document (row/ first index in access tuple)
+    D = np.zeros((len(file_paths), len(list(tfidf.vocabulary_.values()))))  
+    for comb in itertools.product(list(range(len(file_paths))), list(tfidf.vocabulary_.values())):
+        D[comb] = document_term_matrix[comb]
+    return D
+
+def print_info_abt_doc_term_mat(document_term_matrix):
+    print(document_term_matrix)
+    print(document_term_matrix[(0,tfidf.vocabulary_['redit'])])
+    print(tfidf.vocabulary_)
+    print(tfidf.idf_)
+    print(tfidf.get_feature_names_out())
+
+def get_docs_from_file_paths(file_paths):
+    docs = []
+    for path in file_paths:
+        docs.append(pdf_to_str(path))
+    return docs
+
+def get_preprocessed_tokens_from_file_paths(file_paths):
+    df_clean_token = {} # contains preprocessed tokens for each document
+    for path in file_paths:
+        df_clean_token[path] = preprocess_text(path)
+    return df_clean_token
 
 if __name__ == '__main__':
     args = arguments()
     file_paths = get_input_filepath(args)
 
-    df_clean_token = {} # contains preprocessed tokens for each document
-    docs = []
-    for path in file_paths:
-        df_clean_token[path] = preprocess_text(path)
-        docs.append(pdf_to_str(path))
+    #df_clean_token = get_preprocessed_tokens_from_file_paths(file_paths)
+    docs = get_docs_from_file_paths(file_paths)
 
-    vocabulary, words_per_doc = get_vocab_word_per_doc(df_clean_token)
+    #vocabulary, words_per_doc = get_vocab_word_per_doc(df_clean_token)
     #print('vocab', vocabulary)
-    #print('words_per_doc', words_per_doc)
+    #print('words_per_doc ', words_per_doc)
 
     # tfIdf model
     tfidf = TfidfVectorizer(input='content', lowercase=True, analyzer='word', stop_words='english', token_pattern="\w+")
     document_term_matrix = tfidf.fit_transform(docs)
-    #print(document_term_matrix)
-    #print(document_term_matrix[(0,tfidf.vocabulary_['redit'])])
-    #print(tfidf.vocabulary_)
-    #print(tfidf.idf_)
-    #print(tfidf.get_feature_names_out())
+    #print_info_abt_doc_term_mat(document_term_matrix)
 
-    df = get_tfidf_per_doc(tfidf, 1)
-    #print(df)
+    # returns tf-idf values for the first document with token human readable
+    #print(get_tfidf_per_doc(tfidf, 1))
 
-    # document vectorization
-    D = np.zeros((len(file_paths), len(list(tfidf.vocabulary_.values()))))    # tf-idf matrix; entry: tf-idf value of token (collumn/ second entry in access tuple) in document (row/ first index in access tuple)
-    #print(list(range(len(file_paths))),list(tfidf.vocabulary_.values()))
-    for comb in itertools.product(list(range(len(file_paths))), list(tfidf.vocabulary_.values())):
-        D[comb] = document_term_matrix[comb]
-
+    D = get_tf_idf_per_doc(file_paths, tfidf, document_term_matrix)
     print(f'tfidf of {list(tfidf.vocabulary_.keys())[10]} in the first Document is {D[0,list(tfidf.vocabulary_.values())[10]]}')
-    #print(D[0])
-    
+    # returns tf-idf values for the first document with token NOT human readable
+    #print('tf-idf of first document: ', D[0])
+
     # document search engine using TF-IDF
     #print(cosine_similarity_T(10,'lion com', df_clean_token, vocabulary, tfidf))
 
