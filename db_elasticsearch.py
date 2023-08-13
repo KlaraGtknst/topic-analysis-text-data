@@ -26,6 +26,7 @@ def init_db(client: Elasticsearch, num_dimensions: int):
     - image: the image of the document (i.e. information about the document layout). The image is encoded in base64 and has 500 dpi.
 
     cf. https://www.elastic.co/guide/en/elasticsearch/reference/current/binary.html for information about binary for images
+    cf. https://www.elastic.co/guide/en/elasticsearch/reference/current/dense-vector.html for information about dense vectors and similarity measurement types
     '''
     client.indices.create(index='bahamas', mappings={
         "properties": {
