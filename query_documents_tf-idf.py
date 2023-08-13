@@ -24,60 +24,6 @@ run this code by typing and altering the path:
     python3 query_documents_tf-idf.py -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf'
 '''
 
-def gen_vector_T(tokens, vocabulary, tfidf):
-    # Create a vector for Query/search keywords
-    Q = np.zeros((len(vocabulary)))
-    x= tfidf.transform(tokens)
-    #print(tokens[0].split(','))
-    for token in tokens:
-        #print(token)
-        try:
-            ind = vocabulary.index(token)
-            Q[ind]  = x[0, tfidf.vocabulary_[token]]
-        except:
-            pass
-    return Q
-
-def cosine_sim(a, b):
-    cos_sim = np.dot(a, b)/(np.linalg.norm(a)*np.linalg.norm(b))
-    return cos_sim
-
-def cosine_similarity_T(k, query, df_clean_token, vocabulary, tfidf):
-    # TODO: do not use voacb (list of filenmames), but df_clean_token.values (list of tokens)
-    # Cosine Similarity b/w document to query function
-    preprocessed_query = re.sub("\W+", " ", query).strip() # remove one or more non-alphanumeric characters
-    tokens = word_tokenize(str(preprocessed_query))
-    #q_df = pd.DataFrame(columns=['q_clean'])
-    #q_df.loc[0,'q_clean'] = tokens
-    #print(type(q_df.loc[0,'q_clean']))
-    #print('\n' , q_df['q_clean'].values.tolist()[0])
-    #q_df['q_clean'] = list(stemming(remove_stop_words(q_df.q_clean.values.tolist()[0])))
-    #rint(q_df)
-    d_cosines = []
-    
-    query_vector = gen_vector_T(stemming(remove_stop_words(tokens)), vocabulary, tfidf)
-    #gen_vector_T(q_df['q_clean'])
-    for d in tfidf_tran.A:
-        print(d, query_vector)
-        print(cosine_sim(query_vector, d))
-        d_cosines.append(cosine_sim(query_vector, d))
-                    
-    out = np.array(d_cosines).argsort()[-k:][::-1]
-    #print("")
-    d_cosines.sort()
-    print(d_cosines)
-    a = pd.DataFrame()
-    #print(df_clean_token)
-    #print(out)
-    for i,index in enumerate(out):
-        #print(i, index)
-        a.loc[i,'index'] = str(index)
-        #print(df_clean_token[file_paths[index]])
-        a.loc[i,'Subject'] = file_paths[index]
-    for j,simScore in enumerate(d_cosines[-k:][::-1]):
-        a.loc[j,'Score'] = simScore
-    return a
-
 def preprocess_text(path):
     tokens = simple_preprocess(pdf_to_str(path))
     filtered_tokens = remove_stop_words(tokens)
