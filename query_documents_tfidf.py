@@ -10,8 +10,8 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 '''------Code to find documents most fitting for input query-------
 run this code by typing and altering the path:
-    python3 query_documents_tf-idf.py -d '/Users/klara/Downloads/*.pdf'
-    python3 query_documents_tf-idf.py -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf'
+    python3 query_documents_tfidf.py -d '/Users/klara/Downloads/*.pdf'
+    python3 query_documents_tfidf.py -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf'
 '''
 
 def preprocess_text(path: str) -> list:
@@ -51,6 +51,7 @@ def get_tfidf_per_doc(tfidf: TfidfVectorizer, doc_num: int, document_term_matrix
     :param document_term_matrix: document term matrix, entries are tf-idf values of tokens per document
     :return: pandas data frame with tf-idf values for each token in a specific document doc_num, whereas the tokens are sorted by their tf-idf value. The row's name is the token.
     
+    DO NOT USE for representation of document as vectore, since the return value is sorted and therefore not suitable as an identifier.
     for more information cf. https://kavita-ganesan.com/tfidftransformer-tfidfvectorizer-usage-differences/
     '''
     # place tf-idf values in a pandas data frame 
@@ -158,8 +159,9 @@ if __name__ == '__main__':
     document_term_matrix = tfidf.fit_transform(docs)
     #print_info_abt_doc_term_mat_model(document_term_matrix, tfidf)
 
-    # returns tf-idf values for the first document with token human readable
-    #print(get_tfidf_per_doc(tfidf, 0, document_term_matrix))
+    # returns tf-idf values for the first document with token human readable, but SORTED (≠ document vectorization)
+    print(get_tfidf_per_doc(tfidf, 0, document_term_matrix))
+    #print(get_tfidf_per_doc(tfidf, 1, document_term_matrix))
 
     D = get_tfidf_matrix(file_paths, tfidf, document_term_matrix)
     #print(f'tfidf of {list(tfidf.vocabulary_.keys())[10]} in the first Document is {D[0,list(tfidf.vocabulary_.values())[10]]}')

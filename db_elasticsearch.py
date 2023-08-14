@@ -4,6 +4,7 @@ import base64
 from read_pdf import *
 from cli import *
 from pdf_matrix import *
+from query_documents_tfidf import *
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 from gensim.utils import simple_preprocess
 
@@ -12,7 +13,7 @@ run this code by typing and altering the path:
     python3 db_elasticsearch.py -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/images/'
 '''
 
-def init_db(client: Elasticsearch, num_dimensions: int):
+def init_db(client: Elasticsearch, num_dimensions: int):#, vocab_size: int):
     '''
     :param client: Elasticsearch client
     :param num_dimensions: number of dimensions of the embedding
@@ -36,6 +37,12 @@ def init_db(client: Elasticsearch, num_dimensions: int):
                 "index": True,
                 "similarity": "cosine",
             },
+            '''"tfidf": {
+                "type": "dense_vector",
+                "dims": vocab_size, #FIXME: uses 2048 as maximum, bc vocab_size is 7243
+                "index": True,
+                "similarity": "cosine",
+            },'''
             "text": {
                 "type": "text",
             },
@@ -48,9 +55,9 @@ def init_db(client: Elasticsearch, num_dimensions: int):
         },
     })
 
-def insert_documents(src_path: list, model: Doc2Vec, client: Elasticsearch, image_path: str = None):
+def insert_documents(src_paths: list, model: Doc2Vec, client: Elasticsearch, image_path: str = None):#doc_tfidf_vectorization: np.ndarray,
     '''
-    :param src_path: path to the documents to be inserted into the database
+    :param src_paths: path to the documents to be inserted into the database
     :param model: Doc2Vec model
     :param client: Elasticsearch client
     :param image_path: path to the images of the documents to be inserted into the database; if not set, assumes the images are in the same folder as the documents.
@@ -70,7 +77,8 @@ def insert_documents(src_path: list, model: Doc2Vec, client: Elasticsearch, imag
     cf. https://www.codespeedy.com/convert-image-to-base64-string-in-python/ for information about converting images to base64
     '''
     
-    for path in src_path:
+    for i in range(len(src_paths)):
+        path = src_paths[i]
         try:
             id = path.split('/')[-1].split('.')[0]  # document title
             image = image_path + id  + '.png' if image_path else path.split('.')[0] + '.png'
@@ -87,8 +95,10 @@ def insert_documents(src_path: list, model: Doc2Vec, client: Elasticsearch, imag
                 # missing EOF marker in pdf
                 continue 
 
+            #print(doc_tfidf_vectorization[i].shape)
             client.create(index='bahamas', id=id, document={
                 "embedding": model.infer_vector(simple_preprocess(pdf_to_str(path))),
+                #"tfidf": doc_tfidf_vectorization[i],
                 "text": text,
                 "path": path,
                 "image": str(b64_image),
@@ -142,9 +152,9 @@ def infer_embedding_vector(model: Elasticsearch, path: str):
     '''
     return model.infer_vector(simple_preprocess(pdf_to_str(path)))
 
-def get_tagged_input_documents(src_path: str, tokens_only: bool = False):
+def get_tagged_input_documents(src_paths: list, tokens_only: bool = False):
     '''
-    :param src_path: path to the documents to be inserted into the database
+    :param src_paths: list of paths to the documents to be inserted into the database
     :param tokens_only: if True, only the tokens of the document are returned, else tagged tokens are returned
     :return: tagged tokens or only the tokens (depending on tokens_only)
 
@@ -154,8 +164,8 @@ def get_tagged_input_documents(src_path: str, tokens_only: bool = False):
     cf. https://radimrehurek.com/gensim/auto_examples/tutorials/run_doc2vec_lee.html#sphx-glr-auto-examples-tutorials-run-doc2vec-lee-py
     for the original code
     '''
-    for i, path in enumerate(glob.glob(src_path)):
-        
+    for i in range(len(src_paths)):
+        path = src_paths[i]
         tokens = simple_preprocess(pdf_to_str(path))
         if tokens_only:
             yield tokens
@@ -205,25 +215,43 @@ def infer_embedding_for_single_document(model: Doc2Vec, text: str):
     vector = model.infer_vector(simple_preprocess(text))
     return vector
 
+def tfidf_aux(src_paths: list):
+    '''
+    :param src_paths: paths to the documents to be inserted into the database
+    :return: document-term matrix and the trained tfidf vectorizer model
+    '''
+    docs = get_docs_from_file_paths(src_paths)
+    tfidf = TfidfVectorizer(input='content', lowercase=True, analyzer='word', stop_words='english', token_pattern="\w+")
+    document_term_matrix = tfidf.fit_transform(docs)
+    D = get_tfidf_matrix(src_paths, tfidf, document_term_matrix)
+    return D, tfidf
+
 if __name__ == '__main__':
     args = arguments()
-    src_path = get_input_filepath(args)
+    src_paths = get_input_filepath(args)
     image_src_path = get_filepath(args, option='image')
-    print('image src: ' + image_src_path)
     
-    NUM_DIMENSIONS = 55
+    NUM_DIMENSIONS = 50
     print('-' * 80)
+
+    # tfidf 
+    # TODO: how to find out which document belongs to a row (first/ only index)?
+    # FIXME: vocab size to big for maximum dimension of elastic search
+    '''doc_tfidf_vectorization, tfidf = tfidf_aux(src_paths)
+    vocab_size = len(list(tfidf.vocabulary_.values()))
+    print(f'Vocabulary size: {vocab_size}')
+    print(doc_tfidf_vectorization.shape)'''
 
     # Create the client instance
     client = Elasticsearch("http://localhost:9200")
 
     # delete old index and create new one
-    if client.indices.get_mapping(index='bahamas')['bahamas']['mappings']['properties']['embedding']['dims'] != NUM_DIMENSIONS:
+    if ('bahamas' not in client.indices.get_alias(index='*')) or (client.indices.get_mapping(index='bahamas')['bahamas']['mappings']['properties']['embedding']['dims'] != NUM_DIMENSIONS):
         client.options(ignore_status=[400,404]).indices.delete(index='bahamas')
-        init_db(client, num_dimensions=NUM_DIMENSIONS)
+        init_db(client, num_dimensions=NUM_DIMENSIONS)#, vocab_size=vocab_size)
     
     # training corpus
-    train_corpus = list(get_tagged_input_documents(src_path[0]))
+    train_corpus = list(get_tagged_input_documents(src_paths))
 
     # model 
     # infrequent words are discarded, since retaining them can make model worse
@@ -231,7 +259,7 @@ if __name__ == '__main__':
     model = Doc2Vec(train_corpus, vector_size=NUM_DIMENSIONS, window=2, min_count=2, workers=4, epochs=40)
 
     # build a vocabulary (i.e. list of unique words); accessable via model.wv.index_to_key
-    # model.build_vocab(train_corpus)
+    model.build_vocab(train_corpus, update=True)
 
     # additonal information about each word
     # word = 'credit'
@@ -246,25 +274,25 @@ if __name__ == '__main__':
     # assess the model
     # here: using training corpus -> overfitting, not representative
     #assess_model(model, train_corpus)
+
     
-    
-    insert_documents(src_path, model, client, image_path=image_src_path)  
+    insert_documents(src_paths, model, client, image_path=image_src_path)#, doc_tfidf_vectorization=doc_tfidf_vectorization)  
 
     # alternatively, use AsyncElasticsearch or time.sleep(1)
     client.indices.refresh(index="bahamas")
 
-    '''for path in glob.glob(src_path):
+    '''for path in src_paths:
        print('\n' + '-' * 40, path, '-' * 40)
        search_in_db(client, model, path)'''
     
-    
+
     # sample query for a document
-    path = src_path[50]
+    path = src_paths[50]
     print('\n' + '-' * 40, path, '-' * 40)
     scores = search_in_db(client, model, path)
     for score in list(scores.keys()):
         print(score, scores[score])
 
     # create image matrix of 9 most similar images for query image
-    image_paths = [image_src_path + id.split('.')[0]  + '.png' if image_src_path else src_path.split('.')[0] + '.png' for id in scores.values()]
+    image_paths = [image_src_path + id.split('.')[0]  + '.png' if image_src_path else src_paths.split('.')[0] + '.png' for id in scores.values()]
     create_image_matrix(input_files=image_paths, dim=3, output_path=None)
