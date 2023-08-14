@@ -1,12 +1,14 @@
 import collections
 from elasticsearch import ConflictError, Elasticsearch
 import base64
+from gensim.models.doc2vec import Doc2Vec, TaggedDocument
+from gensim.utils import simple_preprocess
+# own modules
 from read_pdf import *
 from cli import *
 from pdf_matrix import *
 from query_documents_tfidf import *
-from gensim.models.doc2vec import Doc2Vec, TaggedDocument
-from gensim.utils import simple_preprocess
+from universal_sent_encoder_tensorFlow import *
 
 '''------initiate, fill and search in database-------
 run this code by typing and altering the path:
@@ -37,6 +39,12 @@ def init_db(client: Elasticsearch, num_dimensions: int):#, vocab_size: int):
                 "index": True,
                 "similarity": "cosine",
             },
+            "google_univ_sent_encoding": {
+                "type": "dense_vector",
+                "dims": 512,
+                "index": True,
+                "similarity": "cosine",
+            },
             '''"tfidf": {
                 "type": "dense_vector",
                 "dims": vocab_size, #FIXME: uses 2048 as maximum, bc vocab_size is 7243
@@ -55,7 +63,7 @@ def init_db(client: Elasticsearch, num_dimensions: int):#, vocab_size: int):
         },
     })
 
-def insert_documents(src_paths: list, model: Doc2Vec, client: Elasticsearch, image_path: str = None):#doc_tfidf_vectorization: np.ndarray,
+def insert_documents(src_paths: list, model: Doc2Vec, client: Elasticsearch, google_model, image_path: str = None):#doc_tfidf_vectorization: np.ndarray,
     '''
     :param src_paths: path to the documents to be inserted into the database
     :param model: Doc2Vec model
@@ -99,6 +107,7 @@ def insert_documents(src_paths: list, model: Doc2Vec, client: Elasticsearch, ima
             client.create(index='bahamas', id=id, document={
                 "embedding": model.infer_vector(simple_preprocess(pdf_to_str(path))),
                 #"tfidf": doc_tfidf_vectorization[i],
+                "google_univ_sent_encoding": embed([text], google_model).numpy().tolist()[0],
                 "text": text,
                 "path": path,
                 "image": str(b64_image),
@@ -226,12 +235,23 @@ def tfidf_aux(src_paths: list):
     D = get_tfidf_matrix(src_paths, tfidf, document_term_matrix)
     return D, tfidf
 
+def google_univ_sent_encoding_aux(src_paths: list):
+    '''
+    :param src_paths: paths to the documents to be inserted into the database
+    :return: document-term matrix and the trained tfidf vectorizer model
+    '''
+    docs = get_docs_from_file_paths(src_paths)
+    module_url = "https://tfhub.dev/google/universal-sentence-encoder/4"
+    model = hub.load(module_url)
+    #embeddings = embed(docs, model)
+    return model#embeddings
+
 if __name__ == '__main__':
     args = arguments()
     src_paths = get_input_filepath(args)
     image_src_path = get_filepath(args, option='image')
     
-    NUM_DIMENSIONS = 50
+    NUM_DIMENSIONS = 55
     print('-' * 80)
 
     # tfidf 
@@ -241,6 +261,9 @@ if __name__ == '__main__':
     vocab_size = len(list(tfidf.vocabulary_.values()))
     print(f'Vocabulary size: {vocab_size}')
     print(doc_tfidf_vectorization.shape)'''
+
+    # google universal sentence encoder
+    google_model = google_univ_sent_encoding_aux(src_paths)
 
     # Create the client instance
     client = Elasticsearch("http://localhost:9200")
@@ -276,7 +299,7 @@ if __name__ == '__main__':
     #assess_model(model, train_corpus)
 
     
-    insert_documents(src_paths, model, client, image_path=image_src_path)#, doc_tfidf_vectorization=doc_tfidf_vectorization)  
+    insert_documents(src_paths, model, client, image_path=image_src_path, google_model=google_model)#, doc_tfidf_vectorization=doc_tfidf_vectorization)  
 
     # alternatively, use AsyncElasticsearch or time.sleep(1)
     client.indices.refresh(index="bahamas")

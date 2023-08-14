@@ -100,6 +100,7 @@ if __name__ == '__main__':
 
     # get embedding for single document
     embedding = embed([messages[0]], model)
+    #print((embedding).numpy().tolist()[0])
 
     # get embedding for all documents in a folder, find out how to access the embeddings of the single documents
     embeddings = embed(messages, model)
