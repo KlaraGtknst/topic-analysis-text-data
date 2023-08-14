@@ -243,8 +243,7 @@ def google_univ_sent_encoding_aux(src_paths: list):
     docs = get_docs_from_file_paths(src_paths)
     module_url = "https://tfhub.dev/google/universal-sentence-encoder/4"
     model = hub.load(module_url)
-    #embeddings = embed(docs, model)
-    return model#embeddings
+    return model
 
 if __name__ == '__main__':
     args = arguments()
