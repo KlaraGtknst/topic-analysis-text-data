@@ -1,16 +1,9 @@
 from read_pdf import *
 from cli import *
 import seaborn as sns
-#from absl import logging
-
-import tensorflow as tf
-
 import tensorflow_hub as hub
 import matplotlib.pyplot as plt
 import numpy as np
-import os
-import pandas as pd
-import re
 import seaborn as sns
 
 '''------Code to compare documents in terms of similiarity-------
