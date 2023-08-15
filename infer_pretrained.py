@@ -20,6 +20,17 @@ run this code by typing and altering the path:
     python3 infer_pretrained.py -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -o '/Users/klara/Downloads/'
 '''
 
+def init_infer(model_path: str, w2v_path: str, file_paths: list, version: int = 1) -> tuple:
+    params_model = {'bsize': 64, 'word_emb_dim': 300, 'enc_lstm_dim': 2048,
+                    'pool_type': 'max', 'dpout_model': 0.0, 'version': version}
+    infersent = InferSent(params_model)
+    infersent.load_state_dict(torch.load(model_path))
+    infersent.set_w2v_path(w2v_path)
+    docs = get_docs_from_file_paths(file_paths)
+    infersent.build_vocab(docs, tokenize=True)
+
+    return infersent, docs
+
 
 if __name__ == '__main__':
     args = arguments()
@@ -27,18 +38,13 @@ if __name__ == '__main__':
     outpath = get_filepath(args, option='output')
 
     nltk.download('punkt')
-    
     V = 1   # trained with GloVe
     MODEL_PATH = '/Users/klara/Developer/Uni/encoder/infersent%s.pkl' % V
-    params_model = {'bsize': 64, 'word_emb_dim': 300, 'enc_lstm_dim': 2048,
-                    'pool_type': 'max', 'dpout_model': 0.0, 'version': V}
-    infersent = InferSent(params_model)
-    infersent.load_state_dict(torch.load(MODEL_PATH))
+    W2V_PATH = '/Users/klara/Developer/Uni/GloVe/glove.840B.300d.txt'
 
-    W2V_PATH = '/Users/klara/Developer/Uni/GloVe/glove.840B.300d.txt'#'fastText/crawl-300d-2M.vec'
-    infersent.set_w2v_path(W2V_PATH)
-
-    docs = get_docs_from_file_paths(file_paths)
-    infersent.build_vocab(docs, tokenize=True)
+    infersent, docs = init_infer(model_path=MODEL_PATH, w2v_path=W2V_PATH, file_paths=file_paths, version=V)
+    
     embeddings = infersent.encode(docs, tokenize=True)
+    
+    print(embeddings.shape)
     infersent.visualize('A man plays an instrument.', tokenize=True)
