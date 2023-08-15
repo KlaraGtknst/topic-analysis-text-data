@@ -4,7 +4,7 @@ import cv2
 
 '''------Code for matrix of PDF layouts-------
 run this code by typing and altering the path:
-    python3 pdf_matrix.py --number 5 -d '/Users/klara/Documents/uni/bachelorarbeit/images/*.png' -o '/Users/klara/Downloads/'
+    python3 pdf_matrix.py --number 5 -d '/Users/klara/Documents/uni/bachelorarbeit/images/images/*.png' -o '/Users/klara/Downloads/'
 '''
 
 
