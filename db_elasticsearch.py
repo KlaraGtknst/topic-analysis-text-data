@@ -9,6 +9,7 @@ from cli import *
 from pdf_matrix import *
 from query_documents_tfidf import *
 from universal_sent_encoder_tensorFlow import *
+from hugging_face_sentence_transformer import *
 
 '''------initiate, fill and search in database-------
 run this code by typing and altering the path:
@@ -45,6 +46,12 @@ def init_db(client: Elasticsearch, num_dimensions: int):#, vocab_size: int):
                 "index": True,
                 "similarity": "cosine",
             },
+            "huggingface_sent_transformer": {
+                "type": "dense_vector",
+                "dims": 384,
+                "index": True,
+                "similarity": "cosine",
+            },
             '''"tfidf": {
                 "type": "dense_vector",
                 "dims": vocab_size, #FIXME: uses 2048 as maximum, bc vocab_size is 7243
@@ -63,7 +70,7 @@ def init_db(client: Elasticsearch, num_dimensions: int):#, vocab_size: int):
         },
     })
 
-def insert_documents(src_paths: list, model: Doc2Vec, client: Elasticsearch, google_model, image_path: str = None):#doc_tfidf_vectorization: np.ndarray,
+def insert_documents(src_paths: list, model: Doc2Vec, client: Elasticsearch, google_model, huggingface_model, image_path: str = None):#doc_tfidf_vectorization: np.ndarray,
     '''
     :param src_paths: path to the documents to be inserted into the database
     :param model: Doc2Vec model
@@ -108,6 +115,7 @@ def insert_documents(src_paths: list, model: Doc2Vec, client: Elasticsearch, goo
                 "embedding": model.infer_vector(simple_preprocess(pdf_to_str(path))),
                 #"tfidf": doc_tfidf_vectorization[i],
                 "google_univ_sent_encoding": embed([text], google_model).numpy().tolist()[0],
+                "huggingface_sent_transformer": huggingface_model.encode(text),
                 "text": text,
                 "path": path,
                 "image": str(b64_image),
@@ -235,12 +243,11 @@ def tfidf_aux(src_paths: list):
     D = get_tfidf_matrix(src_paths, tfidf, document_term_matrix)
     return D, tfidf
 
-def google_univ_sent_encoding_aux(src_paths: list):
+def google_univ_sent_encoding_aux():
     '''
     :param src_paths: paths to the documents to be inserted into the database
     :return: document-term matrix and the trained tfidf vectorizer model
     '''
-    docs = get_docs_from_file_paths(src_paths)
     module_url = "https://tfhub.dev/google/universal-sentence-encoder/4"
     model = hub.load(module_url)
     return model
@@ -261,8 +268,12 @@ if __name__ == '__main__':
     print(f'Vocabulary size: {vocab_size}')
     print(doc_tfidf_vectorization.shape)'''
 
+    # huggingface sentence transformer
+    huggingface_model = init_hf_sentTrans_model()
+    #huggingface_embedding = huggingface_model.encode(src_paths)
+
     # google universal sentence encoder
-    google_model = google_univ_sent_encoding_aux(src_paths)
+    google_model = google_univ_sent_encoding_aux()
 
     # Create the client instance
     client = Elasticsearch("http://localhost:9200")
@@ -298,7 +309,7 @@ if __name__ == '__main__':
     #assess_model(model, train_corpus)
 
     
-    insert_documents(src_paths, model, client, image_path=image_src_path, google_model=google_model)#, doc_tfidf_vectorization=doc_tfidf_vectorization)  
+    insert_documents(src_paths, model, client, image_path=image_src_path, google_model=google_model, huggingface_model=huggingface_model)#, doc_tfidf_vectorization=doc_tfidf_vectorization)  
 
     # alternatively, use AsyncElasticsearch or time.sleep(1)
     client.indices.refresh(index="bahamas")
