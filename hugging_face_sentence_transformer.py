@@ -20,14 +20,14 @@ run this code by typing and altering the path:
     python3 hugging_face_sentence_transformer.py -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -o '/Users/klara/Developer/Uni/hugging_face_sentence_transformer'
 '''
 
-def init_model() -> SentenceTransformer:
+def init_hf_sentTrans_model() -> SentenceTransformer:
     model = SentenceTransformer('paraphrase-MiniLM-L6-v2')
     return model
 
-def save_model_to_disk(model: SentenceTransformer, outpath: str) -> None:
+def save_hf_sentTrans_model_to_disk(model: SentenceTransformer, outpath: str) -> None:
     model.save(outpath)
 
-def load_model(model_path: str) -> SentenceTransformer:
+def load_hf_sentTrans_model(model_path: str) -> SentenceTransformer:
     # https://github.com/UKPLab/sentence-transformers/issues/1666
     model = SentenceTransformer(model_path)
     return model
@@ -40,11 +40,11 @@ if __name__ == '__main__':
 
     docs = get_docs_from_file_paths(file_paths)
     # Choose wether to train a new model or load an existing one
-    #model = init_model()   # new model
-    model = load_model(model_path=outpath)      # existing model uses outpath as model path
+    #model = init_hf_sentTrans_model()   # new model
+    model = load_hf_sentTrans_model(model_path=outpath)      # existing model uses outpath as model path
 
     # Comment if you don't want to save the model
-    #save_model_to_disk(model=model, outpath=outpath)
+    #save_hf_sentTrans_model_to_disk(model=model, outpath=outpath)
     
     #Sentences we want to encode. Example:
     sentence = docs#[0]
