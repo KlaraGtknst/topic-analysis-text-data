@@ -12,6 +12,8 @@ import torch
 The code below is based on:
     https://github.com/facebookresearch/InferSent
     https://github.com/facebookresearch/InferSent/blob/main/models.py
+    https://www.kaggle.com/code/jacksoncrow/infersent-demo
+    https://morioh.com/a/95a832e85c0d/infersent-sentence-embeddings
 
 run this code by typing and altering the path:
     python3 infer_pretrained.py -d '/Users/klara/Downloads/*.pdf' -o '/Users/klara/Downloads/'
