@@ -1,7 +1,6 @@
 from read_pdf import *
 from cli import *
 from query_documents_tfidf import get_docs_from_file_paths
-import numpy as np
 from sentence_transformers import SentenceTransformer
 
 
