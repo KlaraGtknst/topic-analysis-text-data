@@ -21,7 +21,7 @@ run this code by typing and altering the path:
 '''
 
 def init_infer(model_path: str, w2v_path: str, file_paths: list, version: int = 1) -> tuple:
-    params_model = {'bsize': 64, 'word_emb_dim': 300, 'enc_lstm_dim': 2048,
+    params_model = {'bsize': 64, 'word_emb_dim': 300, 'enc_lstm_dim': 2048, # value bigger than maximum database vector size, change non-trivial since pre-trained model  has to be trained again
                     'pool_type': 'max', 'dpout_model': 0.0, 'version': version}
     infersent = InferSent(params_model)
     infersent.load_state_dict(torch.load(model_path))
@@ -45,6 +45,6 @@ if __name__ == '__main__':
     infersent, docs = init_infer(model_path=MODEL_PATH, w2v_path=W2V_PATH, file_paths=file_paths, version=V)
     
     embeddings = infersent.encode(docs, tokenize=True)
-    
+
     print(embeddings.shape)
     infersent.visualize('A man plays an instrument.', tokenize=True)
