@@ -9,6 +9,8 @@ import torch
 
 
 '''------Code to encode documents as sentence embeddings using pretrained models (InferSent)-------
+Since the model is pretrained and the output embedding is a vector of size 4096, the model has to be trained again to fit the database's maximum dense vector size.
+
 The code below is based on:
     https://github.com/facebookresearch/InferSent
     https://github.com/facebookresearch/InferSent/blob/main/models.py
