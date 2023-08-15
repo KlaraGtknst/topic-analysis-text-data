@@ -17,7 +17,7 @@ run this code by typing and altering the path:
     python3 hugging_face_sentence_transformer.py -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -o '/Users/klara/Developer/Uni/hugging_face_sentence_transformer'
 
     ### LOAD MODEL ###
-    python3 hugging_face_sentence_transformer.py -d '/Users/klara/Developer/Uni/hugging_face_sentence_transformer'
+    python3 hugging_face_sentence_transformer.py -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -o '/Users/klara/Developer/Uni/hugging_face_sentence_transformer'
 '''
 
 def init_model() -> SentenceTransformer:
@@ -28,6 +28,7 @@ def save_model_to_disk(model: SentenceTransformer, outpath: str) -> None:
     model.save(outpath)
 
 def load_model(model_path: str) -> SentenceTransformer:
+    # https://github.com/UKPLab/sentence-transformers/issues/1666
     model = SentenceTransformer(model_path)
     return model
 
@@ -40,16 +41,18 @@ if __name__ == '__main__':
     docs = get_docs_from_file_paths(file_paths)
     # Choose wether to train a new model or load an existing one
     #model = init_model()   # new model
-    model = load_model(model_path=file_paths[0])      # existing model
+    model = load_model(model_path=outpath)      # existing model uses outpath as model path
 
     # Comment if you don't want to save the model
     #save_model_to_disk(model=model, outpath=outpath)
     
     #Sentences we want to encode. Example:
-    sentence = docs[0]
+    sentence = docs#[0]
 
     #Sentences are encoded by calling model.encode()
     embedding = model.encode(sentence)
 
     print(embedding.shape)
-    print(embedding)
+    #print(embedding)
+    print(embedding[0].shape)
+    print(embedding[0])
