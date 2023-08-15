@@ -51,15 +51,16 @@ def plot_similarity(labels: list, features: np.ndarray, outpath: str = None) -> 
         plt.savefig(outpath + '/' + title + '.pdf', format="pdf", bbox_inches="tight")
     plt.show()
 
-def run_and_plot(messages: list, model, num_chars: int = 300, outpath: str = None) -> None:
+def run_and_plot(messages: list, model, num_chars: int = None, outpath: str = None) -> None:
     '''
     :param messages: list of strings to be embedded
     :param model: trained model
-    :param num_chars: number of characters to be displayed as label; if not set 300 characters are displayed
+    :param num_chars: number of characters to be displayed as label; if not set 300 characters are displayed if the number of messages is less than 25, otherwise 10 characters are displayed.
     :param outpath: path to save plot; if not set the plot is not saved
     :return: None
     '''
     message_embeddings_ = embed(messages, model)
+    num_chars = num_chars if num_chars else (300 if len(messages) < 25 else 10)
     labels = [msg[0:num_chars] + '...' for msg in messages]
     plot_similarity(labels, message_embeddings_, outpath=outpath)
         
@@ -89,7 +90,7 @@ if __name__ == '__main__':
         text = pdf_to_str(path)
         messages.append(text)
 
-    run_and_plot(messages, model, 10, outpath)
+    run_and_plot(messages, model, outpath=outpath)
 
     # get embedding for single document
     embedding = embed([messages[0]], model)
