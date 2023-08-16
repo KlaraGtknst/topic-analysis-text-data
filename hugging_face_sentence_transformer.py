@@ -21,14 +21,31 @@ run this code by typing and altering the path:
 '''
 
 def init_hf_sentTrans_model() -> SentenceTransformer:
+    '''
+    : return: pretrained model from Hugging Face
+    
+    This function initializes a pretrained model from Hugging Face and returns it.
+    '''
     model = SentenceTransformer('paraphrase-MiniLM-L6-v2')
     return model
 
 def save_hf_sentTrans_model_to_disk(model: SentenceTransformer, outpath: str) -> None:
+    '''
+    : param model: pretrained model from Hugging Face
+    : param outpath: path to save the model to
+    
+    This function saves the model to the specified path.
+    '''
     model.save(outpath)
 
 def load_hf_sentTrans_model(model_path: str) -> SentenceTransformer:
-    # https://github.com/UKPLab/sentence-transformers/issues/1666
+    '''
+    : param model_path: path to the model to load
+    : return: pretrained model from model_path
+    
+    This function loads a pretrained model from Hugging Face and returns it.
+    cf. https://github.com/UKPLab/sentence-transformers/issues/1666 for more information
+    '''
     model = SentenceTransformer(model_path)
     return model
 
