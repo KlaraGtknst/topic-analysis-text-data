@@ -34,7 +34,7 @@ def get_vocab_word_per_doc(df_clean_token: dict) -> tuple:
     '''
     :param df_clean_token: dictionary with document id as key and list of tokens as value
     :return: vocabulary: list of all unique tokens of all documents
-    words_per_doc: dictionary with document id as key and dictionary with token as key and number of occurences of token in document as value
+        words_per_doc: dictionary with document id as key and dictionary with token as key and number of occurences of token in document as value
     '''
     vocabulary = set() # contains all unique tokens of all documents
     words_per_doc = {}  # contains the number of occurences of each token in each document
@@ -51,12 +51,12 @@ def get_tfidf_per_doc(tfidf: TfidfVectorizer, doc_num: int, document_term_matrix
     :param document_term_matrix: document term matrix, entries are tf-idf values of tokens per document
     :return: pandas data frame with tf-idf values for each token in a specific document doc_num, whereas the tokens are sorted by their tf-idf value. The row's name is the token.
     
-    DO NOT USE for representation of document as vectore, since the return value is sorted and therefore not suitable as an identifier.
+    DO NOT USE for representation of document as vector, since the return value is sorted and therefore not suitable as an identifier.
     for more information cf. https://kavita-ganesan.com/tfidftransformer-tfidfvectorizer-usage-differences/
     '''
     # place tf-idf values in a pandas data frame 
-    tfidf_first_document_vector = document_term_matrix[doc_num]
-    tfidf_per_token = pd.DataFrame(tfidf_first_document_vector.T.todense(), index=tfidf.get_feature_names_out(), columns=["tfidf"]) 
+    tfidf_document_vector = document_term_matrix[doc_num]
+    tfidf_per_token = pd.DataFrame(tfidf_document_vector.T.todense(), index=tfidf.get_feature_names_out(), columns=["tfidf"]) 
     tfidf_per_token.sort_values(by=["tfidf"], ascending=False, inplace=True)
     return tfidf_per_token
 
@@ -156,17 +156,17 @@ if __name__ == '__main__':
 
     # tfIdf model
     tfidf = TfidfVectorizer(input='content', lowercase=True, analyzer='word', stop_words='english', token_pattern="\w+")
-    document_term_matrix = tfidf.fit_transform(docs)
-    #print_info_abt_doc_term_mat_model(document_term_matrix, tfidf)
+    document_term_matrix = tfidf.fit_transform(docs)    # format: (document, token encoding) tf-idf score -> use D (below) to access tf-idf values
+    # print_info_abt_doc_term_mat_model(document_term_matrix, tfidf)
 
     # returns tf-idf values for the first document with token human readable, but SORTED (≠ document vectorization)
     print(get_tfidf_per_doc(tfidf, 0, document_term_matrix))
     #print(get_tfidf_per_doc(tfidf, 1, document_term_matrix))
 
     D = get_tfidf_matrix(file_paths, tfidf, document_term_matrix)
-    #print(f'tfidf of {list(tfidf.vocabulary_.keys())[10]} in the first Document is {D[0,list(tfidf.vocabulary_.values())[10]]}')
+    print(f'tfidf of {list(tfidf.vocabulary_.keys())[10]} in the first Document is {D[0,list(tfidf.vocabulary_.values())[10]]}')
     # returns tf-idf values for the first document with token NOT human readable
-    #print('tf-idf of first document: ', D[0])
+    print('tf-idf of first document: ', D[0])
 
     # document search engine using TF-IDF and cosine similarity
     #transformed_query = print_tfidf_transformation_example(tfidf=tfidf, query='human readable Bahamas credit system')
