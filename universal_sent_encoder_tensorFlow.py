@@ -90,14 +90,19 @@ if __name__ == '__main__':
         text = pdf_to_str(path)
         messages.append(text)
 
-    run_and_plot(messages, model, outpath=outpath)
+    #run_and_plot(messages, model, outpath=outpath)
 
     # get embedding for single document
     embedding = embed([messages[0]], model)
+    embedding2 = embed([messages[0]], model)
     #print((embedding).numpy().tolist()[0])
 
     # get embedding for all documents in a folder, find out how to access the embeddings of the single documents
     embeddings = embed(messages, model)
-    #print('difference between embedding of single document and the embedding in the matrix containing all embeddings:\n', embeddings[0] - embedding)
+    print('difference between embedding of single document and the embedding in the matrix containing all embeddings:\n', embeddings[0].numpy() - embedding.numpy()[0])
 
+    print(embedding.numpy()[0].shape, embeddings[0].numpy().shape)#, embedding.numpy()[0], embeddings[0].numpy()
+    #print(embedding - embedding2)
+    print(sum((embedding.numpy()[0] - embedding2.numpy()[0])**2))
+    #print(sum((np.array([0,1,23,4]) - np.array([0,1,43,4]))**2))
     #print_info_abt_embeddings(embeddings, messages)
