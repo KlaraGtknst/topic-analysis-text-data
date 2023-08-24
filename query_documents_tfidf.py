@@ -155,7 +155,8 @@ if __name__ == '__main__':
     #print('words_per_doc ', words_per_doc)
 
     # tfIdf model
-    tfidf = TfidfVectorizer(input='content', lowercase=True, analyzer='word', stop_words='english', token_pattern="\w+")
+    # use min/ max_df to filter out tokens that appear in too many/ too few documents -> reduce vector dimensionality
+    tfidf = TfidfVectorizer(input='content', max_df=int(len(docs)*0.25), min_df=7, lowercase=True, analyzer='word', stop_words='english', token_pattern="\w+")
     document_term_matrix = tfidf.fit_transform(docs)    # format: (document, token encoding) tf-idf score -> use D (below) to access tf-idf values
     # print_info_abt_doc_term_mat_model(document_term_matrix, tfidf)
 
