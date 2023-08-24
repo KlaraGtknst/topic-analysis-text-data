@@ -10,6 +10,7 @@ from pdf_matrix import *
 from query_documents_tfidf import *
 from universal_sent_encoder_tensorFlow import *
 from hugging_face_sentence_transformer import *
+from query_database import *
 
 '''------initiate, fill and search in database-------
 run this code by typing and altering the path:
@@ -131,50 +132,7 @@ def insert_documents(src_paths: list, model: Doc2Vec, client: Elasticsearch, goo
             continue
             #print(err)
 
-def search_in_db(client: Elasticsearch, model: Doc2Vec, path: str):
-    '''
-    :param client: Elasticsearch client
-    :param model: Doc2Vec model
-    :param path: path to the document to be searched for
-    :return: None
 
-    The field of interest in the database, i.e. the one to be searched for, is the embedding. 
-    The embedding is inferred from the document text using the trained Doc2Vec model.
-    The document text is preprocessed in the same way as the documents stored in the database.
-    Since the base64 encoding of the image is very long, it is excluded from the search result.
-    knn is used for the search. The search returns the k=10 most similar documents.
-    The parameter num_candidates is set to 100. This means that the search is performed on 100 documents (per shard, i.e. computer to perform [part of] the computation).
-
-    The search result is printed to the console.
-    The score is the similarity between the document and the query document (i.e. the document to be searched for).
-    The source are the fields of document itself, which are not specifically excluded.
-
-    cf. https://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html#search-api-knn for information about knn in elasticsearch.
-    '''
-    result = client.search(index='bahamas', knn={
-            "field": "embedding",
-            "query_vector": infer_embedding_vector(model, path),
-            "k": 10,
-            "num_candidates": 100
-        }, source_excludes=['image'])
-    
-    scores = {}
-    for hit in result['hits']['hits']:
-        scores[hit['_score']] = hit['_source']['path'].split('/')[-1]
-    return scores
-
-def infer_embedding_vector(model: Elasticsearch, path: str):
-    '''
-    :param model: trained Doc2Vec model
-    :param path: path to the document to be searched for
-    :return: the embedding vector of the document to be searched for
-
-    This function infers the embedding vector of the document to be searched for.
-    The document is preprocessed in the same way as the documents stored in the database.
-    The gensim function 'simple_preprocess' converts a document into a list of tokens (cf. https://tedboy.github.io/nlps/generated/generated/gensim.utils.simple_preprocess.html).
-    The resulting list of unicode strings is lowercased and tokenized.
-    '''
-    return model.infer_vector(simple_preprocess(pdf_to_str(path)))
 
 def get_tagged_input_documents(src_paths: list, tokens_only: bool = False):
     '''
@@ -248,11 +206,11 @@ def tfidf_aux(src_paths: list) -> tuple:
     # reduce dimensionality of tfidf matrix by allowing only words that appear a certain number of times
     # (1) tfidf embedding to find similiar documents (i.e. words have to appear in more than one document)
     # to reduce dimensionality, only words that appear in more than 10% of the documents are considered
-    sim_docs_tfidf = TfidfVectorizer(input='content', lowercase=True, min_df=2, max_df=int(len(docs)*0.07), analyzer='word', stop_words='english', token_pattern="\w+")
+    sim_docs_tfidf = TfidfVectorizer(input='content', lowercase=True, min_df=2, max_df=int(len(docs)*0.06), analyzer='word', stop_words='english', token_pattern="\w+")
     sim_docs_document_term_matrix = sim_docs_tfidf.fit_transform(docs)
     sim_docs_D = get_tfidf_matrix(src_paths, sim_docs_tfidf, sim_docs_document_term_matrix)
     # (2) tfidf embedding to find a document from the corpus (i.e. words appearing in many documents are not informative)
-    find_doc_tfidf = TfidfVectorizer(input='content', lowercase=True, max_df=int(len(docs)*0.05), analyzer='word', stop_words='english', token_pattern="\w+")
+    find_doc_tfidf = TfidfVectorizer(input='content', lowercase=True, max_df=int(len(docs)*0.09), analyzer='word', stop_words='english', token_pattern="\w+")
     find_doc_document_term_matrix = find_doc_tfidf.fit_transform(docs)
     find_doc_D = get_tfidf_matrix(src_paths, find_doc_tfidf, find_doc_document_term_matrix)
     return find_doc_D, find_doc_tfidf, sim_docs_D, sim_docs_tfidf
@@ -265,6 +223,12 @@ def google_univ_sent_encoding_aux():
     module_url = "https://tfhub.dev/google/universal-sentence-encoder/4"
     model = hub.load(module_url)
     return model
+
+
+def show_best_search_results(scores, src_paths, image_src_path=None):
+    # create image matrix of 9 most similar images for query image
+    image_paths = [image_src_path + id.split('.')[0]  + '.png' if image_src_path else src_paths.split('.')[0] + '.png' for id in scores.values()]
+    create_image_matrix(input_files=image_paths, dim=3, output_path=None)
 
 if __name__ == '__main__':
     args = arguments()
@@ -327,10 +291,7 @@ if __name__ == '__main__':
 
     # alternatively, use AsyncElasticsearch or time.sleep(1)
     client.indices.refresh(index="bahamas")
-
-    '''for path in src_paths:
-       print('\n' + '-' * 40, path, '-' * 40)
-       search_in_db(client, model, path)'''
+    
     
 
     # sample query for a document
@@ -341,5 +302,13 @@ if __name__ == '__main__':
         print(score, scores[score])
 
     # create image matrix of 9 most similar images for query image
-    image_paths = [image_src_path + id.split('.')[0]  + '.png' if image_src_path else src_paths.split('.')[0] + '.png' for id in scores.values()]
-    create_image_matrix(input_files=image_paths, dim=3, output_path=None)
+    #show_best_search_results(scores, src_paths, image_src_path)
+
+    # FIXME: TypeError(f"Unable to serialize {data!r} (type: {type(data)})") TypeError: Unable to serialize DenseVector([...
+    print('\n' 'TFIDF:\n', '-' * 40, path, '-' * 40)
+    '''scores = find_document_tfidf(client, find_doc_tfidf, path)
+    for score in list(scores.keys()):
+        print(score, scores[score])
+
+    # create image matrix of 9 most similar images for query image
+    show_best_search_results(scores, src_paths, image_src_path)'''
