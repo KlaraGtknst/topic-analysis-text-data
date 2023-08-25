@@ -50,3 +50,6 @@ if __name__ == '__main__':
 
     print(embeddings.shape)
     infersent.visualize('A man plays an instrument.', tokenize=True)
+
+    # retrain model (cf. https://github.com/parasdahal/infersent/blob/master/train.py)
+    # project does not support training: https://github.com/facebookresearch/InferSent/issues/82
