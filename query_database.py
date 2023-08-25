@@ -1,6 +1,4 @@
-import collections
 from elasticsearch import ConflictError, Elasticsearch
-import base64
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 from gensim.utils import simple_preprocess
 from pyspark.mllib.linalg import Vectors

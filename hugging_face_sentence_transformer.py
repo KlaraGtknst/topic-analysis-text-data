@@ -69,7 +69,7 @@ if __name__ == '__main__':
     #Sentences are encoded by calling model.encode()
     embedding = model.encode(sentence)
 
-    print(embedding.shape)
+    '''print(embedding.shape)
     #print(embedding)
     print(embedding[0].shape)
-    print(embedding[0])
+    print(embedding[0])'''
