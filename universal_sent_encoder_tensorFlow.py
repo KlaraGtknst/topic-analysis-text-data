@@ -87,22 +87,34 @@ if __name__ == '__main__':
 
     messages = []
     for path in file_paths:
+        # input is allowed to be not only lower case and not yet tokenized (cf. https://www.tensorflow.org/hub/tutorials/semantic_similarity_with_tf_hub_universal_encoder)
         text = pdf_to_str(path)
         messages.append(text)
 
     #run_and_plot(messages, model, outpath=outpath)
 
     # get embedding for single document
-    embedding = embed([messages[0]], model)
+    embedding = embed([messages[0]], model) # paper: Universal Sentence Encoder page 2
     embedding2 = embed([messages[0]], model)
     #print((embedding).numpy().tolist()[0])
 
     # get embedding for all documents in a folder, find out how to access the embeddings of the single documents
-    embeddings = embed(messages, model)
-    print('difference between embedding of single document and the embedding in the matrix containing all embeddings:\n', embeddings[0].numpy() - embedding.numpy()[0])
-
-    print(embedding.numpy()[0].shape, embeddings[0].numpy().shape)#, embedding.numpy()[0], embeddings[0].numpy()
-    #print(embedding - embedding2)
-    print(sum((embedding.numpy()[0] - embedding2.numpy()[0])**2))
-    #print(sum((np.array([0,1,23,4]) - np.array([0,1,43,4]))**2))
+    embeddings = embed(messages, model) # https://www.tensorflow.org/hub/tutorials/semantic_similarity_with_tf_hub_universal_encoder
+    print('\nmatrix of differences between embedding of single document and the embedding in the matrix containing all embeddings:\n', 
+          embeddings[0].numpy() - embedding.numpy()[0])
+    print('\nshape of single embedding and the one from a matrix: ',
+          embedding.numpy()[0].shape, embeddings[0].numpy().shape)
+    # TODO: hypothesis: 
+    # (1) embedding is influenced by other documents in the input (context) 
+    # or (2) model adapts to the input
+    # or !(3) the embedding uses n-grams of documents close to current doc (like a window) to embed it, cf. DAN in https://amitness.com/2020/06/universal-sentence-encoder/
+    print('\nsquared difference between single embedding and the one from a matrix:\n',
+           sum((embedding.numpy()[0] - embeddings[0].numpy())**2))
+    plt.figure(figsize=(12,7))
+    plt.title('Difference between embedding of single document and the embedding in the matrix containing all embeddings')
+    plt.plot(embedding.numpy()[0] - embeddings[0].numpy(), color='green')
+    plt.yscale('symlog')
+    plt.show()
+    print('\nsquared difference between single embeddings of the same document:\n',
+          sum((embedding.numpy()[0] - embedding2.numpy()[0])**2))
     #print_info_abt_embeddings(embeddings, messages)
