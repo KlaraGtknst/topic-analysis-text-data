@@ -52,6 +52,7 @@ if __name__ == '__main__':
     pca_img = pca.fit_transform(preprocessed_images)
     print('PCA components: ', pca.components_.shape)
     print('PCA return shape: ', pca_img.shape)
+    print('PCA image: ', pca_img)
 
     # plot eigenvectors as images
     for img in pca.components_[:2]:
