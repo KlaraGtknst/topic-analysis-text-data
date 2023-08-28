@@ -29,7 +29,11 @@ def preprocess_images(image_paths: list, img_size: int)-> np.ndarray:
     More information in:
     https://scikit-learn.org/stable/auto_examples/decomposition/plot_faces_decomposition.html#sphx-glr-auto-examples-decomposition-plot-faces-decomposition-py
     '''
-    preprocessed_images = np.array([np.reshape(a=cv2.normalize(cv2.resize(cv2.imread(img, cv2.IMREAD_GRAYSCALE), (img_size, img_size)), None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F), newshape=IMG_SIZE**2) for img in image_paths])
+    # remove 'broken' images to avoid errors
+    for img in image_paths:
+        if cv2.imread(img, cv2.IMREAD_GRAYSCALE) is None:
+            image_paths.remove(img)
+    preprocessed_images = np.array([np.reshape(a=cv2.normalize(cv2.resize(cv2.imread(img, cv2.IMREAD_GRAYSCALE), (img_size, img_size)), None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F), newshape=img_size**2) for img in image_paths])
     # Global centering (focus on one feature, centering all samples)
     preprocessed_images_centered = preprocessed_images - np.mean(preprocessed_images, axis=0)
     # Local centering (focus on one sample, centering all features)
@@ -105,12 +109,14 @@ def get_cluster_PCA_df(src_path: str, n_cluster: int, n_components: int = 2, pre
     :return: dataframe, which contains pca weights, cluster index and the corresponding image paths as index
     '''
     # preprocessing
+    if src_path.endswith('/'):
+        src_path = src_path + '*.png'
     image_src_paths = glob.glob(src_path)
     preprocessed_images = preprocess_images(image_src_paths, preprocess_image_size)
     # PCA
     pca = decomposition.PCA(n_components=n_components, whiten=True)
     pca_weights = pca.fit_transform(preprocessed_images)
-    pca_df = create_pca_df(glob.glob(image_src_path), pca_weights)
+    pca_df = create_pca_df(image_src_paths, pca_weights)
     # clustering
     kmeans = KMeans(n_clusters=n_cluster, random_state=0, n_init="auto").fit(pca_df['pca_weights'].to_list())
     pca_df['cluster'] = kmeans.labels_
