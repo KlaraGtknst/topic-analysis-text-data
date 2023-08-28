@@ -60,7 +60,7 @@ def run_and_plot(messages: list, model, num_chars: int = None, outpath: str = No
     :return: None
     '''
     message_embeddings_ = embed(messages, model)
-    num_chars = num_chars if num_chars else (300 if len(messages) < 25 else 10)
+    num_chars = num_chars if num_chars else (200 if len(messages) < 25 else 10)
     labels = [msg[0:num_chars] + '...' for msg in messages]
     plot_similarity(labels, message_embeddings_, outpath=outpath)
         
@@ -82,8 +82,10 @@ if __name__ == '__main__':
     file_paths = get_input_filepath(args)
     outpath = get_filepath(args, option='output')
 
-    module_url = "https://tfhub.dev/google/universal-sentence-encoder/4"
+    # if load of URL does not work, use: "https://tfhub.dev/google/universal-sentence-encoder/4", cf. https://www.kaggle.com/code/nicapotato/universal-sentence-encoder-semantic-similarity
+    module_url = "https://tfhub.dev/google/universal-sentence-encoder-large/5"
     model = hub.load(module_url)
+    print ("module %s loaded" % module_url)
 
     messages = []
     for path in file_paths:
@@ -91,7 +93,7 @@ if __name__ == '__main__':
         text = pdf_to_str(path)
         messages.append(text)
 
-    #run_and_plot(messages, model, outpath=outpath)
+    run_and_plot(messages, model, outpath=outpath)
 
     # get embedding for single document
     embedding = embed([messages[0]], model) # paper: Universal Sentence Encoder page 2
