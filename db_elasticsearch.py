@@ -18,7 +18,7 @@ run this code by typing and altering the path:
     python3 db_elasticsearch.py -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/images/'
 '''
 
-def init_db(client: Elasticsearch, num_dimensions: int, sim_docs_vocab_size: int, find_doc_vocab_size: int, n_components: int):
+def init_db(client: Elasticsearch, num_dimensions: int, sim_docs_vocab_size: int, n_components: int):
     '''
     :param client: Elasticsearch client
     :param num_dimensions: number of dimensions of the embedding
@@ -60,20 +60,24 @@ def init_db(client: Elasticsearch, num_dimensions: int, sim_docs_vocab_size: int
                 "index": True,
                 "similarity": "cosine",
             },
-            "find_doc_tfidf": {
+            '''"find_doc_tfidf": {
                 "type": "dense_vector",
                 "dims": find_doc_vocab_size, #FIXME: uses 2048 as maximum, bc vocab_size is 7243
                 "index": True,
                 "similarity": "cosine",
-            },
-            "PCA_image": {
+            },'''
+            "pca_image": {
                 "type": "dense_vector",
                 "dims": n_components,
-                "index": True,
-                "similarity": "cosine",
+                #"index": True,
+                #"similarity": "cosine",
+                #"store": True,
             },
-            "PCA_KMeans_cluster": {
-                "type": "byte"
+            "pca_kmeans_cluster": {
+                "type": "byte",
+                #"index": True,
+                #"similarity": "boolean",
+                #"store": True,
             },
             "text": {
                 "type": "text",
@@ -87,7 +91,7 @@ def init_db(client: Elasticsearch, num_dimensions: int, sim_docs_vocab_size: int
         },
     })
 
-def insert_documents(src_paths: list, model: Doc2Vec, client: Elasticsearch, google_model, huggingface_model, sim_doc_tfidf_vectorization: np.ndarray, find_doc_tfidf_vectorization: np.ndarray, pca_df: pd.DataFrame, image_path: str = None):
+def insert_documents(src_paths: list, model: Doc2Vec, client: Elasticsearch, google_model, huggingface_model, sim_doc_tfidf_vectorization: np.ndarray, pca_df: pd.DataFrame, image_path: str = None): #find_doc_tfidf_vectorization: np.ndarray
     '''
     :param src_paths: path to the documents to be inserted into the database
     :param model: Doc2Vec model
@@ -131,22 +135,34 @@ def insert_documents(src_paths: list, model: Doc2Vec, client: Elasticsearch, goo
             except:
                 # missing EOF marker in pdf
                 continue 
-
-            pca_df_row = pca_df.loc[pca_df.index == path]
+            
+            pca_df_row = pca_df.loc[pca_df.index == image]
 
             #print(doc_tfidf_vectorization[i].shape)
-            client.create(index='bahamas', id=id, document={
-                "embedding": model.infer_vector(simple_preprocess(pdf_to_str(path))),
-                "sim_docs_tfidf": sim_doc_tfidf_vectorization[i],
-                "find_doc_tfidf": find_doc_tfidf_vectorization[i],
-                "google_univ_sent_encoding": embed([text], google_model).numpy().tolist()[0],
-                "huggingface_sent_transformer": huggingface_model.encode(text),
-                "PCA_image": pca_df_row['pca_weights'].values,
-                "PCA_KMeans_cluster": pca_df_row['cluster'],
-                "text": text,
-                "path": path,
-                "image": str(b64_image),
-            })
+            try:
+                client.create(index='bahamas', id=id, document={
+                    "embedding": model.infer_vector(simple_preprocess(pdf_to_str(path))),
+                    "sim_docs_tfidf": sim_doc_tfidf_vectorization[i],
+                    #"find_doc_tfidf": find_doc_tfidf_vectorization[i],
+                    "google_univ_sent_encoding": embed([text], google_model).numpy().tolist()[0],
+                    "huggingface_sent_transformer": huggingface_model.encode(text),
+                    "pca_image": pca_df_row['pca_weights'].values,
+                    "pca_kmeans_cluster": pca_df_row['cluster'],
+                    "text": text,
+                    "path": path,
+                    "image": str(b64_image),
+                })
+            except:
+                
+                print("embedding ", model.infer_vector(simple_preprocess(pdf_to_str(path))))
+                print("sim_docs_tfidf", sim_doc_tfidf_vectorization[i]) # problem: is zero vector
+                print("google_univ_sent_encoding", embed([text], google_model).numpy().tolist()[0])
+                print("huggingface_sent_transformer", huggingface_model.encode(text))
+                print("pca_image",pca_df_row['pca_weights'])
+                print("pca_kmeans_cluster", pca_df_row['cluster'])
+                #print(pca_df_row)
+                #print(pca_df)
+                #print(path, image)
         except ConflictError as err:
             continue
             #print(err)
@@ -225,14 +241,15 @@ def tfidf_aux(src_paths: list) -> tuple:
     # reduce dimensionality of tfidf matrix by allowing only words that appear a certain number of times
     # (1) tfidf embedding to find similiar documents (i.e. words have to appear in more than one document)
     # to reduce dimensionality, only words that appear in more than 10% of the documents are considered
-    sim_docs_tfidf = TfidfVectorizer(input='content', lowercase=True, min_df=2, max_df=int(len(docs)*0.06), analyzer='word', stop_words='english', token_pattern="\w+")
+    sim_docs_tfidf = TfidfVectorizer(input='content', lowercase=True, min_df=3, max_df=int(len(docs)*0.04), analyzer='word', stop_words='english', token_pattern="\w+")
     sim_docs_document_term_matrix = sim_docs_tfidf.fit_transform(docs)
     sim_docs_D = get_tfidf_matrix(src_paths, sim_docs_tfidf, sim_docs_document_term_matrix)
     # (2) tfidf embedding to find a document from the corpus (i.e. words appearing in many documents are not informative)
-    find_doc_tfidf = TfidfVectorizer(input='content', lowercase=True, max_df=int(len(docs)*0.09), analyzer='word', stop_words='english', token_pattern="\w+")
+    # 3762 is too big for maximum dimension of elastic search
+    '''find_doc_tfidf = TfidfVectorizer(input='content', lowercase=True, max_df=1, analyzer='word', stop_words='english', token_pattern="\w+")
     find_doc_document_term_matrix = find_doc_tfidf.fit_transform(docs)
-    find_doc_D = get_tfidf_matrix(src_paths, find_doc_tfidf, find_doc_document_term_matrix)
-    return find_doc_D, find_doc_tfidf, sim_docs_D, sim_docs_tfidf
+    find_doc_D = get_tfidf_matrix(src_paths, find_doc_tfidf, find_doc_document_term_matrix)'''
+    return sim_docs_D, sim_docs_tfidf #find_doc_D, find_doc_tfidf, 
 
 def google_univ_sent_encoding_aux():
     '''
@@ -266,9 +283,11 @@ if __name__ == '__main__':
     # tfidf 
     # TODO: how to find out which document belongs to a row (first/ only index)?
     # FIXME: vocab size to big for maximum dimension of elastic search
-    find_doc_D, find_doc_tfidf, sim_docs_D, sim_docs_tfidf = tfidf_aux(src_paths)
-    sim_docs_vocab_size, find_doc_vocab_size = len(list(sim_docs_tfidf.vocabulary_.values())), len(list(find_doc_tfidf.vocabulary_.values()))
-    print(f'Vocabulary size (sim): {sim_docs_vocab_size}\nVocabulary size (find): {find_doc_vocab_size}')
+    #find_doc_D, find_doc_tfidf, 
+    sim_docs_D, sim_docs_tfidf = tfidf_aux(src_paths)
+    sim_docs_vocab_size = len(list(sim_docs_tfidf.vocabulary_.values()))
+    #find_doc_vocab_size =  len(list(find_doc_tfidf.vocabulary_.values()))
+    print(f'Vocabulary size (sim): {sim_docs_vocab_size}')#\nVocabulary size (find): {find_doc_vocab_size}')
     #print(doc_tfidf_vectorization.shape)
 
     # huggingface sentence transformer
@@ -280,11 +299,12 @@ if __name__ == '__main__':
 
     # Create the client instance
     client = Elasticsearch("http://localhost:9200")
+    client.options(ignore_status=[400,404]).indices.delete(index='bahamas')
 
     # delete old index and create new one
     if ('bahamas' not in client.indices.get_alias(index='*')) or (client.indices.get_mapping(index='bahamas')['bahamas']['mappings']['properties']['embedding']['dims'] != NUM_DIMENSIONS):
         client.options(ignore_status=[400,404]).indices.delete(index='bahamas')
-        init_db(client, num_dimensions=NUM_DIMENSIONS, sim_docs_vocab_size=sim_docs_vocab_size, find_doc_vocab_size=find_doc_vocab_size, n_components=NUM_COMPONENTS)
+        init_db(client, num_dimensions=NUM_DIMENSIONS, sim_docs_vocab_size=sim_docs_vocab_size, n_components=NUM_COMPONENTS)
     
     # training corpus
     train_corpus = list(get_tagged_input_documents(src_paths))
@@ -314,7 +334,7 @@ if __name__ == '__main__':
     pca_cluster_df = get_cluster_PCA_df(src_path= image_src_path, n_cluster= 4, n_components= NUM_COMPONENTS, preprocess_image_size=600)
 
     
-    insert_documents(src_paths, model, client, image_path=image_src_path, google_model=google_model, huggingface_model=huggingface_model, sim_doc_tfidf_vectorization=sim_docs_D, find_doc_tfidf_vectorization=find_doc_D, pca_df=pca_cluster_df)  
+    insert_documents(src_paths, model, client, image_path=image_src_path, google_model=google_model, huggingface_model=huggingface_model, sim_doc_tfidf_vectorization=sim_docs_D, pca_df=pca_cluster_df)  #find_doc_tfidf_vectorization=find_doc_D
 
     # alternatively, use AsyncElasticsearch or time.sleep(1)
     client.indices.refresh(index="bahamas")
@@ -339,3 +359,5 @@ if __name__ == '__main__':
 
     # create image matrix of 9 most similar images for query image
     show_best_search_results(scores, src_paths, image_src_path)'''
+
+    print(client.indices.get_mapping(index='bahamas'))
