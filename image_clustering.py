@@ -18,9 +18,9 @@ run this code by typing and altering the path:
     python3 image_clustering.py -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Downloads/*.png'
 '''
 
-def preprocess_images(src_path: str, img_size: int)-> np.ndarray:
+def preprocess_images(image_paths: list, img_size: int)-> np.ndarray:
     '''
-    :param src_path: path to the images to be preprocessed
+    :param image_paths: paths to the images to be preprocessed as list
     :param img_size: single dimension of the output images (resized to quadratic images)
     :return: numpy array of preprocessed images
     
@@ -29,7 +29,6 @@ def preprocess_images(src_path: str, img_size: int)-> np.ndarray:
     More information in:
     https://scikit-learn.org/stable/auto_examples/decomposition/plot_faces_decomposition.html#sphx-glr-auto-examples-decomposition-plot-faces-decomposition-py
     '''
-    image_paths = glob.glob(image_src_path)
     preprocessed_images = np.array([np.reshape(a=cv2.normalize(cv2.resize(cv2.imread(img, cv2.IMREAD_GRAYSCALE), (img_size, img_size)), None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F), newshape=IMG_SIZE**2) for img in image_paths])
     # Global centering (focus on one feature, centering all samples)
     preprocessed_images_centered = preprocessed_images - np.mean(preprocessed_images, axis=0)
@@ -42,10 +41,13 @@ def plot_grey_images(image: list, title: str = None, save: bool = False) -> None
     :param image: images to be plotted; list of greyvalues; if the image is a 1d array it will be reshaped to be displayable
     :param title: title of the plot
     :return: None
+
+    more information about automatically transform image using -1:
+    https://www.datacamp.com/tutorial/principal-component-analysis-in-python
     '''
     if len(image.shape) == 1:
         image_size = int(sqrt(image.shape[0]))
-        image = image[:image_size**2].reshape(image_size, image_size)
+        image = image[:image_size**2].reshape(-1, image_size)
     plt.imshow(image, cmap='gray')
     if title:
         plt.title(title)
@@ -56,7 +58,7 @@ def plot_grey_images(image: list, title: str = None, save: bool = False) -> None
 
 def create_pca_df(image_src_path: list, pca_weights: list) -> pd.DataFrame:
     '''
-    :param image_src_path: paths to the images; used as index
+    :param image_src_path: paths to the images (as a list); used as index
     :param pca_weights: weights/ factors of the pca components
     :return: dataframe of the pca weights and the corresponding image paths
     
@@ -67,7 +69,7 @@ def create_pca_df(image_src_path: list, pca_weights: list) -> pd.DataFrame:
     pca_df = pd.DataFrame({'path': image_src_path, 'pca_weights': [0 for i in range(len(image_src_path))]})
     pca_df.set_index('path', inplace=True)
     for i in range(len(image_src_path)):
-       pca_df.loc[[image_src_path[i]], 'pca_weights'] = pd.Series([pca_img[i]], index=pca_df.index[[i]])
+       pca_df.loc[[image_src_path[i]], 'pca_weights'] = pd.Series([pca_weights[i]], index=pca_df.index[[i]])
     return pca_df
 
 def get_sample_doc_img_per_cluster(pca_df: pd.DataFrame, num_cluster: int) -> list:
@@ -80,10 +82,9 @@ def get_sample_doc_img_per_cluster(pca_df: pd.DataFrame, num_cluster: int) -> li
     '''
     return [pca_df[pca_df['cluster'] == i].sample(1).index.values[0] for i in range(num_cluster)]
 
-def visualize_class_distr(pca_df: pd.DataFrame, num_cluster: int) -> None:
+def visualize_class_distr(pca_df: pd.DataFrame) -> None:
     '''
     :param pca_df: dataframe of the pca weights and the corresponding image paths as index
-    :param cluster: number of clusters
     :return: None
     
     This function visualizes the class distribution of the clusters.
@@ -93,19 +94,39 @@ def visualize_class_distr(pca_df: pd.DataFrame, num_cluster: int) -> None:
     pca_df['cluster'].value_counts().plot(kind='bar', title='Class distribution', xlabel='Class', ylabel='Count')
     cluster_counts = pca_df['cluster'].value_counts().sort_values(inplace=False, ascending=False).values
     for i in range(len(pca_df['cluster'].value_counts())):
-            plt.text(i,cluster_counts[i], cluster_counts[i])
+        plt.text(i,cluster_counts[i], cluster_counts[i])
     plt.show()
 
-if __name__ == '__main__':
-    args = arguments()
-    src_paths = get_input_filepath(args)
-    image_src_path = get_filepath(args, option='image')
-    outpath = get_filepath(args, option='output')
+def get_cluster_PCA_df(src_path: str, n_cluster: int, n_components: int = 2, preprocess_image_size: int = 600) -> pd.DataFrame:
+    '''
+    :param src_path: path to the directory of the images
+    :param n_cluster: number of clusters
+    :param n_components: number of components to keep
+    :return: dataframe, which contains pca weights, cluster index and the corresponding image paths as index
+    '''
+    # preprocessing
+    image_src_paths = glob.glob(src_path)
+    preprocessed_images = preprocess_images(image_src_paths, preprocess_image_size)
+    # PCA
+    pca = decomposition.PCA(n_components=n_components, whiten=True)
+    pca_weights = pca.fit_transform(preprocessed_images)
+    pca_df = create_pca_df(glob.glob(image_src_path), pca_weights)
+    # clustering
+    kmeans = KMeans(n_clusters=n_cluster, random_state=0, n_init="auto").fit(pca_df['pca_weights'].to_list())
+    pca_df['cluster'] = kmeans.labels_
+    return pca_df
 
-    IMG_SIZE = 600
-    NUM_CLASSES = 4
 
-    preprocessed_images = preprocess_images(image_src_path, IMG_SIZE)
+def plot_all_pca_cluster_info():
+    '''
+    :return: None
+    
+    This is a method to plot all information about the pca and clusters.
+    The information is similar to the notebook, but more difficult to compare.
+    If possible, use notebook to visualize the information instead.
+    '''
+    image_src_paths = glob.glob(image_src_path)
+    preprocessed_images = preprocess_images(image_src_paths, IMG_SIZE)
 
     # plot preprocessed images
     for img in preprocessed_images[:2]:
@@ -123,7 +144,7 @@ if __name__ == '__main__':
         i += 1
 
     # PCA dataframe
-    pca_df = create_pca_df(glob.glob(image_src_path), pca_img)
+    pca_df = create_pca_df(image_src_paths, pca_img)
 
     # cluster the images
     kmeans = KMeans(n_clusters=NUM_CLASSES, random_state=0, n_init="auto").fit(pca_df['pca_weights'].to_list())
@@ -137,8 +158,25 @@ if __name__ == '__main__':
         plot_grey_images(cv2.imread(img, cv2.IMREAD_GRAYSCALE), title='example image of cluster ' + str(i))
     
     # visualize class distribution
-    visualize_class_distr(pca_df, NUM_CLASSES)
+    visualize_class_distr(pca_df)
 
     # visualize factors of pca components/ results of pca
     for i in range(len(pca_img[:2])):
         plot_grey_images(pca_img[i], title='weights of PCA components of image number' + str(i))
+
+if __name__ == '__main__':
+    args = arguments()
+    src_paths = get_input_filepath(args)
+    image_src_path = get_filepath(args, option='image')
+    outpath = get_filepath(args, option='output')
+
+    IMG_SIZE = 600
+    NUM_CLASSES = 4
+
+    #plot_all_pca_cluster_info()
+
+    # get dataframe of pca weights and cluster index
+    pca_df = get_cluster_PCA_df(src_path= image_src_path, n_cluster= NUM_CLASSES, n_components= 2, preprocess_image_size=IMG_SIZE)
+    print(pca_df)
+
+    
