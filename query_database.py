@@ -48,7 +48,7 @@ def search_in_db(client: Elasticsearch, model: Doc2Vec, path: str):
 
     cf. https://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html#search-api-knn for information about knn in elasticsearch.
     '''
-    print(type(infer_embedding_vector(model, path)))
+    #print(type(infer_embedding_vector(model, path)))
     result = client.search(index='bahamas', knn={
             "field": "embedding",
             "query_vector": infer_embedding_vector(model, path),
@@ -96,6 +96,46 @@ def find_document_tfidf(client: Elasticsearch, model: TfidfVectorizer, path: str
         scores[hit['_score']] = hit['_source']['path'].split('/')[-1]
     return scores
 
+def get_docs_from_same_cluster(elastic_search_client: Elasticsearch, path_to_doc: str, n_results: int = 5) -> list:
+    '''
+    :param elastic_search_client: Elasticsearch client
+    :param path_to_doc: path to the document to be searched for; acts as the index in the database
+    :param n_results: number of results to be returned
+    :return: list of paths to documents in the same cluster as the document to be searched for
+    '''
+    # get cluster
+    doc_id = path_to_doc.split('/')[-1].split('.')[0]
+    elastic_search_client.indices.refresh(index='bahamas')
+    resp = elastic_search_client.get(index='bahamas', id=doc_id,  source_includes=['pca_kmeans_cluster'])
+    cluster = resp['_source']['pca_kmeans_cluster'][0]
+
+    # query
+    query = {   
+        "query_string": {
+            "fields" : ["pca_kmeans_cluster"],
+            "query": str(cluster),
+        }
+    }
+
+    # results
+    search_results = elastic_search_client.search(index='bahamas', query=query, source_includes=['path'], size=n_results)
+
+    # Extract and process the search results
+    print('Query Document: ', doc_id, ' of cluster ', cluster, '\n')
+    for hit in search_results['hits']['hits']:
+        # Access the relevant fields from the hit
+        source = hit['_source']
+        document_id = hit['_id']
+        score = hit['_score']
+        
+        # Process the data as needed
+        print(f"Document ID: {document_id}, Score: {score}")
+        print("Source Data:", source)
+        print("-" * 20)
+
+    return search_results
+
+
 if __name__ == '__main__':
     args = arguments()
     src_paths = get_input_filepath(args)
@@ -104,4 +144,7 @@ if __name__ == '__main__':
     # Create the client instance
     client = Elasticsearch("http://localhost:9200")
 
-    print('-' * 40, 'hello', '-' * 40)
+    print('-' * 40, 'Query for same cluster in database', '-' * 40)
+    NUM_RESULTS = 5
+
+    get_docs_from_same_cluster(elastic_search_client = client, path_to_doc = src_paths[13], n_results=NUM_RESULTS)
