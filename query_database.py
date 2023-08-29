@@ -82,11 +82,11 @@ def find_document_tfidf(client: Elasticsearch, model: TfidfVectorizer, path: str
 
     cf. https://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html#search-api-knn for information about knn in elasticsearch.
     '''
-    print(type(Vectors.dense(np.array(model.transform([pdf_to_str(path)]).tocoo().data))))
-    # FIXME: TypeError(f"Unable to serialize {data!r} (type: {type(data)})") TypeError: Unable to serialize DenseVector([...]) (type: <class 'pyspark.ml.linalg.DenseVector'>)
+    embedding = model.transform([pdf_to_str(path)])
+    # FIXME: SerializationError(elastic_transport.SerializationError: Unable to serialize to JSON: {'knn': {'field': 'sim_docs_tfidf', 'query_vector': array([<1x1642 sparse matrix of type '<class 'numpy.float64'>'with 18 stored elements in Compressed Sparse Row format>],dtype=object), 'k': 10, 'num_candidates': 100}} (type: dict)
     result = client.search(index='bahamas', knn={
-            "field": "find_doc_tfidf",
-            "query_vector": Vectors.dense(np.array(model.transform([pdf_to_str(path)]).tocoo().data)),
+            "field": "sim_docs_tfidf",
+            "query_vector": np.ravel(np.array(embedding)).tolist(),
             "k": 10,
             "num_candidates": 100
         }, source_excludes=['image'])
@@ -95,6 +95,7 @@ def find_document_tfidf(client: Elasticsearch, model: TfidfVectorizer, path: str
     for hit in result['hits']['hits']:
         scores[hit['_score']] = hit['_source']['path'].split('/')[-1]
     return scores
+
 
 def get_docs_from_same_cluster(elastic_search_client: Elasticsearch, path_to_doc: str, n_results: int = 5) -> list:
     '''
@@ -135,6 +136,7 @@ def get_docs_from_same_cluster(elastic_search_client: Elasticsearch, path_to_doc
 
     return search_results
 
+
 def get_number_docs_in_db(client: Elasticsearch) -> int:
     '''
     :param client: Elasticsearch client
@@ -143,7 +145,6 @@ def get_number_docs_in_db(client: Elasticsearch) -> int:
     for more information about the number of documents in database see: 
         https://stackoverflow.com/questions/49691574/counting-number-of-documents-in-an-index-in-elasticsearch
     '''
-    # 
     client.indices.refresh(index='bahamas')
     resp = client.cat.count(index='bahamas', params={"format": "json"})
     return resp[0]['count']
@@ -164,3 +165,10 @@ if __name__ == '__main__':
     print('-' * 40, 'Query for same cluster in database', '-' * 40)
     NUM_RESULTS = 5
     get_docs_from_same_cluster(elastic_search_client = client, path_to_doc = src_paths[0], n_results=NUM_RESULTS)
+
+    # query
+    # TODO: fix tfidf
+    '''docs = get_docs_from_file_paths(src_paths)
+    sim_docs_tfidf = TfidfVectorizer(input='content', lowercase=True, min_df=3, max_df=int(len(docs)*0.07), analyzer='word', stop_words='english', token_pattern=r'(?u)\b[A-Za-z]+\b')
+    sim_docs_document_term_matrix = sim_docs_tfidf.fit(docs)
+    find_document_tfidf(client, sim_docs_tfidf, path=src_paths[0])'''
