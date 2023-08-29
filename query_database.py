@@ -144,7 +144,13 @@ if __name__ == '__main__':
     # Create the client instance
     client = Elasticsearch("http://localhost:9200")
 
+
+    # number of documents in database: https://stackoverflow.com/questions/49691574/counting-number-of-documents-in-an-index-in-elasticsearch
+    client.indices.refresh(index='bahamas')
+    resp = client.cat.count(index='bahamas', params={"format": "json"})
+    print('number of documents in database: ', resp[0]['count'])
+
+    # Cluster query
     print('-' * 40, 'Query for same cluster in database', '-' * 40)
     NUM_RESULTS = 5
-
-    get_docs_from_same_cluster(elastic_search_client = client, path_to_doc = src_paths[13], n_results=NUM_RESULTS)
+    get_docs_from_same_cluster(elastic_search_client = client, path_to_doc = src_paths[0], n_results=NUM_RESULTS)
