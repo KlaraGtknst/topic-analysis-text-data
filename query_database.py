@@ -135,6 +135,18 @@ def get_docs_from_same_cluster(elastic_search_client: Elasticsearch, path_to_doc
 
     return search_results
 
+def get_number_docs_in_db(client: Elasticsearch) -> int:
+    '''
+    :param client: Elasticsearch client
+    :return: number of documents in database
+    
+    for more information about the number of documents in database see: 
+        https://stackoverflow.com/questions/49691574/counting-number-of-documents-in-an-index-in-elasticsearch
+    '''
+    # 
+    client.indices.refresh(index='bahamas')
+    resp = client.cat.count(index='bahamas', params={"format": "json"})
+    return resp[0]['count']
 
 if __name__ == '__main__':
     args = arguments()
@@ -145,10 +157,8 @@ if __name__ == '__main__':
     client = Elasticsearch("http://localhost:9200")
 
 
-    # number of documents in database: https://stackoverflow.com/questions/49691574/counting-number-of-documents-in-an-index-in-elasticsearch
-    client.indices.refresh(index='bahamas')
-    resp = client.cat.count(index='bahamas', params={"format": "json"})
-    print('number of documents in database: ', resp[0]['count'])
+    # number of documents in database
+    print('number of documents in database: ', get_number_docs_in_db(client))
 
     # Cluster query
     print('-' * 40, 'Query for same cluster in database', '-' * 40)
