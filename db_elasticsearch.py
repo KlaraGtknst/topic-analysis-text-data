@@ -1,5 +1,6 @@
 import collections
-from elasticsearch import ConflictError, Elasticsearch
+from http.client import HTTPException
+from elasticsearch import ApiError, ConflictError, Elasticsearch
 import base64
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 from gensim.utils import simple_preprocess
@@ -117,7 +118,7 @@ def insert_documents(src_paths: list, model: Doc2Vec, client: Elasticsearch, goo
     cf. https://stackoverflow.com/questions/8908287/why-do-i-need-b-to-encode-a-string-with-base64 for information about base64 encoding
     cf. https://www.codespeedy.com/convert-image-to-base64-string-in-python/ for information about converting images to base64
     '''
-    
+    counter = 0
     for i in range(len(src_paths)):
         path = src_paths[i]
         try:
@@ -142,8 +143,9 @@ def insert_documents(src_paths: list, model: Doc2Vec, client: Elasticsearch, goo
             try:
                 client.create(index='bahamas', id=id, document={
                     "embedding": model.infer_vector(simple_preprocess(pdf_to_str(path))),
-                    "sim_docs_tfidf": sim_doc_tfidf_vectorization[i],
-                    #"find_doc_tfidf": find_doc_tfidf_vectorization[i],
+                    # some documents have no words in the vocabulary, i.e. the document-term matrix is a zero matrix -> insert None to avoid error and thus, them not being inserted into the database
+                    "sim_docs_tfidf": None if np.array([entry  == 0 for entry in sim_doc_tfidf_vectorization[i]]).all() else np.ravel(np.array(sim_doc_tfidf_vectorization[i])),
+                    #"find_doc_tfidf": find_doc_tfidf_vectorization[i], too big!
                     "google_univ_sent_encoding": embed([text], google_model).numpy().tolist()[0],
                     "huggingface_sent_transformer": huggingface_model.encode(text),
                     "pca_image": pca_df_row['pca_weights'].values,
@@ -152,20 +154,36 @@ def insert_documents(src_paths: list, model: Doc2Vec, client: Elasticsearch, goo
                     "path": path,
                     "image": str(b64_image),
                 })
-            except:
-                
-                print("embedding ", model.infer_vector(simple_preprocess(pdf_to_str(path))))
+            except ApiError as err:
+                #print(err)
+                counter += 1
+                entry = {"embedding": model.infer_vector(simple_preprocess(pdf_to_str(path))),
+                    "sim_docs_tfidf": np.ravel(np.array(sim_doc_tfidf_vectorization[i])),
+                    "google_univ_sent_encoding": embed([text], google_model).numpy().tolist()[0],
+                    "huggingface_sent_transformer": huggingface_model.encode(text),
+                    "pca_image": pca_df_row['pca_weights'].values,
+                    "pca_kmeans_cluster": pca_df_row['cluster'],
+                    "text": text,
+                    "path": path,
+                    "image": str(b64_image)}
+                for key in entry.keys():
+                    # large text field is ok: https://discuss.elastic.co/t/what-is-the-maximum-text-size-that-can-be-indexed-as-a-single-term/292697
+                    # maximum binary field is 100MB: https://discuss.elastic.co/t/best-max-size-for-storing-files-in-es/116630/3
+                    if len(entry[key]) > 2048 and key not in ['image', 'text']:
+                        print(key, 'has length ', len(entry[key]))
+                #print("embedding ", model.infer_vector(simple_preprocess(pdf_to_str(path))))
+               
                 print("sim_docs_tfidf", sim_doc_tfidf_vectorization[i]) # problem: is zero vector
-                print("google_univ_sent_encoding", embed([text], google_model).numpy().tolist()[0])
-                print("huggingface_sent_transformer", huggingface_model.encode(text))
-                print("pca_image",pca_df_row['pca_weights'])
-                print("pca_kmeans_cluster", pca_df_row['cluster'])
-                #print(pca_df_row)
-                #print(pca_df)
-                #print(path, image)
+                print('sim_docs_tfidf all zeros?', np.array([entry  == 0 for entry in sim_doc_tfidf_vectorization[i]]).all())
+                #print("google_univ_sent_encoding", embed([text], google_model).numpy().tolist()[0])
+                #print("huggingface_sent_transformer", huggingface_model.encode(text))
+                #print("pca_image",pca_df_row['pca_weights'])
+                #print("pca_kmeans_cluster", pca_df_row['cluster'])
+        
         except ConflictError as err:
             continue
             #print(err)
+    print(f'{counter} from {len(src_paths)} documents raised an ApiError error when inserting into the database.')
 
 
 
@@ -188,6 +206,7 @@ def get_tagged_input_documents(src_paths: list, tokens_only: bool = False):
             yield tokens
         else:
             yield TaggedDocument(tokens, [i])
+   
 
 
 
@@ -240,16 +259,20 @@ def tfidf_aux(src_paths: list) -> tuple:
     docs = get_docs_from_file_paths(src_paths)
     # reduce dimensionality of tfidf matrix by allowing only words that appear a certain number of times
     # (1) tfidf embedding to find similiar documents (i.e. words have to appear in more than one document)
-    # to reduce dimensionality, only words that appear in more than 10% of the documents are considered
-    sim_docs_tfidf = TfidfVectorizer(input='content', lowercase=True, min_df=3, max_df=int(len(docs)*0.04), analyzer='word', stop_words='english', token_pattern="\w+")
-    sim_docs_document_term_matrix = sim_docs_tfidf.fit_transform(docs)
-    sim_docs_D = get_tfidf_matrix(src_paths, sim_docs_tfidf, sim_docs_document_term_matrix)
+    # to reduce dimensionality, only words that appear in more than 3 and less than 4% of the documents are considered
+    # FIXME: many/ 2 document have none of the words in the vocabulary, i.e. the document-term matrix is a zero matrix
+    # no more numbers in vocabulary, only words, cf. https://stackoverflow.com/questions/51643427/how-to-make-tfidfvectorizer-only-learn-alphabetical-characters-as-part-of-the-vo
+    # usage of uni-grams only
+    sim_docs_tfidf = TfidfVectorizer(input='content', lowercase=True, min_df=3, max_df=int(len(docs)*0.07), analyzer='word', stop_words='english', token_pattern=r'(?u)\b[A-Za-z]+\b')
+    # to dense: https://hackernoon.com/document-term-matrix-in-nlp-count-and-tf-idf-scores-explained
+    sim_docs_document_term_matrix = sim_docs_tfidf.fit_transform(docs).todense()
+
     # (2) tfidf embedding to find a document from the corpus (i.e. words appearing in many documents are not informative)
     # 3762 is too big for maximum dimension of elastic search
     '''find_doc_tfidf = TfidfVectorizer(input='content', lowercase=True, max_df=1, analyzer='word', stop_words='english', token_pattern="\w+")
     find_doc_document_term_matrix = find_doc_tfidf.fit_transform(docs)
     find_doc_D = get_tfidf_matrix(src_paths, find_doc_tfidf, find_doc_document_term_matrix)'''
-    return sim_docs_D, sim_docs_tfidf #find_doc_D, find_doc_tfidf, 
+    return sim_docs_document_term_matrix, sim_docs_tfidf #find_doc_D, find_doc_tfidf, 
 
 def google_univ_sent_encoding_aux():
     '''
@@ -342,17 +365,17 @@ if __name__ == '__main__':
     
 
     # sample query for a document
-    path = src_paths[50]
+    '''path = src_paths[50]
     print('\n' + '-' * 40, path, '-' * 40)
     scores = search_in_db(client, model, path)
     for score in list(scores.keys()):
         print(score, scores[score])
 
     # create image matrix of 9 most similar images for query image
-    #show_best_search_results(scores, src_paths, image_src_path)
+    show_best_search_results(scores, src_paths, image_src_path)'''
 
     # FIXME: TypeError(f"Unable to serialize {data!r} (type: {type(data)})") TypeError: Unable to serialize DenseVector([...
-    print('\n' 'TFIDF:\n', '-' * 40, path, '-' * 40)
+    #print('\n' 'TFIDF:\n', '-' * 40, path, '-' * 40)
     '''scores = find_document_tfidf(client, find_doc_tfidf, path)
     for score in list(scores.keys()):
         print(score, scores[score])
@@ -361,3 +384,7 @@ if __name__ == '__main__':
     show_best_search_results(scores, src_paths, image_src_path)'''
 
     print(client.indices.get_mapping(index='bahamas'))
+
+    client.indices.refresh(index='bahamas')
+    resp = client.count(index='bahamas')
+    print('number of documents in database: ', resp['count'])
