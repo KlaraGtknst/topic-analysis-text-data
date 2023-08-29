@@ -156,7 +156,10 @@ if __name__ == '__main__':
 
     # tfIdf model
     # use min/ max_df to filter out tokens that appear in too many/ too few documents -> reduce vector dimensionality
-    tfidf = TfidfVectorizer(input='content', max_df=int(len(docs)*0.25), min_df=7, lowercase=True, analyzer='word', stop_words='english', token_pattern="\w+")
+    '''tfidf = TfidfVectorizer(input='content', max_df=int(len(docs)*0.25), min_df=7, lowercase=True, analyzer='word', stop_words='english', token_pattern="\w+")
+    #tfidf = tfidf.fit(docs)
+    print(tfidf.get_feature_names_out())
+
     document_term_matrix = tfidf.fit_transform(docs)    # format: (document, token encoding) tf-idf score -> use D (below) to access tf-idf values
     # print_info_abt_doc_term_mat_model(document_term_matrix, tfidf)
 
@@ -172,5 +175,20 @@ if __name__ == '__main__':
     # document search engine using TF-IDF and cosine similarity
     #transformed_query = print_tfidf_transformation_example(tfidf=tfidf, query='human readable Bahamas credit system')
  
-    #print_cosine_similarity_examples(transformed_query=transformed_query, document_term_matrix=document_term_matrix)
+    #print_cosine_similarity_examples(transformed_query=transformed_query, document_term_matrix=document_term_matrix)'''
+
+    # no more numbers in vocabulary, only words
+    sim_docs_tfidf = TfidfVectorizer(input='content', lowercase=True, min_df=3, max_df=int(len(docs)*0.04), analyzer='word', stop_words='english', token_pattern=r'(?u)\b[A-Za-z]+\b')
+    sim_docs_tfidf = sim_docs_tfidf.fit(docs)
+    print('max df: ', int(len(docs)*0.04))
+    print(sim_docs_tfidf.get_feature_names_out(), len(sim_docs_tfidf.get_feature_names_out()))
+    sim_docs_document_term_matrix = sim_docs_tfidf.fit_transform(docs).todense()
+    #print(sim_docs_document_term_matrix)
+    #sim_docs_D = get_tfidf_matrix(src_paths, sim_docs_tfidf, sim_docs_document_term_matrix)
+    count = 0
+    for i in range(len(docs)):
+        if np.array([entry  == 0 for entry in sim_docs_document_term_matrix[i]]).all():
+            #print(f'{file_paths[i]} is all zero')
+            count += 1
+    print(f'number of documents with all zero tf-idf values: {count} from {len(docs)}')
 
