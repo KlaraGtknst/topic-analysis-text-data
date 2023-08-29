@@ -30,7 +30,7 @@ def pdf_to_str(path: str) -> str:
 
         return text
     except:
-        # missing EOF marker in pdf
+        # TODO: fix missing EOF marker in pdf
         return ''
 
 def tokenize(text: str) -> list:
