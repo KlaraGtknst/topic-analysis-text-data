@@ -62,6 +62,7 @@ def get_tfidf_per_doc(tfidf: TfidfVectorizer, doc_num: int, document_term_matrix
 
 def get_tfidf_matrix(file_paths: list, tfidf: TfidfVectorizer, document_term_matrix: np.ndarray) -> np.ndarray:
     '''
+    DEPRECATED, use to dense instead: https://hackernoon.com/document-term-matrix-in-nlp-count-and-tf-idf-scores-explained
     :param file_paths: list of file paths
     :param tfidf: trained tf-idf model
     :param document_term_matrix: document term matrix, entries are tf-idf values of tokens per document
@@ -143,6 +144,24 @@ def print_tfidf_transformation_example(tfidf: TfidfVectorizer,query: str = 'huma
     return t
     
 
+def get_num_all_zero_tfidf_embeddings(sim_docs_document_term_matrix: TfidfVectorizer, file_paths: list = None):
+    '''
+    :param sim_docs_document_term_matrix: document term matrix, entries are tf-idf values of tokens per document
+    :param file_paths: list of file paths; default: None; if set, the file path of the document with all zero tf-idf values is printed
+    :return: None
+    
+    This method prints the number of documents, which are represented as all zero tf-idf values.
+    This may be due to the fact, that there are no tokens in the document, which are in the vocabulary.
+    The vocabulary has to be limited in order to reduce the dimensionality of the vector space.
+    '''
+    count = 0
+    for i in range(len(sim_docs_document_term_matrix)):
+        if np.array([entry  == 0 for entry in sim_docs_document_term_matrix[i]]).all():
+            if file_paths is not None:
+                print(f'{file_paths[i]} is all zero')
+            count += 1
+    print(f'number of documents with all zero tf-idf values: {count} from {len(sim_docs_document_term_matrix)}')
+
 if __name__ == '__main__':
     args = arguments()
     file_paths = get_input_filepath(args)
@@ -176,6 +195,8 @@ if __name__ == '__main__':
     #transformed_query = print_tfidf_transformation_example(tfidf=tfidf, query='human readable Bahamas credit system')
  
     #print_cosine_similarity_examples(transformed_query=transformed_query, document_term_matrix=document_term_matrix)'''
+
+    
     # max_features: top frequent words -> not suitable for our use case, cf. https://stackoverflow.com/questions/46118910/scikit-learn-vectorizer-max-features
     # no more numbers in vocabulary, only words, cf. https://stackoverflow.com/questions/51643427/how-to-make-tfidfvectorizer-only-learn-alphabetical-characters-as-part-of-the-vo
     # usage of uni-grams only
@@ -183,15 +204,11 @@ if __name__ == '__main__':
     # usage of n_gram increases vocabulary size (bad), but does not reduce number of zero tf-idf document embeddings (bad)
     #sim_docs_tfidf = TfidfVectorizer(input='content', lowercase=True, ngram_range=(1,3), min_df=3, max_df=int(len(docs)*0.07), analyzer='word', stop_words='english', token_pattern=r'(?u)\b[A-Za-z]+\b')
     sim_docs_tfidf = sim_docs_tfidf.fit(docs)
-    print('max df: ', int(len(docs)*0.04))
-    print(sim_docs_tfidf.get_feature_names_out(), len(sim_docs_tfidf.get_feature_names_out()))
+    print('max df of vocabulary: ', int(len(docs)*0.04))  # == 7
+    print('vocabulary: ', sim_docs_tfidf.get_feature_names_out(), '\nnumber of elements of vocabulary: ', len(sim_docs_tfidf.get_feature_names_out()))
+
     # to dense: https://hackernoon.com/document-term-matrix-in-nlp-count-and-tf-idf-scores-explained
     sim_docs_document_term_matrix = sim_docs_tfidf.fit_transform(docs).todense()
-    #print(sim_docs_document_term_matrix)
-    count = 0
-    for i in range(len(docs)):
-        if np.array([entry  == 0 for entry in sim_docs_document_term_matrix[i]]).all():
-            #print(f'{file_paths[i]} is all zero')
-            count += 1
-    print(f'number of documents with all zero tf-idf values: {count} from {len(docs)}')
 
+    # all zero tf-idf document embeddings
+    get_num_all_zero_tfidf_embeddings(sim_docs_document_term_matrix, file_paths)
