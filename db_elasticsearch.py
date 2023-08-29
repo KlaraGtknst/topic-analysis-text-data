@@ -129,13 +129,15 @@ def insert_documents(src_paths: list, model: Doc2Vec, client: Elasticsearch, goo
                     b64_image = base64.b64encode(img_file.read())
             except FileNotFoundError:
                 # bc i did not copy all images from cluster to local machine
-                continue
+                # dummy (black) picture to avoid not inserting the document into the database
+                b64_image = base64.b64encode(np.zeros([100,100,3],dtype=np.uint8)) # TODO: or insert None
 
             try:
                 text = pdf_to_str(path)
             except:
                 # missing EOF marker in pdf
-                continue 
+                print(f'EOF marker missing in {path}.')
+                print(pdf_to_str(path))
             
             pca_df_row = pca_df.loc[pca_df.index == image]
 
@@ -155,35 +157,11 @@ def insert_documents(src_paths: list, model: Doc2Vec, client: Elasticsearch, goo
                     "image": str(b64_image),
                 })
             except ApiError as err:
-                #print(err)
                 counter += 1
-                entry = {"embedding": model.infer_vector(simple_preprocess(pdf_to_str(path))),
-                    "sim_docs_tfidf": np.ravel(np.array(sim_doc_tfidf_vectorization[i])),
-                    "google_univ_sent_encoding": embed([text], google_model).numpy().tolist()[0],
-                    "huggingface_sent_transformer": huggingface_model.encode(text),
-                    "pca_image": pca_df_row['pca_weights'].values,
-                    "pca_kmeans_cluster": pca_df_row['cluster'],
-                    "text": text,
-                    "path": path,
-                    "image": str(b64_image)}
-                for key in entry.keys():
-                    # large text field is ok: https://discuss.elastic.co/t/what-is-the-maximum-text-size-that-can-be-indexed-as-a-single-term/292697
-                    # maximum binary field is 100MB: https://discuss.elastic.co/t/best-max-size-for-storing-files-in-es/116630/3
-                    if len(entry[key]) > 2048 and key not in ['image', 'text']:
-                        print(key, 'has length ', len(entry[key]))
-                #print("embedding ", model.infer_vector(simple_preprocess(pdf_to_str(path))))
-               
-                print("sim_docs_tfidf", sim_doc_tfidf_vectorization[i]) # problem: is zero vector
-                print('sim_docs_tfidf all zeros?', np.array([entry  == 0 for entry in sim_doc_tfidf_vectorization[i]]).all())
-                #print("google_univ_sent_encoding", embed([text], google_model).numpy().tolist()[0])
-                #print("huggingface_sent_transformer", huggingface_model.encode(text))
-                #print("pca_image",pca_df_row['pca_weights'])
-                #print("pca_kmeans_cluster", pca_df_row['cluster'])
-        
         except ConflictError as err:
             continue
-            #print(err)
-    print(f'{counter} from {len(src_paths)} documents raised an ApiError error when inserting into the database.')
+    if counter > 0:
+        print(f'{counter} from {len(src_paths)} documents raised an ApiError error and are thus, not inserted into the database.')
 
 
 
