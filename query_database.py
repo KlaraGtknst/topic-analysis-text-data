@@ -2,6 +2,7 @@ from elasticsearch import ConflictError, Elasticsearch
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 from gensim.utils import simple_preprocess
 from pyspark.mllib.linalg import Vectors
+import pdb # use breakpoint() for debugging when running the code from the command line
 # own modules
 from read_pdf import *
 from cli import *
@@ -83,10 +84,9 @@ def find_document_tfidf(client: Elasticsearch, model: TfidfVectorizer, path: str
     cf. https://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html#search-api-knn for information about knn in elasticsearch.
     '''
     embedding = model.transform([pdf_to_str(path)])
-    # FIXME: SerializationError(elastic_transport.SerializationError: Unable to serialize to JSON: {'knn': {'field': 'sim_docs_tfidf', 'query_vector': array([<1x1642 sparse matrix of type '<class 'numpy.float64'>'with 18 stored elements in Compressed Sparse Row format>],dtype=object), 'k': 10, 'num_candidates': 100}} (type: dict)
     result = client.search(index='bahamas', knn={
             "field": "sim_docs_tfidf",
-            "query_vector": np.ravel(np.array(embedding)).tolist(),
+            "query_vector": np.ravel(embedding.todense()),
             "k": 10,
             "num_candidates": 100
         }, source_excludes=['image'])
@@ -166,9 +166,12 @@ if __name__ == '__main__':
     NUM_RESULTS = 5
     get_docs_from_same_cluster(elastic_search_client = client, path_to_doc = src_paths[0], n_results=NUM_RESULTS)
 
-    # query
-    # TODO: fix tfidf
-    '''docs = get_docs_from_file_paths(src_paths)
+
+    # query database for a document using tfidf
+    docs = get_docs_from_file_paths(src_paths)
     sim_docs_tfidf = TfidfVectorizer(input='content', lowercase=True, min_df=3, max_df=int(len(docs)*0.07), analyzer='word', stop_words='english', token_pattern=r'(?u)\b[A-Za-z]+\b')
     sim_docs_document_term_matrix = sim_docs_tfidf.fit(docs)
-    find_document_tfidf(client, sim_docs_tfidf, path=src_paths[0])'''
+    results = find_document_tfidf(client, sim_docs_tfidf, path=src_paths[0])
+    image_paths = [image_src_path + file_name.split('.')[0] + '.png' for file_name in list(results.values())]
+    create_image_matrix(image_paths, 2)
+
