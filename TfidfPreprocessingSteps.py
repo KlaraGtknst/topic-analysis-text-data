@@ -26,6 +26,7 @@ class TfidfPreprocessingSteps():
         self.sw_nltk = set(stopwords.words('english'))
 
     def strip_accents(self):
+        # more information about unidecode: https://www.geeksforgeeks.org/how-to-remove-string-accents-using-python-3/
         self.X = [unidecode.unidecode(text) for text in self.X]
         return self
     
@@ -38,6 +39,8 @@ class TfidfPreprocessingSteps():
         return self
     
     def discretize_numbers(self):
+        # replace numbers with SMALLNUMBER, BIGNUMBER, FLOAT
+        # more information about regex: https://www.bogotobogo.com/python/python_regularExpressions.php
         self.X = [re.sub(r'\d{1,5}', 'SMALLNUMBER', re.sub(r'\d{6,}', 'BIGNUMBER', (re.sub(r'\d+\.\d+', 'FLOAT', text)))) for text in self.X]
         return self
     

@@ -1,5 +1,6 @@
 import re
 import string
+import pdb # for debugging
 
 from sklearn.pipeline import Pipeline
 from read_pdf import *
@@ -291,11 +292,17 @@ if __name__ == '__main__':
     get_num_all_zero_tfidf_embeddings(sim_docs_document_term_matrix, file_paths)
     '''
 
-    pipe = Pipeline(steps=[
+    '''pipe = Pipeline(steps=[
            ('text_preproc', TfidfTextPreprocessor()), 
-           #('tfidf', TfidfVectorizer())
+           ('tfidf', TfidfVectorizer(preprocessor=TfidfTextPreprocessor().fit_transform()))
            ])
     print(len(docs[0:3]))
     data = pipe.fit_transform(docs[0:3])
-    print(data)
+    print(data)'''
+
+    tfidf = TfidfVectorizer(input='content', preprocessor=TfidfTextPreprocessor().fit_transform)
+    #breakpoint()
+    res = tfidf.fit_transform(docs[0:3])
+    #breakpoint()
+    print(res)
     

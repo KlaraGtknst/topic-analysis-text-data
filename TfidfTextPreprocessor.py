@@ -15,15 +15,14 @@ class TfidfTextPreprocessor():
     return self.transform(X)
 
   def transform(self, X, y=None):
-    if type(X) == str:
-      X = [X]
-    txt_preproc = TfidfPreprocessingSteps(X.copy())
+    data = [X] if type(X) == str else X
+    txt_preproc = TfidfPreprocessingSteps(data)
     processed_text = \
             txt_preproc.strip_accents().strip_newlines().lowercase().\
             discretize_numbers().remove_punctuations().\
             change_number_encoding().remove_stopwords().\
             lemmatisation().to_text()
-
-    return processed_text
+    
+    return processed_text[0] if type(X) == str else processed_text
   
   
