@@ -34,16 +34,23 @@ def create_image_matrix(input_files: list, dim: int= 10, output_path: str = None
         raise ValueError('Input files must have at least dim*dim elements.')
     fig, axs = plt.subplots(dim, dim, figsize=(dim, dim))
     fig.subplots_adjust(hspace = .00, wspace= .00)
+    picture_not_found_counter = 0
     for i, img in enumerate(input_files[:dim*dim]):
-        image = cv2.imread(img, cv2.IMREAD_COLOR)
         ax = fig.add_subplot(dim, dim, i+1)
-        plt.imshow(image)
         axs[i//dim, i%dim].axis('off')
         alter_axes(ax)
+        try:
+            image = cv2.imread(img, cv2.IMREAD_COLOR)
+            plt.imshow(image)
+        except TypeError:
+            picture_not_found_counter += 1
+            continue
     plt.axis('off')
     if output_path:
         plt.savefig(output_path + 'image_matrix.pdf', format="pdf", bbox_inches="tight")
     plt.show()
+    if picture_not_found_counter > 0:
+        print('Could not find %s pictures.' % picture_not_found_counter)
 
 if __name__ == '__main__':
     args = arguments()
