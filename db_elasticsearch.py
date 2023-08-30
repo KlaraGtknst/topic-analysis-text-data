@@ -55,6 +55,7 @@ def init_db(client: Elasticsearch, num_dimensions: int, sim_docs_vocab_size: int
                 "index": True,
                 "similarity": "cosine",
             },
+            # TODO: vector size +1, flag 1 if zero vector
             "sim_docs_tfidf": {
                 "type": "dense_vector",
                 "dims": sim_docs_vocab_size, #FIXME: uses 2048 as maximum, bc vocab_size is 7243
@@ -146,6 +147,7 @@ def insert_documents(src_paths: list, model: Doc2Vec, client: Elasticsearch, goo
                 client.create(index='bahamas', id=id, document={
                     "embedding": model.infer_vector(simple_preprocess(pdf_to_str(path))),
                     # some documents have no words in the vocabulary, i.e. the document-term matrix is a zero matrix -> insert None to avoid error and thus, them not being inserted into the database
+                    # TODO: vector size +1, flag 1 if zero vector
                     "sim_docs_tfidf": None if np.array([entry  == 0 for entry in sim_doc_tfidf_vectorization[i]]).all() else np.ravel(np.array(sim_doc_tfidf_vectorization[i])),
                     #"find_doc_tfidf": find_doc_tfidf_vectorization[i], too big!
                     "google_univ_sent_encoding": embed([text], google_model).numpy().tolist()[0],
