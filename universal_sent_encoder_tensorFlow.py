@@ -1,10 +1,13 @@
 from read_pdf import *
 from cli import *
 import seaborn as sns
+import tensorflow as tf
 import tensorflow_hub as hub
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
+tf.random.set_seed(123)
+np.random.seed(123)
 
 '''------Code to compare documents in terms of similiarity-------
 The code below is based on:
@@ -96,27 +99,32 @@ if __name__ == '__main__':
     run_and_plot(messages, model, outpath=outpath)
 
     # get embedding for single document
-    embedding = embed([messages[0]], model) # paper: Universal Sentence Encoder page 2
-    embedding2 = embed([messages[0]], model)
+    embedding = embed([messages[1]], model) # paper: Universal Sentence Encoder page 2
+    embedding2 = embed([messages[1]], model)
     #print((embedding).numpy().tolist()[0])
 
     # get embedding for all documents in a folder, find out how to access the embeddings of the single documents
     embeddings = embed(messages, model) # https://www.tensorflow.org/hub/tutorials/semantic_similarity_with_tf_hub_universal_encoder
     print('\nmatrix of differences between embedding of single document and the embedding in the matrix containing all embeddings:\n', 
-          embeddings[0].numpy() - embedding.numpy()[0])
+          embeddings[1].numpy() - embedding.numpy()[0])
     print('\nshape of single embedding and the one from a matrix: ',
-          embedding.numpy()[0].shape, embeddings[0].numpy().shape)
+          embedding.numpy()[0].shape, embeddings[1].numpy().shape)
     # TODO: hypothesis: 
     # (1) embedding is influenced by other documents in the input (context) 
     # or (2) model adapts to the input
     # or !(3) the embedding uses n-grams of documents close to current doc (like a window) to embed it, cf. DAN in https://amitness.com/2020/06/universal-sentence-encoder/
     print('\nsquared difference between single embedding and the one from a matrix:\n',
-           sum((embedding.numpy()[0] - embeddings[0].numpy())**2))
+           sum((embedding.numpy()[0] - embeddings[1].numpy())**2))
     plt.figure(figsize=(12,7))
     plt.title('Difference between embedding of single document and the embedding in the matrix containing all embeddings')
-    plt.plot(embedding.numpy()[0] - embeddings[0].numpy(), color='green')
+    plt.plot(embedding.numpy()[0] - embeddings[1].numpy(), color='green')
     plt.yscale('symlog')
     plt.show()
     print('\nsquared difference between single embeddings of the same document:\n',
           sum((embedding.numpy()[0] - embedding2.numpy()[0])**2))
     #print_info_abt_embeddings(embeddings, messages)
+
+    # https://github.com/tensorflow/hub/issues/658
+    # TODO: in BA schreiben: bei diesen Modell gibt es Schwankungen mit Batch Übergabe -> liegt es am Code oder Modell (Modell wäre dann bei allen Anbietern falsch)
+    # TODO: bei init/insert db einzeln embeddings berechnen und speichern?
+    # TODO: huggingface Variante testen
