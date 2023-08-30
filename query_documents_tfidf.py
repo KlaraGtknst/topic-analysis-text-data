@@ -1,16 +1,19 @@
 import re
 import string
+
+from sklearn.pipeline import Pipeline
 from read_pdf import *
 from cli import *
 from gensim.utils import simple_preprocess
 import pandas as pd
 import numpy as np
 from nltk.corpus import wordnet as wn
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer#, TfidfTransformer
 import itertools
 from sklearn.metrics.pairwise import cosine_similarity
 import unidecode
 from nltk.stem import WordNetLemmatizer
+from TfidfTextPreprocessor import *
 
 '''------Code to find documents most fitting for input query-------
 run this code by typing and altering the path:
@@ -272,8 +275,10 @@ if __name__ == '__main__':
 
     # all zero tf-idf document embeddings
     '''
-
-    preprocess_tfidf_text('sample TEsxt 12312312 . qsw !212. a 123.123')
+    '''preProc = TfidfTextPreprocessor()
+    results = preProc.fit_transform(docs[0:3])
+    print(results)'''
+    #preprocess_tfidf_text('sample TEsxt 12312312 . qsw !212. a 123.123')
 
     '''tfidf = TfidfVectorizer(input='content', token_pattern=r'(?u)\b[A-Za-z]+\b', preprocessor=preprocess_tfidf_text)
 
@@ -285,3 +290,12 @@ if __name__ == '__main__':
     sim_docs_document_term_matrix = tfidf.fit_transform(docs).todense()
     get_num_all_zero_tfidf_embeddings(sim_docs_document_term_matrix, file_paths)
     '''
+
+    pipe = Pipeline(steps=[
+           ('text_preproc', TfidfTextPreprocessor()), 
+           #('tfidf', TfidfVectorizer())
+           ])
+    print(len(docs[0:3]))
+    data = pipe.fit_transform(docs[0:3])
+    print(data)
+    
