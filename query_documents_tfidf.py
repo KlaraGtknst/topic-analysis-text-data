@@ -14,7 +14,7 @@ import itertools
 from sklearn.metrics.pairwise import cosine_similarity
 import unidecode
 from nltk.stem import WordNetLemmatizer
-from TfidfTextPreprocessor import *
+from preprocessing.TfidfTextPreprocessor import *
 
 '''------Code to find documents most fitting for input query-------
 run this code by typing and altering the path:
