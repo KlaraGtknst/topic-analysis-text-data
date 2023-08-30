@@ -196,11 +196,14 @@ if __name__ == '__main__':
  
     #print_cosine_similarity_examples(transformed_query=transformed_query, document_term_matrix=document_term_matrix)'''
 
-    
+
     # max_features: top frequent words -> not suitable for our use case, cf. https://stackoverflow.com/questions/46118910/scikit-learn-vectorizer-max-features
     # no more numbers in vocabulary, only words, cf. https://stackoverflow.com/questions/51643427/how-to-make-tfidfvectorizer-only-learn-alphabetical-characters-as-part-of-the-vo
     # usage of uni-grams only
-    sim_docs_tfidf = TfidfVectorizer(input='content', lowercase=True, min_df=3, max_df=int(len(docs)*0.07), analyzer='word', stop_words='english', token_pattern=r'(?u)\b[A-Za-z]+\b')
+    # TODO: save large embedding in two vectors/ properties?
+    # TODO: strip accent? YES
+    # TODO: Zahl oder intervall (small number für 5 Zeichen, sonst groß, float) durch NUMBER/... ersetzen? Doc enthält (viele) Zahlen
+    sim_docs_tfidf = TfidfVectorizer(input='content', lowercase=True, min_df=3, max_df=int(len(docs)*0.07), analyzer='word', stop_words='english', token_pattern=r'(?u)\b[A-Za-z]+\b', strip_accents='ascii')
     # usage of n_gram increases vocabulary size (bad), but does not reduce number of zero tf-idf document embeddings (bad)
     #sim_docs_tfidf = TfidfVectorizer(input='content', lowercase=True, ngram_range=(1,3), min_df=3, max_df=int(len(docs)*0.07), analyzer='word', stop_words='english', token_pattern=r'(?u)\b[A-Za-z]+\b')
     sim_docs_tfidf = sim_docs_tfidf.fit(docs)
