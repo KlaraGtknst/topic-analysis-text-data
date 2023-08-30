@@ -1,3 +1,5 @@
+import re
+import string
 from read_pdf import *
 from cli import *
 from gensim.utils import simple_preprocess
@@ -7,6 +9,8 @@ from nltk.corpus import wordnet as wn
 from sklearn.feature_extraction.text import TfidfVectorizer
 import itertools
 from sklearn.metrics.pairwise import cosine_similarity
+import unidecode
+from nltk.stem import WordNetLemmatizer
 
 '''------Code to find documents most fitting for input query-------
 run this code by typing and altering the path:
@@ -162,6 +166,59 @@ def get_num_all_zero_tfidf_embeddings(sim_docs_document_term_matrix: TfidfVector
             count += 1
     print(f'number of documents with all zero tf-idf values: {count} from {len(sim_docs_document_term_matrix)}')
 
+def preprocess_tfidf_text(text: str) -> str:
+    '''
+    :param text: text to be preprocessed
+    :return: preprocessed text (lowercase, remove stop words, stemming, making numbers discrete by replacing them by special token, strip accent)
+    
+    
+    This function is used to preprocesses text instead of the the built-in version of sklearn's TfidfVectorizer.
+    For more information see: https://stackoverflow.com/questions/23850256/how-can-i-pass-a-preprocessor-to-tfidfvectorizer-sklearn-python
+    '''
+    print(text)
+    # strip accent
+    text = unidecode.unidecode(text)
+
+    # lowercase
+    text = text.lower()
+
+    # identify floats
+    print(text)
+    text = re.sub(r'\d+\.\d+', 'FLOAT', text)
+
+    # make numbers discrete
+    text = re.sub(r'\d{6,}', 'BIGNUMBER', text)
+    text = re.sub(r'\d{1,5}', 'SMALLNUMBER', text)
+
+    # remove punctuation
+    # '!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~' 32 punctuations in python string module
+    text = re.sub('[%s]' % re.escape(string.punctuation), '', text)
+
+    text = re.sub('BIGNUMBER', '+', text)
+    text = re.sub('SMALLNUMBER', '-', text)
+    text = re.sub('FLOAT', '/', text)
+
+    # remove stop words and lowercase
+    #text = remove_stop_words(list(text))
+    #nltk.download('stopwords')
+    print('before stop words: ', text)
+    stop_words = set(stopwords.words('english'))
+    text = [w for w in text.split(' ') if w not in stop_words]
+    print('after stop words: ', text)
+
+    # lemmatization
+    #nltk.download("wordnet")
+    lemmatizer = WordNetLemmatizer()
+    text = [lemmatizer.lemmatize(word) for word in text]
+    print('after lemmatization: ', text)
+
+    text = ' '.join(text)
+    
+
+    print(text)
+    return text
+
+
 if __name__ == '__main__':
     args = arguments()
     file_paths = get_input_filepath(args)
@@ -197,7 +254,7 @@ if __name__ == '__main__':
     #print_cosine_similarity_examples(transformed_query=transformed_query, document_term_matrix=document_term_matrix)'''
 
 
-    # max_features: top frequent words -> not suitable for our use case, cf. https://stackoverflow.com/questions/46118910/scikit-learn-vectorizer-max-features
+    '''# max_features: top frequent words -> not suitable for our use case, cf. https://stackoverflow.com/questions/46118910/scikit-learn-vectorizer-max-features
     # no more numbers in vocabulary, only words, cf. https://stackoverflow.com/questions/51643427/how-to-make-tfidfvectorizer-only-learn-alphabetical-characters-as-part-of-the-vo
     # usage of uni-grams only
     # TODO: save large embedding in two vectors/ properties?
@@ -214,4 +271,17 @@ if __name__ == '__main__':
     sim_docs_document_term_matrix = sim_docs_tfidf.fit_transform(docs).todense()
 
     # all zero tf-idf document embeddings
+    '''
+
+    preprocess_tfidf_text('sample TEsxt 12312312 . qsw !212. a 123.123')
+
+    '''tfidf = TfidfVectorizer(input='content', token_pattern=r'(?u)\b[A-Za-z]+\b', preprocessor=preprocess_tfidf_text)
+
+    tfidf = tfidf.fit(docs)
+    print('max df of vocabulary: ', int(len(docs)*0.04))  # == 7
+    print('vocabulary: ', tfidf.get_feature_names_out(), '\nnumber of elements of vocabulary: ', len(tfidf.get_feature_names_out()))
+
+    # to dense: https://hackernoon.com/document-term-matrix-in-nlp-count-and-tf-idf-scores-explained
+    sim_docs_document_term_matrix = tfidf.fit_transform(docs).todense()
     get_num_all_zero_tfidf_embeddings(sim_docs_document_term_matrix, file_paths)
+    '''
