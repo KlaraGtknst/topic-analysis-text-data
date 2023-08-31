@@ -257,33 +257,11 @@ if __name__ == '__main__':
  
     #print_cosine_similarity_examples(transformed_query=transformed_query, document_term_matrix=document_term_matrix)'''
 
-
-    # max_features: top frequent words -> not suitable for our use case, cf. https://stackoverflow.com/questions/46118910/scikit-learn-vectorizer-max-features
-    # no more numbers in vocabulary, only words, cf. https://stackoverflow.com/questions/51643427/how-to-make-tfidfvectorizer-only-learn-alphabetical-characters-as-part-of-the-vo
-    # usage of uni-grams only
-    # TODO: save large embedding in two vectors/ properties?
-    # TODO: strip accent? YES
-    # TODO: Zahl oder intervall (small number für 5 Zeichen, sonst groß, float) durch NUMBER/... ersetzen? Doc enthält (viele) Zahlen
-    sim_docs_tfidf = TfidfVectorizer(input='content', lowercase=True, min_df=3, max_df=int(len(docs)*0.07), analyzer='word', stop_words='english', token_pattern=r'(?u)\b[A-Za-z]+\b', strip_accents='ascii')
-    # usage of n_gram increases vocabulary size (bad), but does not reduce number of zero tf-idf document embeddings (bad)
-    #sim_docs_tfidf = TfidfVectorizer(input='content', lowercase=True, ngram_range=(1,3), min_df=3, max_df=int(len(docs)*0.07), analyzer='word', stop_words='english', token_pattern=r'(?u)\b[A-Za-z]+\b')
-    sim_docs_tfidf = sim_docs_tfidf.fit(docs)
-    #print('max df of vocabulary: ', int(len(docs)*0.04))  # == 7
-    print('vocabulary: ', sim_docs_tfidf.get_feature_names_out(), '\nnumber of elements of vocabulary: ', len(sim_docs_tfidf.get_feature_names_out()))
-
-    # to dense: https://hackernoon.com/document-term-matrix-in-nlp-count-and-tf-idf-scores-explained
-    #sim_docs_document_term_matrix = sim_docs_tfidf.fit_transform(docs).todense()
-
-    # all zero tf-idf document embeddings
-    
-    '''preProc = TfidfTextPreprocessor()
-    results = preProc.fit_transform(docs[0:3])
-    print(results)'''
-    #preprocess_tfidf_text('sample TEsxt 12312312 . qsw !212. a 123.123')
-
+    # custom preprocessor
+    # usage of uni-grams only, n_gram (n>1) increases vocabulary size (bad), but does not reduce number of zero tf-idf document embeddings (bad)
     tfidf = TfidfVectorizer(input='content', preprocessor=TfidfTextPreprocessor().fit_transform, min_df=3, max_df=int(len(docs)*0.07))
+    # to dense: https://hackernoon.com/document-term-matrix-in-nlp-count-and-tf-idf-scores-explained
     sim_docs_document_term_matrix = tfidf.fit_transform(docs).todense()
     get_num_all_zero_tfidf_embeddings(sim_docs_document_term_matrix, file_paths)
-    #print('max df of vocabulary: ', int(len(docs)*0.04))  # == 7
     print('vocabulary: ', tfidf.get_feature_names_out(), '\nnumber of elements of vocabulary: ', len(tfidf.get_feature_names_out()))
     
