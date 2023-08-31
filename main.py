@@ -8,6 +8,7 @@ from elasticSearch import db_elasticsearch
 from elasticSearch.queries import query_documents_tfidf, query_database
 from doc_images import pdf_matrix, convert_pdf2image
 from doc_images.PCA import PCA_image_clustering
+from tests import word_embeddings
 #from doc_images.AE import AE_image_clustering
 
 
@@ -72,6 +73,12 @@ if __name__ == '__main__':
         # python3 main.py 'PCA_image_clustering.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/images/*.png'
         # python3 main.py 'PCA_image_clustering.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Downloads/*.png'
         PCA_image_clustering.main(src_paths=file_paths, image_src_path=image_src_path, outpath=out_file)
+
+    # test
+    elif file_to_run[0] == 'word_embeddings.py':
+        # python3 main.py 'word_embeddings.py' -i '/Users/klara/Downloads/SAC2-12.pdf' '/Users/klara/Downloads/SAC1-6.pdf'
+        # python3 main.py 'word_embeddings.py' -d '/Users/klara/Downloads/*.pdf'
+        word_embeddings.main(file_paths=file_paths)
 
     else:
         print('Error: No file to run.')
