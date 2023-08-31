@@ -122,8 +122,12 @@ def get_cluster_PCA_df(src_path: str, n_cluster: int, n_components: int = 2, pre
     return pca_df
 
 
-def plot_all_pca_cluster_info():
+def plot_all_pca_cluster_info(image_src_path: str, img_size: int, num_classes: int, outpath: str = None):
     '''
+    :param image_src_path: path to the directory of the images
+    :param img_size: single dimension of the output images (resized to quadratic images)
+    :param num_classes: number of clusters
+    :param outpath: path to the directory where the image should be saved; if None, the image will be displayed but not saved
     :return: None
     
     This is a method to plot all information about the pca and clusters.
@@ -131,7 +135,7 @@ def plot_all_pca_cluster_info():
     If possible, use notebook to visualize the information instead.
     '''
     image_src_paths = glob.glob(image_src_path)
-    preprocessed_images = preprocess_images(image_src_paths, IMG_SIZE)
+    preprocessed_images = preprocess_images(image_src_paths, img_size)
 
     # plot preprocessed images
     for img in preprocessed_images[:2]:
@@ -152,12 +156,12 @@ def plot_all_pca_cluster_info():
     pca_df = create_pca_df(image_src_paths, pca_img)
 
     # cluster the images
-    kmeans = KMeans(n_clusters=NUM_CLASSES, random_state=0, n_init="auto").fit(pca_df['pca_weights'].to_list())
+    kmeans = KMeans(n_clusters=num_classes, random_state=0, n_init="auto").fit(pca_df['pca_weights'].to_list())
     pca_df['cluster'] = kmeans.labels_
 
     # get sample images per cluster
-    sample_doc_img_per_cluster = get_sample_doc_img_per_cluster(pca_df, NUM_CLASSES)
-    create_image_matrix(dim=int(math.sqrt(NUM_CLASSES)), input_files=sample_doc_img_per_cluster, output_path=outpath)
+    sample_doc_img_per_cluster = get_sample_doc_img_per_cluster(pca_df, num_classes)
+    create_image_matrix(dim=int(math.sqrt(num_classes)), input_files=sample_doc_img_per_cluster, output_path=outpath)
     for i in range(len(sample_doc_img_per_cluster)):
         img = sample_doc_img_per_cluster[i]
         plot_grey_images(cv2.imread(img, cv2.IMREAD_GRAYSCALE), title='example image of cluster ' + str(i))
