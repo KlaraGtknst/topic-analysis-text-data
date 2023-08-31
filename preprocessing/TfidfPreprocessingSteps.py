@@ -14,7 +14,7 @@ def download_if_non_existent(res_path, res_name):
         try:
             nltk.data.find(res_path)
         except LookupError:
-            print(f'resource {res_path} not found. Downloading now...')
+            # print(f'resource {res_path} not found. Downloading now...')
             nltk.download(res_name)
 
 class TfidfPreprocessingSteps():
