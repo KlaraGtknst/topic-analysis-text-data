@@ -27,6 +27,9 @@ def arguments():
     #========== C O M M O N ==========#
     parser = argparse.ArgumentParser(description=desc, add_help=True, formatter_class=argparse.RawTextHelpFormatter)
 
+    parser.add_argument('file_to_run', nargs=1, help='filename with .py ending, whose main method should be run.', metavar="FILE",
+                        type=lambda x: is_valid_py_file(parser, x))
+
     output_help = """path to directory to write the result to. 
     If not set, the result is printed to stdout."""
     common_options = parser.add_argument_group("Common Options", description="Common options for subcommands")
@@ -45,6 +48,12 @@ def arguments():
 
 
     return parser.parse_args()
+
+def is_valid_py_file(parser, arg):
+    if not arg.endswith('.py'):
+        parser.error("The file %s is not a python file!" % arg)
+    else:
+        return arg
 
 def is_valid_file(parser, arg):
     if '*' in arg:  # wildcard
