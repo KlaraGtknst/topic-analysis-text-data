@@ -64,30 +64,10 @@ def get_tfidf_per_doc(tfidf: TfidfVectorizer, doc_num: int, document_term_matrix
     '''
     # place tf-idf values in a pandas data frame 
     tfidf_document_vector = document_term_matrix[doc_num]
-    tfidf_per_token = pd.DataFrame(tfidf_document_vector.T.todense(), index=tfidf.get_feature_names_out(), columns=["tfidf"]) 
+    tfidf_per_token = pd.DataFrame(tfidf_document_vector.T, index=tfidf.get_feature_names_out(), columns=["tfidf"]) 
     tfidf_per_token.sort_values(by=["tfidf"], ascending=False, inplace=True)
     return tfidf_per_token
 
-def get_tfidf_matrix(file_paths: list, tfidf: TfidfVectorizer, document_term_matrix: np.ndarray) -> np.ndarray:
-    '''
-    DEPRECATED, use to dense instead: https://hackernoon.com/document-term-matrix-in-nlp-count-and-tf-idf-scores-explained
-    :param file_paths: list of file paths
-    :param tfidf: trained tf-idf model
-    :param document_term_matrix: document term matrix, entries are tf-idf values of tokens per document
-    :return: numpy array with tf-idf values for each token in every document. The row's identifier is the document and the columns' identifier is the token's encoding from the tfidf model.
-    
-    This function creates document vectorization using tf-idf model's token encoding.
-    The return value is a tf-idf matrix with the following structure:
-        - rows: documents (first index in access tuple))
-        - columns: tokens (second index in access tuple))
-        - entries: tf-idf value of tokens
-
-    for more information cf. https://towardsdatascience.com/tf-idf-for-document-ranking-from-scratch-in-python-on-real-world-dataset-796d339a4089
-    '''
-    D = np.zeros((len(file_paths), len(list(tfidf.vocabulary_.values()))))  
-    for comb in itertools.product(list(range(len(file_paths))), list(tfidf.vocabulary_.values())):
-        D[comb] = document_term_matrix[comb]
-    return D
 
 def print_info_abt_doc_term_mat_model(document_term_matrix: np.ndarray, tfidf: TfidfVectorizer) -> None:
     '''
@@ -126,7 +106,8 @@ def get_preprocessed_tokens_from_file_paths(file_paths: list) -> dict:
 def print_cosine_similarity_examples(transformed_query: np.ndarray, document_term_matrix: np.ndarray):
     '''
     :param transformed_query: tf-idf vector of query string
-    :param document_term_matrix: document term matrix, entries are tf-idf values of tokens per document
+    :param document_term_matrix: document term matrix, entries are tf-idf values of tokens per document; 
+        use return of tfidf.(fit_)transform(docs)- don't use .todense()!
     :return: None
 
     prints the cosine similarity between documents in the training corpus and the query string, as well as between documents in the training corpus.
@@ -170,58 +151,6 @@ def get_num_all_zero_tfidf_embeddings(sim_docs_document_term_matrix: TfidfVector
             count += 1
     print(f'number of documents with all zero tf-idf values: {count} from {len(sim_docs_document_term_matrix)}')
 
-def preprocess_tfidf_text(text: str) -> str:
-    '''
-    :param text: text to be preprocessed
-    :return: preprocessed text (lowercase, remove stop words, stemming, making numbers discrete by replacing them by special token, strip accent)
-    
-    
-    This function is used to preprocesses text instead of the the built-in version of sklearn's TfidfVectorizer.
-    For more information see: https://stackoverflow.com/questions/23850256/how-can-i-pass-a-preprocessor-to-tfidfvectorizer-sklearn-python
-    '''
-    print(text)
-    # strip accent
-    text = unidecode.unidecode(text)
-
-    # lowercase
-    text = text.lower()
-
-    # identify floats
-    print(text)
-    text = re.sub(r'\d+\.\d+', 'FLOAT', text)
-
-    # make numbers discrete
-    text = re.sub(r'\d{6,}', 'BIGNUMBER', text)
-    text = re.sub(r'\d{1,5}', 'SMALLNUMBER', text)
-
-    # remove punctuation
-    # '!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~' 32 punctuations in python string module
-    text = re.sub('[%s]' % re.escape(string.punctuation), '', text)
-
-    text = re.sub('BIGNUMBER', '+', text)
-    text = re.sub('SMALLNUMBER', '-', text)
-    text = re.sub('FLOAT', '/', text)
-
-    # remove stop words and lowercase
-    #text = remove_stop_words(list(text))
-    #nltk.download('stopwords')
-    print('before stop words: ', text)
-    stop_words = set(stopwords.words('english'))
-    text = [w for w in text.split(' ') if w not in stop_words]
-    print('after stop words: ', text)
-
-    # lemmatization
-    #nltk.download("wordnet")
-    lemmatizer = WordNetLemmatizer()
-    text = [lemmatizer.lemmatize(word) for word in text]
-    print('after lemmatization: ', text)
-
-    text = ' '.join(text)
-    
-
-    print(text)
-    return text
-
 
 if __name__ == '__main__':
     args = arguments()
@@ -230,38 +159,11 @@ if __name__ == '__main__':
     #df_clean_token = get_preprocessed_tokens_from_file_paths(file_paths)
     docs = get_docs_from_file_paths(file_paths)
 
-    #vocabulary, words_per_doc = get_vocab_word_per_doc(df_clean_token)
-    #print('vocab', vocabulary)
-    #print('words_per_doc ', words_per_doc)
-
-    # tfIdf model
-    # use min/ max_df to filter out tokens that appear in too many/ too few documents -> reduce vector dimensionality
-    '''tfidf = TfidfVectorizer(input='content', max_df=int(len(docs)*0.25), min_df=7, lowercase=True, analyzer='word', stop_words='english', token_pattern="\w+")
-    #tfidf = tfidf.fit(docs)
-    print(tfidf.get_feature_names_out())
-
-    document_term_matrix = tfidf.fit_transform(docs)    # format: (document, token encoding) tf-idf score -> use D (below) to access tf-idf values
-    # print_info_abt_doc_term_mat_model(document_term_matrix, tfidf)
-
-    # returns tf-idf values for the first document with token human readable, but SORTED (≠ document vectorization)
-    print(get_tfidf_per_doc(tfidf, 0, document_term_matrix))
-    #print(get_tfidf_per_doc(tfidf, 1, document_term_matrix))
-
-    D = get_tfidf_matrix(file_paths, tfidf, document_term_matrix)
-    print(f'tfidf of {list(tfidf.vocabulary_.keys())[10]} in the first Document is {D[0,list(tfidf.vocabulary_.values())[10]]}')
-    # returns tf-idf values for the first document with token NOT human readable
-    print('tf-idf of first document: ', D[0])
-
-    # document search engine using TF-IDF and cosine similarity
-    #transformed_query = print_tfidf_transformation_example(tfidf=tfidf, query='human readable Bahamas credit system')
- 
-    #print_cosine_similarity_examples(transformed_query=transformed_query, document_term_matrix=document_term_matrix)'''
-
     # custom preprocessor
     # usage of uni-grams only, n_gram (n>1) increases vocabulary size (bad), but does not reduce number of zero tf-idf document embeddings (bad)
     tfidf = TfidfVectorizer(input='content', preprocessor=TfidfTextPreprocessor().fit_transform, min_df=3, max_df=int(len(docs)*0.07))
     # to dense: https://hackernoon.com/document-term-matrix-in-nlp-count-and-tf-idf-scores-explained
-    sim_docs_document_term_matrix = tfidf.fit_transform(docs).todense()
+    sim_docs_document_term_matrix = tfidf.fit_transform(docs).todense() # format: (document, token encoding) tf-idf score
     get_num_all_zero_tfidf_embeddings(sim_docs_document_term_matrix, file_paths)
     print('vocabulary: ', tfidf.get_feature_names_out(), '\nnumber of elements of vocabulary: ', len(tfidf.get_feature_names_out()))
     
