@@ -73,6 +73,8 @@ def find_document_tfidf(client: Elasticsearch, model: TfidfVectorizer, path: str
 
     The field of interest in the database, i.e. the one to be searched for, is the tfidf embedding. 
     The embedding is inferred from the document text using the fitted tfidf model.
+    Since there is a extra flag in the tfidf embedding in the database, which indicates whether the representation of the document is an all-zero vector, 
+    this flag is also added to the query vector.
     The document text is preprocessed in the same way as the documents stored in the database.
     Since the base64 encoding of the image is very long, it is excluded from the search result.
     knn is used for the search. The search returns the k=10 most similar documents.
@@ -85,9 +87,11 @@ def find_document_tfidf(client: Elasticsearch, model: TfidfVectorizer, path: str
     cf. https://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html#search-api-knn for information about knn in elasticsearch.
     '''
     embedding = model.transform([pdf_to_str(path)])
+    embedding = np.ravel(embedding.todense())
+    embedding = np.append(embedding, 1 if np.array([entry  == 0 for entry in embedding]).all() else 0)
     result = client.search(index='bahamas', knn={
             "field": "sim_docs_tfidf",
-            "query_vector": np.ravel(embedding.todense()),
+            "query_vector": embedding,
             "k": 10,
             "num_candidates": 100
         }, source_excludes=['image'])
