@@ -7,10 +7,10 @@ from sklearn.cluster import KMeans
 # own modules
 from read_pdf import *
 from cli import *
-from pdf_matrix import *
-from query_documents_tfidf import *
+from doc_images.pdf_matrix import *
+from elasticSearch.queries.query_documents_tfidf import *
 from universal_sent_encoder_tensorFlow import *
-from hugging_face_sentence_transformer import *
+from text_embeddings.hugging_face_sentence_transformer import *
 
 '''------search in existing database-------
 run this code by typing and altering the path:

@@ -1,10 +1,10 @@
-from read_pdf import *
-from cli import *
+from text_embeddings.preprocessing.read_pdf import *
+from user_interface.cli import *
 from wordcloud import WordCloud
 
 '''------Code for visualization-------
 run this code by typing and altering the path:
-    python3 visualize_texts.py -i '/Users/klara/Downloads/SAC2-12.pdf' -o '/Users/klara/Downloads/'
+    python3 text_visualizations/visualize_texts.py -i '/Users/klara/Downloads/SAC2-12.pdf' -o '/Users/klara/Downloads/'
     python3 visualize_texts.py -i '/Users/klara/Downloads/SAC2-12.pdf' '/Users/klara/Downloads/SAC1-6.pdf'
     python3 visualize_texts.py -d '/Users/klara/Downloads/*.pdf'
 '''
@@ -50,11 +50,7 @@ def word_cloud(tokens: list, file_name: str, outpath: str = None) -> None:
         print('Error: No words to plot.')
 
 
-if __name__ == '__main__':
-    args = arguments()
-
-    file_paths = get_input_filepath(args)
-    out_file = get_filepath(args, option='output')
+def main(file_paths, out_file):
 
     for path in file_paths:
         text = pdf_to_str(path)

@@ -1,9 +1,9 @@
 from read_pdf import *
 from cli import *
-from query_documents_tfidf import get_docs_from_file_paths
+from elasticSearch.queries.query_documents_tfidf import get_docs_from_file_paths
 import seaborn as sns
 import nltk
-from models import InferSent
+from text_embeddings.models import InferSent
 import torch
 
 

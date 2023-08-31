@@ -1,4 +1,4 @@
-from cli import *
+from user_interface.cli import *
 from PyPDF2 import PdfReader
 import nltk
 from nltk.tokenize import word_tokenize
