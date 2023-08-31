@@ -1,5 +1,5 @@
-from read_pdf import *
-from cli import *
+from text_embeddings.preprocessing.read_pdf import *
+from user_interface.cli import *
 from elasticSearch.queries.query_documents_tfidf import get_docs_from_file_paths
 from sentence_transformers import SentenceTransformer
 

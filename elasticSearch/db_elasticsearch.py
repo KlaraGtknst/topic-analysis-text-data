@@ -5,14 +5,14 @@ import base64
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 from gensim.utils import simple_preprocess
 # own modules
-from read_pdf import *
-from cli import *
+from text_embeddings.preprocessing.read_pdf import *
+from user_interface.cli import *
 from doc_images.pdf_matrix import *
 from elasticSearch.queries.query_documents_tfidf import *
-from universal_sent_encoder_tensorFlow import *
+from text_embeddings.universal_sent_encoder_tensorFlow import *
 from text_embeddings.hugging_face_sentence_transformer import *
 from elasticSearch.queries.query_database import *
-from doc_images.image_clustering import *
+from doc_images.PCA.PCA_image_clustering import *
 
 '''------initiate, fill and search in database-------
 run this code by typing and altering the path:

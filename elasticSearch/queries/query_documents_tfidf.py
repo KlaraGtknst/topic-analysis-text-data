@@ -3,8 +3,8 @@ import string
 import pdb # for debugging
 
 from sklearn.pipeline import Pipeline
-from read_pdf import *
-from cli import *
+from text_embeddings.preprocessing.read_pdf import *
+from user_interface.cli import *
 from gensim.utils import simple_preprocess
 import pandas as pd
 import numpy as np
@@ -14,7 +14,7 @@ import itertools
 from sklearn.metrics.pairwise import cosine_similarity
 import unidecode
 from nltk.stem import WordNetLemmatizer
-from preprocessing.TfidfTextPreprocessor import *
+from text_embeddings.TFIDF.preprocessing.TfidfTextPreprocessor import *
 
 '''------Code to find documents most fitting for input query-------
 run this code by typing and altering the path:

@@ -1,5 +1,5 @@
-from read_pdf import *
-from cli import *
+from text_embeddings.preprocessing.read_pdf import *
+from user_interface.cli import *
 import cv2 
 
 '''------Code for matrix of PDF layouts-------

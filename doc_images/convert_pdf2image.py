@@ -1,4 +1,4 @@
-from cli import *
+from user_interface.cli import *
 import fitz 
 
 '''------Convert PDF files to PNG files-------

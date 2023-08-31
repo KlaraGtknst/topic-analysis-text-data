@@ -1,4 +1,4 @@
-from preprocessing.TfidfPreprocessingSteps import *
+from text_embeddings.TFIDF.preprocessing.TfidfPreprocessingSteps import *
 
 '''
 code snippet from https://towardsdatascience.com/elegant-text-pre-processing-with-nltk-in-sklearn-pipeline-d6fe18b91eb8

@@ -1,5 +1,5 @@
-from read_pdf import *
-from cli import *
+from text_embeddings.preprocessing.read_pdf import *
+from user_interface.cli import *
 import seaborn as sns
 import tensorflow as tf
 import tensorflow_hub as hub

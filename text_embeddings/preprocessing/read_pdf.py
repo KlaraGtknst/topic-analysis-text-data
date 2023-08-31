@@ -76,10 +76,7 @@ def stemming(tokens: list) -> list:
     return stemmed_filtered_tokens
 
 
-if __name__ == '__main__':
-    args = arguments()
-    file_paths = get_input_filepath(args)
-
+def main(file_paths):
     for path in file_paths:
         text = pdf_to_str(path)
 
