@@ -10,6 +10,7 @@ from doc_images.pdf_matrix import *
 from elasticSearch.queries.query_documents_tfidf import *
 from text_embeddings.universal_sent_encoder_tensorFlow import *
 from text_embeddings.hugging_face_sentence_transformer import *
+from text_embeddings.TFIDF.preprocessing.TfidfTextPreprocessor import *
 
 '''------search in existing database-------
 run this code by typing and altering the path:
@@ -149,10 +150,7 @@ def get_number_docs_in_db(client: Elasticsearch) -> int:
     resp = client.cat.count(index='bahamas', params={"format": "json"})
     return resp[0]['count']
 
-if __name__ == '__main__':
-    args = arguments()
-    src_paths = get_input_filepath(args)
-    image_src_path = get_filepath(args, option='image')
+def main(src_paths, image_src_path):
     
     # Create the client instance
     client = Elasticsearch("http://localhost:9200")
@@ -169,7 +167,7 @@ if __name__ == '__main__':
 
     # query database for a document using tfidf
     docs = get_docs_from_file_paths(src_paths)
-    sim_docs_tfidf = TfidfVectorizer(input='content', lowercase=True, min_df=3, max_df=int(len(docs)*0.07), analyzer='word', stop_words='english', token_pattern=r'(?u)\b[A-Za-z]+\b')
+    sim_docs_tfidf = TfidfVectorizer(input='content', preprocessor=TfidfTextPreprocessor().fit_transform, min_df=3, max_df=int(len(docs)*0.07))
     sim_docs_document_term_matrix = sim_docs_tfidf.fit(docs)
     results = find_document_tfidf(client, sim_docs_tfidf, path=src_paths[0])
     image_paths = [image_src_path + file_name.split('.')[0] + '.png' for file_name in list(results.values())]

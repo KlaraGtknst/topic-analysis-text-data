@@ -33,10 +33,7 @@ def init_infer(model_path: str, w2v_path: str, file_paths: list, version: int = 
     return infersent, docs
 
 
-if __name__ == '__main__':
-    args = arguments()
-    file_paths = get_input_filepath(args)
-    outpath = get_filepath(args, option='output')
+def main(file_paths, outpath):
 
     nltk.download('punkt')
     V = 1   # trained with GloVe

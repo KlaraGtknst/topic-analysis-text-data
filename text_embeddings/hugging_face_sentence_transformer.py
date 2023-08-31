@@ -50,11 +50,7 @@ def load_hf_sentTrans_model(model_path: str) -> SentenceTransformer:
     return model
 
 
-if __name__ == '__main__':
-    args = arguments()
-    file_paths = get_input_filepath(args)
-    outpath = get_filepath(args, option='output')
-
+def main(file_paths, outpath):
     docs = get_docs_from_file_paths(file_paths)
     # Choose wether to train a new model or load an existing one
     #model = init_hf_sentTrans_model()   # new model
@@ -69,7 +65,7 @@ if __name__ == '__main__':
     #Sentences are encoded by calling model.encode()
     embedding = model.encode(sentence)
 
-    '''print(embedding.shape)
+    print(embedding.shape)
     #print(embedding)
     print(embedding[0].shape)
-    print(embedding[0])'''
+    print(embedding[0])

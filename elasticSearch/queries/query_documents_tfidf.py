@@ -152,9 +152,7 @@ def get_num_all_zero_tfidf_embeddings(sim_docs_document_term_matrix: TfidfVector
     print(f'number of documents with all zero tf-idf values: {count} from {len(sim_docs_document_term_matrix)}')
 
 
-if __name__ == '__main__':
-    args = arguments()
-    file_paths = get_input_filepath(args)
+def main(file_paths):
 
     #df_clean_token = get_preprocessed_tokens_from_file_paths(file_paths)
     docs = get_docs_from_file_paths(file_paths)

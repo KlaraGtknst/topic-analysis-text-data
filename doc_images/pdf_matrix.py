@@ -52,10 +52,5 @@ def create_image_matrix(input_files: list, dim: int= 10, output_path: str = None
     if picture_not_found_counter > 0:
         print('Could not find %s pictures.' % picture_not_found_counter)
 
-if __name__ == '__main__':
-    args = arguments()
-
-    file_paths = get_input_filepath(args)
-    out_file = get_filepath(args, option='output')
-
-    create_image_matrix(dim=args.number, input_files=file_paths, output_path=out_file)
+def main(file_paths, out_file, dim):
+    create_image_matrix(dim=dim, input_files=file_paths, output_path=out_file)

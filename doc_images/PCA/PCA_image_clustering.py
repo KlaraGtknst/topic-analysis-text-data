@@ -6,15 +6,15 @@ from sklearn.cluster import KMeans
 # own modules
 from text_embeddings.preprocessing.read_pdf import *
 from user_interface.cli import *
-from pdf_matrix import *
+from doc_images.pdf_matrix import *
 from elasticSearch.queries.query_documents_tfidf import *
 from text_embeddings.universal_sent_encoder_tensorFlow import *
 from text_embeddings.hugging_face_sentence_transformer import *
 
 '''------search in existing database-------
 run this code by typing and altering the path:
-    python3 image_clustering.py -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/images/*.png'
-    python3 image_clustering.py -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Downloads/*.png'
+    python3 PCA_image_clustering.py -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/images/*.png'
+    python3 PCA_image_clustering.py -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Downloads/*.png'
 '''
 
 def preprocess_images(image_paths: list, img_size: int)-> np.ndarray:
@@ -169,12 +169,7 @@ def plot_all_pca_cluster_info():
     for i in range(len(pca_img[:2])):
         plot_grey_images(pca_img[i], title='weights of PCA components of image number' + str(i))
 
-if __name__ == '__main__':
-    args = arguments()
-    src_paths = get_input_filepath(args)
-    image_src_path = get_filepath(args, option='image')
-    outpath = get_filepath(args, option='output')
-
+def main(src_paths, image_src_path, outpath):
     IMG_SIZE = 600
     NUM_CLASSES = 4
 

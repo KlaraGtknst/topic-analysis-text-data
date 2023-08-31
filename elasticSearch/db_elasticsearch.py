@@ -13,6 +13,7 @@ from text_embeddings.universal_sent_encoder_tensorFlow import *
 from text_embeddings.hugging_face_sentence_transformer import *
 from elasticSearch.queries.query_database import *
 from doc_images.PCA.PCA_image_clustering import *
+from text_embeddings.TFIDF.preprocessing.TfidfTextPreprocessor import *
 
 '''------initiate, fill and search in database-------
 run this code by typing and altering the path:
@@ -243,7 +244,7 @@ def tfidf_aux(src_paths: list) -> tuple:
     # FIXME: many/ 2 document have none of the words in the vocabulary, i.e. the document-term matrix is a zero matrix
     # no more numbers in vocabulary, only words, cf. https://stackoverflow.com/questions/51643427/how-to-make-tfidfvectorizer-only-learn-alphabetical-characters-as-part-of-the-vo
     # usage of uni-grams only
-    sim_docs_tfidf = TfidfVectorizer(input='content', lowercase=True, min_df=3, max_df=int(len(docs)*0.07), analyzer='word', stop_words='english', token_pattern=r'(?u)\b[A-Za-z]+\b', strip_accents='ascii')
+    sim_docs_tfidf = TfidfVectorizer(input='content', preprocessor=TfidfTextPreprocessor().fit_transform, min_df=3, max_df=int(len(docs)*0.07))
     # to dense: https://hackernoon.com/document-term-matrix-in-nlp-count-and-tf-idf-scores-explained
     sim_docs_document_term_matrix = sim_docs_tfidf.fit_transform(docs).todense()
 
@@ -273,10 +274,7 @@ def show_best_search_results(scores, src_paths, image_src_path=None):
     image_paths = [image_src_path + id.split('.')[0]  + '.png' if image_src_path else src_paths.split('.')[0] + '.png' for id in scores.values()]
     create_image_matrix(input_files=image_paths, dim=3, output_path=None)
 
-if __name__ == '__main__':
-    args = arguments()
-    src_paths = get_input_filepath(args)
-    image_src_path = get_filepath(args, option='image')
+def main(src_paths, image_src_path):
     
     NUM_DIMENSIONS = 55
     NUM_COMPONENTS = 2

@@ -29,9 +29,6 @@ def pdf_to_png(file_path: list, outpath: str = None) -> None:
         pix.set_dpi(75, 75) # image resolution
         pix.save(f"{outpath}/{file_name}.png")
 
-if __name__ == '__main__':
-    args = arguments()
-    file_paths = get_input_filepath(args)
-    outpath = get_filepath(args, option='output')
+def main(file_paths, outpath):
 
     pdf_to_png(file_paths, outpath=outpath)

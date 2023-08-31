@@ -80,11 +80,7 @@ def print_info_abt_embeddings(message_embeddings: list, messages: list) -> None:
         message_embedding_snippet = ", ".join((str(x) for x in message_embedding[:3]))
         print("Embedding: [{}, ...]\n".format(message_embedding_snippet))
 
-if __name__ == '__main__':
-    args = arguments()
-    file_paths = get_input_filepath(args)
-    outpath = get_filepath(args, option='output')
-
+def main(file_paths, outpath):
     # if load of URL does not work, use: "https://tfhub.dev/google/universal-sentence-encoder/4", cf. https://www.kaggle.com/code/nicapotato/universal-sentence-encoder-semantic-similarity
     module_url = "https://tfhub.dev/google/universal-sentence-encoder-large/5"
     model = hub.load(module_url)
