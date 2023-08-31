@@ -181,6 +181,24 @@ def main(src_paths, image_src_path, outpath):
 
     # get dataframe of pca weights and cluster index
     pca_df = get_cluster_PCA_df(src_path= image_src_path, n_cluster= NUM_CLASSES, n_components= 2, preprocess_image_size=IMG_SIZE)
-    print(pca_df)
+    print(len(pca_df['pca_weights']))
 
-    
+    '''path = src_paths[23]
+    image_path = None
+    image_path = image_path if image_path else (path.split('data/0/')[0] + 'images/images/')
+    id = path.split('/')[-1].split('.')[0]  # document title
+    image = image_path + id  + '.png'
+    pca_df_row = pca_df.loc[pca_df.index == image]
+    print(pca_df_row['pca_weights'].values[0])
+    print(pca_df_row['pca_weights'].item())'''
+
+    if image_src_path.endswith('/'):
+        image_src_path = image_src_path + '*.png'
+    image_src_paths = glob.glob(image_src_path)
+    images = [img.split('/')[-1].split('.')[0] for img in image_src_paths]
+
+    docs = [doc.split('/')[-1].split('.')[0] for doc in src_paths]
+
+    print(len(docs), len(images))
+    missing_img = [doc for doc in docs if doc not in images]
+    print(len(missing_img), missing_img)    

@@ -56,31 +56,18 @@ def init_db(client: Elasticsearch, num_dimensions: int, sim_docs_vocab_size: int
                 "index": True,
                 "similarity": "cosine",
             },
-            # TODO: vector size +1, flag 1 if zero vector
             "sim_docs_tfidf": {
                 "type": "dense_vector",
-                "dims": sim_docs_vocab_size, #FIXME: uses 2048 as maximum, bc vocab_size is 7243
+                "dims": sim_docs_vocab_size + 1, # last cell indicates all-zero-vector-representation
                 "index": True,
                 "similarity": "cosine",
             },
-            '''"find_doc_tfidf": {
-                "type": "dense_vector",
-                "dims": find_doc_vocab_size, #FIXME: uses 2048 as maximum, bc vocab_size is 7243
-                "index": True,
-                "similarity": "cosine",
-            },'''
             "pca_image": {
                 "type": "dense_vector",
                 "dims": n_components,
-                #"index": True,
-                #"similarity": "cosine",
-                #"store": True,
             },
             "pca_kmeans_cluster": {
                 "type": "byte",
-                #"index": True,
-                #"similarity": "boolean",
-                #"store": True,
             },
             "text": {
                 "type": "text",
@@ -121,11 +108,13 @@ def insert_documents(src_paths: list, model: Doc2Vec, client: Elasticsearch, goo
     cf. https://www.codespeedy.com/convert-image-to-base64-string-in-python/ for information about converting images to base64
     '''
     counter = 0
+    image_path = image_path if image_path else (path.split('data/0/')[0] + 'images/images/')
+
     for i in range(len(src_paths)):
         path = src_paths[i]
         try:
             id = path.split('/')[-1].split('.')[0]  # document title
-            image = image_path + id  + '.png' if image_path else path.split('.')[0] + '.png'
+            image = image_path + id  + '.png'
             try:
                 with open(image, "rb") as img_file:
                     b64_image = base64.b64encode(img_file.read())
@@ -141,20 +130,17 @@ def insert_documents(src_paths: list, model: Doc2Vec, client: Elasticsearch, goo
                 print(f'EOF marker missing in {path}.')
                 print(pdf_to_str(path))
             
-            pca_df_row = pca_df.loc[pca_df.index == image]
 
-            #print(doc_tfidf_vectorization[i].shape)
+            pca_df_row = pca_df.loc[pca_df.index == image] if image in list(pca_df.index) else None
+
             try:
                 client.create(index='bahamas', id=id, document={
                     "embedding": model.infer_vector(simple_preprocess(pdf_to_str(path))),
-                    # some documents have no words in the vocabulary, i.e. the document-term matrix is a zero matrix -> insert None to avoid error and thus, them not being inserted into the database
-                    # TODO: vector size +1, flag 1 if zero vector
-                    "sim_docs_tfidf": None if np.array([entry  == 0 for entry in sim_doc_tfidf_vectorization[i]]).all() else np.ravel(np.array(sim_doc_tfidf_vectorization[i])),
-                    #"find_doc_tfidf": find_doc_tfidf_vectorization[i], too big!
+                    "sim_docs_tfidf": np.ravel(np.array(sim_doc_tfidf_vectorization[i])),
                     "google_univ_sent_encoding": embed([text], google_model).numpy().tolist()[0],
                     "huggingface_sent_transformer": huggingface_model.encode(text),
-                    "pca_image": pca_df_row['pca_weights'].values,
-                    "pca_kmeans_cluster": pca_df_row['cluster'],
+                    "pca_image": pca_df_row['pca_weights'].item() if pca_df_row is not None else None,
+                    "pca_kmeans_cluster": pca_df_row['cluster'] if pca_df_row is not None else None,
                     "text": text,
                     "path": path,
                     "image": str(b64_image),
@@ -235,25 +221,18 @@ def infer_embedding_for_single_document(model: Doc2Vec, text: str):
 def tfidf_aux(src_paths: list) -> tuple:
     '''
     :param src_paths: paths to the documents to be inserted into the database
-    :return: document-term matrix and the trained tfidf vectorizer model
+    :return: document-term matrix with a all-zero-flag-cell at the end and the trained tfidf vectorizer model
     '''
     docs = get_docs_from_file_paths(src_paths)
-    # reduce dimensionality of tfidf matrix by allowing only words that appear a certain number of times
-    # (1) tfidf embedding to find similiar documents (i.e. words have to appear in more than one document)
-    # to reduce dimensionality, only words that appear in more than 3 and less than 4% of the documents are considered
-    # FIXME: many/ 2 document have none of the words in the vocabulary, i.e. the document-term matrix is a zero matrix
-    # no more numbers in vocabulary, only words, cf. https://stackoverflow.com/questions/51643427/how-to-make-tfidfvectorizer-only-learn-alphabetical-characters-as-part-of-the-vo
-    # usage of uni-grams only
+    # usage of custom preprocessor
     sim_docs_tfidf = TfidfVectorizer(input='content', preprocessor=TfidfTextPreprocessor().fit_transform, min_df=3, max_df=int(len(docs)*0.07))
-    # to dense: https://hackernoon.com/document-term-matrix-in-nlp-count-and-tf-idf-scores-explained
     sim_docs_document_term_matrix = sim_docs_tfidf.fit_transform(docs).todense()
 
-    # (2) tfidf embedding to find a document from the corpus (i.e. words appearing in many documents are not informative)
-    # 3762 is too big for maximum dimension of elastic search
-    '''find_doc_tfidf = TfidfVectorizer(input='content', lowercase=True, max_df=1, analyzer='word', stop_words='english', token_pattern="\w+")
-    find_doc_document_term_matrix = find_doc_tfidf.fit_transform(docs)
-    find_doc_D = get_tfidf_matrix(src_paths, find_doc_tfidf, find_doc_document_term_matrix)'''
-    return sim_docs_document_term_matrix, sim_docs_tfidf #find_doc_D, find_doc_tfidf, 
+    # add flags, which indicate if the document is represented by an all zero vector
+    flags = np.array([1 if np.array([entry  == 0 for entry in sim_docs_document_term_matrix[i]]).all() else 0 for i in range(len(sim_docs_document_term_matrix))]).reshape(len(sim_docs_document_term_matrix),1)
+    flag_matrix = np.append(sim_docs_document_term_matrix, flags, axis=1)
+
+    return flag_matrix, sim_docs_tfidf
 
 def google_univ_sent_encoding_aux():
     '''
@@ -281,19 +260,13 @@ def main(src_paths, image_src_path):
 
     print('-' * 80)
 
-    # tfidf 
-    # TODO: how to find out which document belongs to a row (first/ only index)?
-    # FIXME: vocab size to big for maximum dimension of elastic search
-    #find_doc_D, find_doc_tfidf, 
-    sim_docs_D, sim_docs_tfidf = tfidf_aux(src_paths)
+    # tfidf embedding incl. all-zero-vector-flag
+    tfidf_matrix, sim_docs_tfidf = tfidf_aux(src_paths)
     sim_docs_vocab_size = len(list(sim_docs_tfidf.vocabulary_.values()))
-    #find_doc_vocab_size =  len(list(find_doc_tfidf.vocabulary_.values()))
-    print(f'Vocabulary size (sim): {sim_docs_vocab_size}')#\nVocabulary size (find): {find_doc_vocab_size}')
-    #print(doc_tfidf_vectorization.shape)
+    #print(f'Vocabulary size (sim): {sim_docs_vocab_size}')
 
     # huggingface sentence transformer
     huggingface_model = init_hf_sentTrans_model()
-    #huggingface_embedding = huggingface_model.encode(src_paths)
 
     # google universal sentence encoder
     google_model = google_univ_sent_encoding_aux()
@@ -318,24 +291,18 @@ def main(src_paths, image_src_path):
     # build a vocabulary (i.e. list of unique words); accessable via model.wv.index_to_key
     model.build_vocab(train_corpus, update=True)
 
-    # additonal information about each word
-    # word = 'credit'
-    # print(f"Word '{word}' appeared {model.wv.get_vecattr(word, 'count')} times in the training corpus.")
-
     # train the model
     model.train(train_corpus, total_examples=model.corpus_count, epochs=model.epochs)
 
-    # infer a vector of a new document
-    #print(f'This is the numerical representation of the document: \n{infer_embedding_for_single_document(model, text="This is a new document to be searched for.")}')
-    
     # assess the model
     # here: using training corpus -> overfitting, not representative
     #assess_model(model, train_corpus)
 
+    # PCA + KMeans clustering
     pca_cluster_df = get_cluster_PCA_df(src_path= image_src_path, n_cluster= 4, n_components= NUM_COMPONENTS, preprocess_image_size=600)
 
-    
-    insert_documents(src_paths, model, client, image_path=image_src_path, google_model=google_model, huggingface_model=huggingface_model, sim_doc_tfidf_vectorization=sim_docs_D, pca_df=pca_cluster_df)  #find_doc_tfidf_vectorization=find_doc_D
+    # insert documents into database
+    insert_documents(src_paths, model, client, image_path=image_src_path, google_model=google_model, huggingface_model=huggingface_model, sim_doc_tfidf_vectorization=tfidf_matrix, pca_df=pca_cluster_df)  #find_doc_tfidf_vectorization=find_doc_D
 
     # alternatively, use AsyncElasticsearch or time.sleep(1)
     client.indices.refresh(index="bahamas")
@@ -352,17 +319,11 @@ def main(src_paths, image_src_path):
     # create image matrix of 9 most similar images for query image
     show_best_search_results(scores, src_paths, image_src_path)'''
 
-    # FIXME: TypeError(f"Unable to serialize {data!r} (type: {type(data)})") TypeError: Unable to serialize DenseVector([...
-    #print('\n' 'TFIDF:\n', '-' * 40, path, '-' * 40)
-    '''scores = find_document_tfidf(client, find_doc_tfidf, path)
-    for score in list(scores.keys()):
-        print(score, scores[score])
 
-    # create image matrix of 9 most similar images for query image
-    show_best_search_results(scores, src_paths, image_src_path)'''
-
+    # properties in db
     print(client.indices.get_mapping(index='bahamas'))
 
+    # number of documents in database
     client.indices.refresh(index='bahamas')
     resp = client.count(index='bahamas')
     print('number of documents in database: ', resp['count'])

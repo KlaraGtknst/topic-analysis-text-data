@@ -47,7 +47,7 @@ if __name__ == '__main__':
         infer_pretrained.main(file_paths, out_file)
 
     elif file_to_run[0] == 'db_elasticsearch.py':
-        # python3 main.py 'db_elasticsearch.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/images/'
+        # python3 main.py 'db_elasticsearch.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/'
         db_elasticsearch.main(file_paths, image_src_path)
 
     elif file_to_run[0] == 'query_documents_tfidf.py':
@@ -56,11 +56,11 @@ if __name__ == '__main__':
         query_documents_tfidf.main(file_paths)
 
     elif file_to_run[0] == 'query_database.py':
-        # python3  main.py 'query_database.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/images/'
+        # python3  main.py 'query_database.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/'
         query_database.main(file_paths, image_src_path)
 
     elif file_to_run[0] == 'pdf_matrix.py':
-        # python3  main.py 'pdf_matrix.py' --number 5 -d '/Users/klara/Documents/uni/bachelorarbeit/images/images/*.png' -o '/Users/klara/Downloads/'
+        # python3  main.py 'pdf_matrix.py' --number 5 -d '/Users/klara/Documents/uni/bachelorarbeit/images/*.png' -o '/Users/klara/Downloads/'
         pdf_matrix.main(file_paths, image_src_path, dim=args.number)
 
     elif file_to_run[0] == 'convert_pdf2image.py':
@@ -70,7 +70,7 @@ if __name__ == '__main__':
         convert_pdf2image.main(file_paths, out_file)
 
     elif file_to_run[0] == 'PCA_image_clustering.py':
-        # python3 main.py 'PCA_image_clustering.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/images/*.png'
+        # python3 main.py 'PCA_image_clustering.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/*.png'
         # python3 main.py 'PCA_image_clustering.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Downloads/*.png'
         PCA_image_clustering.main(src_paths=file_paths, image_src_path=image_src_path, outpath=out_file)
 

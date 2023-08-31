@@ -21,13 +21,21 @@ def pdf_to_png(file_path: list, outpath: str = None) -> None:
     https://stackoverflow.com/questions/69643954/converting-pdf-to-png-with-python-without-pdf2image
     https://pymupdf.readthedocs.io/en/latest/pixmap.html#Pixmap.set_dpi
     '''
+    broken_files = []
     for path in file_path:
         file_name = (path.split('.')[0]).split('/')[-1]
         outpath = outpath if outpath else '/'.join(path.split('/')[:-1])
         doc = fitz.open(path)  # open document
-        pix = doc[0].get_pixmap()  # render first page to an image
-        pix.set_dpi(75, 75) # image resolution
-        pix.save(f"{outpath}/{file_name}.png")
+        try:
+            pix = doc[0].get_pixmap()  # render first page to an image
+            pix.set_dpi(75, 75) # image resolution
+            pix.save(f"{outpath}/{file_name}.png")
+        except:
+            # print(f'file {path} could not be converted to png')
+            broken_files.append(path)
+
+    if broken_files:
+        print(f'files {broken_files} could not be converted to png')
 
 def main(file_paths, outpath):
 

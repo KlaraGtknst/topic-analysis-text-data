@@ -154,14 +154,18 @@ def get_num_all_zero_tfidf_embeddings(sim_docs_document_term_matrix: TfidfVector
 
 def main(file_paths):
 
-    #df_clean_token = get_preprocessed_tokens_from_file_paths(file_paths)
     docs = get_docs_from_file_paths(file_paths)
 
     # custom preprocessor
     # usage of uni-grams only, n_gram (n>1) increases vocabulary size (bad), but does not reduce number of zero tf-idf document embeddings (bad)
     tfidf = TfidfVectorizer(input='content', preprocessor=TfidfTextPreprocessor().fit_transform, min_df=3, max_df=int(len(docs)*0.07))
-    # to dense: https://hackernoon.com/document-term-matrix-in-nlp-count-and-tf-idf-scores-explained
-    sim_docs_document_term_matrix = tfidf.fit_transform(docs).todense() # format: (document, token encoding) tf-idf score
+    sim_docs_document_term_matrix = tfidf.fit_transform(docs).todense()
     get_num_all_zero_tfidf_embeddings(sim_docs_document_term_matrix, file_paths)
     print('vocabulary: ', tfidf.get_feature_names_out(), '\nnumber of elements of vocabulary: ', len(tfidf.get_feature_names_out()))
     
+    # add flag ('column') which indicates if document is all zero tf-idf vector
+    print(sim_docs_document_term_matrix.shape)
+    flags = np.array([1 if np.array([entry  == 0 for entry in sim_docs_document_term_matrix[i]]).all() else 0 for i in range(len(sim_docs_document_term_matrix))]).reshape(len(sim_docs_document_term_matrix),1)
+    flag_matrix = np.append(sim_docs_document_term_matrix, flags, axis=1)
+    print(flag_matrix.shape)
+    get_num_all_zero_tfidf_embeddings(flag_matrix, file_paths)
