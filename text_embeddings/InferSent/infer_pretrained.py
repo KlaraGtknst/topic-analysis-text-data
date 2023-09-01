@@ -38,9 +38,26 @@ def init_infer(model_path: str, w2v_path: str, file_paths: list, version: int = 
 
 # RMSE
 def rmse(y_true, y_predict):
+    '''
+    :param y_true: true values
+    :param y_predict: predicted values
+    :return: root mean squared error
+    
+    for more information see:
+    https://blog.paperspace.com/autoencoder-image-compression-keras/
+    '''
     return tensorflow.keras.backend.mean(tensorflow.keras.backend.square(y_true-y_predict))
     
-def autoencoder(input_shape : int, data : list, latent_dim : int = 2048):
+def autoencoder_emb_model(input_shape : int, data : list, latent_dim : int = 2048):
+    '''
+    :param input_shape: dimension of the input data (1d array)
+    :param data: data to be encoded
+    :param latent_dim: dimension of the latent space; dimension of the output/ compressed data
+    :return: encoded data and trained encoder of autoencoder
+
+    for more information see:
+    https://blog.paperspace.com/autoencoder-image-compression-keras/
+    '''
     # Encoder
     x = tensorflow.keras.layers.Input(shape=(input_shape), name="encoder_input")
 
@@ -85,10 +102,8 @@ def autoencoder(input_shape : int, data : list, latent_dim : int = 2048):
     ae.fit(x_train, x_train, epochs=20, batch_size=256, shuffle=True, validation_data=(x_test, x_test))
 
     encoded_images = encoder.predict(x_train)
-    ''' decoded_images = decoder.predict(encoded_images)
-    decoded_images_orig = np.reshape(decoded_images, newshape=(decoded_images.shape[0], 28, 28))'''
     
-    return encoded_images
+    return encoded_images, encoder
 
 
 def main(file_paths, outpath):
@@ -102,11 +117,21 @@ def main(file_paths, outpath):
     
     embeddings = infersent.encode(docs, tokenize=True)
 
-    print(embeddings.shape)
+    
     #infersent.visualize('A man plays an instrument.', tokenize=True)
 
     # use AE to reduce dimensionality
     # TODO: split into train and test
     # TODO: normalize data?
-    encoded_embedding = autoencoder(input_shape=embeddings.shape[1], latent_dim=2048, data=embeddings)
-    print(encoded_embedding.shape)
+    
+    encoded_embedding, ae_encoder = autoencoder_emb_model(input_shape=embeddings.shape[1], latent_dim=2048, data=embeddings)
+    #print('embeddings shape: ',embeddings.shape)
+    print('input goal shape: ', embeddings.shape[1])
+    print('input shape: ', embeddings[0].shape)
+    print('input type: ', type(embeddings[0]))
+    #print('output shape: ', encoded_embedding.shape)
+    #print('single output shape: ', encoded_embedding[0].shape)
+    print('query input shape and type: ', embeddings[0].shape, type(embeddings[0])) #embeddings[0], 
+    embedding = ae_encoder.predict(x= embeddings)[0]
+    print(embedding)
+    print(sum((embedding - encoded_embedding[0])**2))
