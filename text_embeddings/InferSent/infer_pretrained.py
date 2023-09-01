@@ -116,10 +116,12 @@ def main(file_paths, outpath):
     
     embeddings = infersent.encode(docs, tokenize=True)
     doc = docs[0]
-    print(doc, doc.shape)
-    embedding = infersent.encode(doc, tokenize=True)
-    print('shape of embeddings: ', embeddings[0].shape, embedding.shape)
-    print('difference of embeddings: ', sum((embedding - embeddings[0])**2))
+    #print([doc], [doc])
+    # embdding does not work on singular input
+    embedding = infersent.encode([doc, doc], tokenize=True)
+    print('shape of embeddings: ', embeddings[0].shape, embedding[0].shape)
+    # the difference is non zero!
+    print('difference of embeddings: ', sum((embedding[0] - embeddings[0])**2))
     
     # infersent.visualize('A man plays an instrument.', tokenize=True)
 
