@@ -106,5 +106,7 @@ def main(file_paths, outpath):
     #infersent.visualize('A man plays an instrument.', tokenize=True)
 
     # use AE to reduce dimensionality
+    # TODO: split into train and test
+    # TODO: normalize data?
     encoded_embedding = autoencoder(input_shape=embeddings.shape[1], latent_dim=2048, data=embeddings)
     print(encoded_embedding.shape)
