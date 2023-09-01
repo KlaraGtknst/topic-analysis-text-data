@@ -91,7 +91,7 @@ def autoencoder_emb_model(input_shape : int, data : list, latent_dim : int = 204
     # ae.summary()
 
     # AE Compilation
-    ae.compile(loss="mse", optimizer=tensorflow.keras.optimizers.Adam(lr=0.0005))
+    ae.compile(loss="mse", optimizer=tensorflow.keras.optimizers.legacy.Adam(learning_rate=0.0005))
 
     # data set, TODO: split into train and test
     x_train = data
@@ -115,7 +115,11 @@ def main(file_paths, outpath):
     infersent, docs = init_infer(model_path=MODEL_PATH, w2v_path=W2V_PATH, file_paths=file_paths, version=V)
     
     embeddings = infersent.encode(docs, tokenize=True)
-
+    doc = docs[0]
+    print(doc, doc.shape)
+    embedding = infersent.encode(doc, tokenize=True)
+    print('shape of embeddings: ', embeddings[0].shape, embedding.shape)
+    print('difference of embeddings: ', sum((embedding - embeddings[0])**2))
     
     # infersent.visualize('A man plays an instrument.', tokenize=True)
 
