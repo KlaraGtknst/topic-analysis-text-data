@@ -4,6 +4,10 @@ from elasticSearch.queries.query_documents_tfidf import get_docs_from_file_paths
 import nltk
 from text_embeddings.InferSent.models import InferSent
 import torch
+import tensorflow.python.keras.layers
+import tensorflow.python.keras.models
+import tensorflow.python.keras.optimizers
+import numpy as np
 
 
 
@@ -32,6 +36,60 @@ def init_infer(model_path: str, w2v_path: str, file_paths: list, version: int = 
 
     return infersent, docs
 
+# RMSE
+def rmse(y_true, y_predict):
+    return tensorflow.keras.backend.mean(tensorflow.keras.backend.square(y_true-y_predict))
+    
+def autoencoder(input_shape : int, data : list, latent_dim : int = 2048):
+    # Encoder
+    x = tensorflow.keras.layers.Input(shape=(input_shape), name="encoder_input")
+
+    encoder_dense_layer1 = tensorflow.keras.layers.Dense(units=300, name="encoder_dense_1")(x)
+    encoder_activ_layer1 = tensorflow.keras.layers.LeakyReLU(name="encoder_leakyrelu_1")(encoder_dense_layer1)
+
+    encoder_dense_layer2 = tensorflow.keras.layers.Dense(units=latent_dim, name="encoder_dense_2")(encoder_activ_layer1)
+    encoder_output = tensorflow.keras.layers.LeakyReLU(name="encoder_output")(encoder_dense_layer2)
+
+    encoder = tensorflow.keras.models.Model(x, encoder_output, name="encoder_model")
+    encoder.summary()
+
+    # Decoder
+    decoder_input = tensorflow.keras.layers.Input(shape=(latent_dim), name="decoder_input")
+
+    decoder_dense_layer1 = tensorflow.keras.layers.Dense(units=300, name="decoder_dense_1")(decoder_input)
+    decoder_activ_layer1 = tensorflow.keras.layers.LeakyReLU(name="decoder_leakyrelu_1")(decoder_dense_layer1)
+
+    decoder_dense_layer2 = tensorflow.keras.layers.Dense(units=input_shape, name="decoder_dense_2")(decoder_activ_layer1)
+    decoder_output = tensorflow.keras.layers.LeakyReLU(name="decoder_output")(decoder_dense_layer2)
+
+    decoder = tensorflow.keras.models.Model(decoder_input, decoder_output, name="decoder_model")
+    decoder.summary()
+
+    # Autoencoder
+    ae_input = tensorflow.keras.layers.Input(shape=(input_shape), name="AE_input")
+    ae_encoder_output = encoder(ae_input)
+    ae_decoder_output = decoder(ae_encoder_output)
+
+    ae = tensorflow.keras.models.Model(ae_input, ae_decoder_output, name="AE")
+    ae.summary()
+    #####
+
+    # AE Compilation
+    ae.compile(loss="mse", optimizer=tensorflow.keras.optimizers.Adam(lr=0.0005))
+
+    # data set, TODO: split into train and test
+    x_train = data
+    x_test = data
+
+    # Training AE
+    ae.fit(x_train, x_train, epochs=20, batch_size=256, shuffle=True, validation_data=(x_test, x_test))
+
+    encoded_images = encoder.predict(x_train)
+    ''' decoded_images = decoder.predict(encoded_images)
+    decoded_images_orig = np.reshape(decoded_images, newshape=(decoded_images.shape[0], 28, 28))'''
+    
+    return encoded_images
+
 
 def main(file_paths, outpath):
 
@@ -45,7 +103,8 @@ def main(file_paths, outpath):
     embeddings = infersent.encode(docs, tokenize=True)
 
     print(embeddings.shape)
-    infersent.visualize('A man plays an instrument.', tokenize=True)
+    #infersent.visualize('A man plays an instrument.', tokenize=True)
 
-    # retrain model (cf. https://github.com/parasdahal/infersent/blob/master/train.py)
-    # project does not support training: https://github.com/facebookresearch/InferSent/issues/82
+    # use AE to reduce dimensionality
+    encoded_embedding = autoencoder(input_shape=embeddings.shape[1], latent_dim=2048, data=embeddings)
+    print(encoded_embedding.shape)
