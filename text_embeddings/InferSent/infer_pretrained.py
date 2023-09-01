@@ -68,7 +68,7 @@ def autoencoder_emb_model(input_shape : int, data : list, latent_dim : int = 204
     encoder_output = tensorflow.keras.layers.LeakyReLU(name="encoder_output")(encoder_dense_layer2)
 
     encoder = tensorflow.keras.models.Model(x, encoder_output, name="encoder_model")
-    encoder.summary()
+    # encoder.summary()
 
     # Decoder
     decoder_input = tensorflow.keras.layers.Input(shape=(latent_dim), name="decoder_input")
@@ -80,7 +80,7 @@ def autoencoder_emb_model(input_shape : int, data : list, latent_dim : int = 204
     decoder_output = tensorflow.keras.layers.LeakyReLU(name="decoder_output")(decoder_dense_layer2)
 
     decoder = tensorflow.keras.models.Model(decoder_input, decoder_output, name="decoder_model")
-    decoder.summary()
+    # decoder.summary()
 
     # Autoencoder
     ae_input = tensorflow.keras.layers.Input(shape=(input_shape), name="AE_input")
@@ -88,8 +88,7 @@ def autoencoder_emb_model(input_shape : int, data : list, latent_dim : int = 204
     ae_decoder_output = decoder(ae_encoder_output)
 
     ae = tensorflow.keras.models.Model(ae_input, ae_decoder_output, name="AE")
-    ae.summary()
-    #####
+    # ae.summary()
 
     # AE Compilation
     ae.compile(loss="mse", optimizer=tensorflow.keras.optimizers.Adam(lr=0.0005))
@@ -118,13 +117,13 @@ def main(file_paths, outpath):
     embeddings = infersent.encode(docs, tokenize=True)
 
     
-    #infersent.visualize('A man plays an instrument.', tokenize=True)
+    # infersent.visualize('A man plays an instrument.', tokenize=True)
 
     # use AE to reduce dimensionality
     # TODO: split into train and test
     # TODO: normalize data?
-    
     encoded_embedding, ae_encoder = autoencoder_emb_model(input_shape=embeddings.shape[1], latent_dim=2048, data=embeddings)
     # Encoder does not work on singular input
-    embedding = ae_encoder.predict(x= embeddings)[0]
+    test = np.array([embeddings[0], embeddings[0]])
+    embedding = ae_encoder.predict(x= test)[0]
     print('difference of embeddings: ', sum((embedding - encoded_embedding[0])**2))
