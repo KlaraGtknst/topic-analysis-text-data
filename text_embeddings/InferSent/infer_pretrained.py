@@ -125,13 +125,6 @@ def main(file_paths, outpath):
     # TODO: normalize data?
     
     encoded_embedding, ae_encoder = autoencoder_emb_model(input_shape=embeddings.shape[1], latent_dim=2048, data=embeddings)
-    #print('embeddings shape: ',embeddings.shape)
-    print('input goal shape: ', embeddings.shape[1])
-    print('input shape: ', embeddings[0].shape)
-    print('input type: ', type(embeddings[0]))
-    #print('output shape: ', encoded_embedding.shape)
-    #print('single output shape: ', encoded_embedding[0].shape)
-    print('query input shape and type: ', embeddings[0].shape, type(embeddings[0])) #embeddings[0], 
+    # Encoder does not work on singular input
     embedding = ae_encoder.predict(x= embeddings)[0]
-    print(embedding)
-    print(sum((embedding - encoded_embedding[0])**2))
+    print('difference of embeddings: ', sum((embedding - encoded_embedding[0])**2))
