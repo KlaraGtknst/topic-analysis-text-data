@@ -15,6 +15,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 import unidecode
 from nltk.stem import WordNetLemmatizer
 from text_embeddings.TFIDF.preprocessing.TfidfTextPreprocessor import *
+from text_embeddings.TFIDF.preprocessing.TfidfPreprocessingSteps import *
 
 '''------Code to find documents most fitting for input query-------
 run this code by typing and altering the path:
@@ -151,6 +152,27 @@ def get_num_all_zero_tfidf_embeddings(sim_docs_document_term_matrix: TfidfVector
             count += 1
     print(f'number of documents with all zero tf-idf values: {count} from {len(sim_docs_document_term_matrix)}')
 
+def show_preprocessing_steps(sample_text='The résultat: 123 people, 123456 CATS and 123.45 pizzas!\n'):
+    sample = sample_text
+    #preProc = TfidfTextPreprocessor()
+    preProcSteps = TfidfPreprocessingSteps([sample])
+    preProcSteps.strip_accents()
+    print('accents: ', preProcSteps.X)
+    preProcSteps.strip_newlines()
+    print('new lines: ', preProcSteps.X)
+    preProcSteps.lowercase()
+    print('lowercase: ', preProcSteps.X)
+    preProcSteps.discretize_numbers()
+    print('discretize numbers: ', preProcSteps.X)
+    preProcSteps.remove_punctuations()
+    print('punctations: ', preProcSteps.X)
+    preProcSteps.change_number_encoding()
+    print('change encoding: ', preProcSteps.X)
+    preProcSteps.remove_stopwords()
+    print('stopwords: ', preProcSteps.X)
+    preProcSteps.lemmatisation()
+    print('lemmatisation: ', preProcSteps.X)
+    print('result: ', preProcSteps.to_text())
 
 def main(file_paths):
 
@@ -158,7 +180,7 @@ def main(file_paths):
 
     # custom preprocessor
     # usage of uni-grams only, n_gram (n>1) increases vocabulary size (bad), but does not reduce number of zero tf-idf document embeddings (bad)
-    tfidf = TfidfVectorizer(input='content', preprocessor=TfidfTextPreprocessor().fit_transform, min_df=3, max_df=int(len(docs)*0.07))
+    '''tfidf = TfidfVectorizer(input='content', preprocessor=TfidfTextPreprocessor().fit_transform, min_df=3, max_df=int(len(docs)*0.07))
     sim_docs_document_term_matrix = tfidf.fit_transform(docs).todense()
     get_num_all_zero_tfidf_embeddings(sim_docs_document_term_matrix, file_paths)
     print('vocabulary: ', tfidf.get_feature_names_out(), '\nnumber of elements of vocabulary: ', len(tfidf.get_feature_names_out()))
@@ -168,4 +190,8 @@ def main(file_paths):
     flags = np.array([1 if np.array([entry  == 0 for entry in sim_docs_document_term_matrix[i]]).all() else 0 for i in range(len(sim_docs_document_term_matrix))]).reshape(len(sim_docs_document_term_matrix),1)
     flag_matrix = np.append(sim_docs_document_term_matrix, flags, axis=1)
     print(flag_matrix.shape)
-    get_num_all_zero_tfidf_embeddings(flag_matrix, file_paths)
+    get_num_all_zero_tfidf_embeddings(flag_matrix, file_paths)'''
+
+    # preprocess example
+    show_preprocessing_steps()
+        
