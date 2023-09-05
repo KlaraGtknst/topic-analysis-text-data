@@ -8,7 +8,7 @@ from elasticSearch import db_elasticsearch
 from elasticSearch.queries import query_documents_tfidf, query_database
 from doc_images import pdf_matrix, convert_pdf2image
 from doc_images.PCA import PCA_image_clustering
-#from tests import word_embeddings
+from test_functions import word_embeddings
 from elasticSearch.queries import query_database_inferSent
 from user_interface import user_interface
 #from doc_images.AE import AE_image_clustering
