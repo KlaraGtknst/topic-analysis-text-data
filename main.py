@@ -8,8 +8,9 @@ from elasticSearch import db_elasticsearch
 from elasticSearch.queries import query_documents_tfidf, query_database
 from doc_images import pdf_matrix, convert_pdf2image
 from doc_images.PCA import PCA_image_clustering
-from tests import word_embeddings
+#from tests import word_embeddings
 from elasticSearch.queries import query_database_inferSent
+from user_interface import user_interface
 #from doc_images.AE import AE_image_clustering
 
 
@@ -86,6 +87,10 @@ if __name__ == '__main__':
     elif file_to_run[0] == 'query_database_inferSent.py':
         # python3 main.py 'query_database_inferSent.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf'
         query_database_inferSent.main(file_paths, out_file)
+
+    elif file_to_run[0] == 'user_interface.py':
+        # python3 main.py 'user_interface.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf'
+        user_interface.main()
 
     else:
         print('Error: No file to run.')
