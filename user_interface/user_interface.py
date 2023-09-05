@@ -32,7 +32,7 @@ class QueryPage(Frame):
         # build appearance of window
         # window
         #self = Tk()
-        #self.title("Topic Analysis Text Data")
+        #
 
         # buttons
         self.buttons = []
@@ -165,6 +165,7 @@ class Frame_Controller(Tk):
 
     def __init__(self, *args, **kwargs):
         Tk.__init__(self, *args, **kwargs)
+        self.title("Topic Analysis Text Data")
         container = Frame(self)
         container.pack(side="top", fill="both", expand = True)
         container.grid_rowconfigure(0, weight=1)
