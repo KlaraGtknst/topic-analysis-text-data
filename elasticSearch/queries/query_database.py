@@ -127,7 +127,7 @@ def get_docs_from_same_cluster(elastic_search_client: Elasticsearch, path_to_doc
     search_results = elastic_search_client.search(index='bahamas', query=query, source_includes=['path'], size=n_results)
 
     # Extract and process the search results
-    print('Query Document: ', doc_id, ' of cluster ', cluster, '\n')
+    '''print('Query Document: ', doc_id, ' of cluster ', cluster, '\n')
     for hit in search_results['hits']['hits']:
         # Access the relevant fields from the hit
         source = hit['_source']
@@ -137,7 +137,7 @@ def get_docs_from_same_cluster(elastic_search_client: Elasticsearch, path_to_doc
         # Process the data as needed
         print(f"Document ID: {document_id}, Score: {score}")
         print("Source Data:", source)
-        print("-" * 20)
+        print("-" * 20)'''
 
     return search_results
 
@@ -163,17 +163,32 @@ def main(src_paths, image_src_path):
     # number of documents in database
     print('number of documents in database: ', get_number_docs_in_db(client))
 
+    # create json object to save results to disk and use them later for topic modelling
+    results = {}
+
     # Cluster query
-    print('-' * 40, 'Query for same cluster in database', '-' * 40)
+    doc_to_search_for = src_paths[0]
+    print('-' * 40, f'Query for same cluster as {doc_to_search_for} in database', '-' * 40)
     NUM_RESULTS = 5
-    get_docs_from_same_cluster(elastic_search_client = client, path_to_doc = src_paths[0], n_results=NUM_RESULTS)
+    cluster_results = get_docs_from_same_cluster(elastic_search_client = client, path_to_doc = doc_to_search_for, n_results=NUM_RESULTS)
+    print('Cluster results: ',  [hit['_source']['path'] for hit in cluster_results['hits']['hits']])
+    results['tfidf'] = {doc_to_search_for: [hit['_source']['path'] for hit in cluster_results['hits']['hits']]}
 
 
     # query database for a document using tfidf
     docs = get_docs_from_file_paths(src_paths)
     sim_docs_tfidf = TfidfVectorizer(input='content', preprocessor=TfidfTextPreprocessor().fit_transform, min_df=3, max_df=int(len(docs)*0.07))
     sim_docs_document_term_matrix = sim_docs_tfidf.fit(docs)
-    results = find_document_tfidf(client, sim_docs_tfidf, path=src_paths[0])
-    image_paths = [image_src_path + file_name.split('.')[0] + '.png' for file_name in list(results.values())]
-    create_image_matrix(image_paths, 2)
+    tfidf_results = find_document_tfidf(client, sim_docs_tfidf, path=doc_to_search_for)
+    image_paths = [image_src_path + file_name.split('.')[0] + '.png' for file_name in list(tfidf_results.values())]
 
+    #create_image_matrix(image_paths, 2)
+    print('-' * 40, f'TFIDF results for {doc_to_search_for} in database', '-' * 40)
+    print(doc_to_search_for.split('/')[:-1])
+    print()
+    results['tfidf'] = {doc_to_search_for: ['/'.join(doc_to_search_for.split('/')[:-1]) + '/' + doc for doc in tfidf_results.values()]}
+    #results.to_json('results/results.json')
+    print(results)
+    #json_obj = json.dumps(results)
+    with open("results/results.json", "w") as outfile:
+        json.dump(results, outfile)
