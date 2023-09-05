@@ -5,6 +5,13 @@ from elasticsearch import Elasticsearch
 from text_visualizations import visualize_texts
 from elasticSearch.queries import query_database
 from elasticSearch.queries.query_documents_tfidf import *
+from elasticSearch import db_elasticsearch
+from gensim.models.doc2vec import Doc2Vec
+
+# TODO
+src_paths = glob.glob('/Users/klara/Documents/uni/bachelorarbeit/data/0/*.pdf')
+NUM_DIMENSIONS = 55
+NUM_COMPONENTS = 2
 
  # Create the client instance
 client = Elasticsearch("http://localhost:9200")
@@ -40,6 +47,15 @@ def run_query():
         query_result_status_label.config(text=f'Query Resultat for {doc_to_search_for}:')
         query_result_content_label.config(text='\n'.join(results["cluster"][doc_to_search_for]))
 
+    elif query_type == 'Doc2Vec':
+        train_corpus = list(db_elasticsearch.get_tagged_input_documents(src_paths))
+        d2v_model = Doc2Vec(train_corpus, vector_size=NUM_DIMENSIONS, window=2, min_count=2, workers=4, epochs=40)
+        doc2vec_result = query_database.search_in_db(path=doc_to_search_for, client=client, model=d2v_model)
+        results['Doc2Vec'] = {doc_to_search_for: doc2vec_result.values()}
+
+        query_result_status_label.config(text=f'Query Resultat for {doc_to_search_for}:')
+        query_result_content_label.config(text='\n'.join(results["Doc2Vec"][doc_to_search_for]))
+
 
 # build appearance of window
 # window
@@ -60,7 +76,7 @@ chosen_doc = StringVar(window)
 chosen_doc.set(docs[0]) # default value
 doc_options = OptionMenu(window, chosen_doc, *docs)
 # # for query type
-query_options = ['TF-IDF', 'cluster']#, 'InferSent', 'Universal Sentence Encoder', 'Hugging Face Sentence Transformer']
+query_options = ['TF-IDF', 'cluster', 'Doc2Vec']#, 'InferSent', 'Universal Sentence Encoder', 'Hugging Face Sentence Transformer']
 chosen_query_type = StringVar(window)
 chosen_query_type.set(query_options[0]) # default value
 query_dropdown = OptionMenu(window, chosen_query_type, *query_options)
@@ -85,26 +101,6 @@ buttons.extend([doc_options, wordCloud_button, query_dropdown, query_button, que
 
 
 # place elements on canvas
-'''anweisungs_label.grid(row=0, column=0, pady = 20)
-change_button.grid(row=0, column=1, pady = 20)
-
-wordCloud_label.grid(row=1, column=0, pady = 20)
-wordCloud_button.grid(row=1, column=1, pady = 20)
-
-info_label.grid(row=-1, column=0)
-exit_button.grid(row=-1, column=1)
-
-doc_options_label.grid(row=3, column=0)
-doc_options.grid(row=3, column=1)
-
-query_options_label.grid(row=4, column=0)
-query_dropdown.grid(row=4, column=1)
-
-query_info_label.grid(row=5, column=0)
-query_button.grid(row=5, column=1)
-
-query_result_label.grid(row=6, column=0)'''
-
 for row in range(len(labels)):
     labels[row].grid(row=row, column=0)
     buttons[row].grid(row=row, column=1)
