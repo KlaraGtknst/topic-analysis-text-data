@@ -29,11 +29,6 @@ class QueryPage(Frame):
 
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
-        # build appearance of window
-        # window
-        #self = Tk()
-        #
-
         # buttons
         self.buttons = []
         self.exit_button = Button(self,  text="Visualization Page", command=lambda: controller.show_frame(ImgPage))
@@ -103,20 +98,6 @@ class QueryPage(Frame):
             self.query_result_status_label.config(text=f'Query Resultat for {doc_to_search_for}:')
             self.query_result_content_label.config(text='\n'.join(results["Doc2Vec"][doc_to_search_for]))
 
-class StartPage(Frame):
-
-    def __init__(self, parent, controller):
-        Frame.__init__(self,parent)
-        label = Label(self, text="Start Page", font=12)
-        label.pack(pady=10,padx=10)
-
-        button = Button(self, text="Visit Query Page",
-                            command=lambda: controller.show_frame(QueryPage))
-        button.pack()
-
-        button2 = Button(self, text="Visit Visualization Page",
-                            command=lambda: controller.show_frame(ImgPage))
-        button2.pack()
 
 class ImgPage(Frame):
 
@@ -160,6 +141,24 @@ class ImgPage(Frame):
 
     def run_term_frq(self):
         visualize_texts.get_one_visualization(option='term_frequency', paths=[self.chosen_doc.get()])
+        
+
+class StartPage(Frame):
+
+    def __init__(self, parent, controller):
+        Frame.__init__(self,parent)
+        label = Label(self, text="Start Page", font=12)
+        label.pack(pady=10,padx=10)
+
+        button = Button(self, text="Visit Query Page",
+                            command=lambda: controller.show_frame(QueryPage))
+        button.pack()
+
+        button2 = Button(self, text="Visit Visualization Page",
+                            command=lambda: controller.show_frame(ImgPage))
+        button2.pack()
+
+
 
 class Frame_Controller(Tk):
 
