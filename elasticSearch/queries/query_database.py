@@ -154,6 +154,22 @@ def get_number_docs_in_db(client: Elasticsearch) -> int:
     resp = client.cat.count(index='bahamas', params={"format": "json"})
     return resp[0]['count']
 
+
+def get_sim_docs_tfidf(doc_to_search_for, src_paths='/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf', client_addr="http://localhost:9200"):
+    '''
+    :param doc_to_search_for: path to the document to be searched for
+    :param src_paths: path to the document corpus to be searched in
+    :param client_addr: address of the Elasticsearch client
+    :return: list of paths to documents in the same cluster as the document to be searched for
+    '''
+    client = Elasticsearch(client_addr)
+    src_paths = glob.glob(src_paths)
+    docs = get_docs_from_file_paths(src_paths)
+    sim_docs_tfidf = TfidfVectorizer(input='content', preprocessor=TfidfTextPreprocessor().fit_transform, min_df=3, max_df=int(len(docs)*0.07))
+    sim_docs_document_term_matrix = sim_docs_tfidf.fit(docs)
+    return find_document_tfidf(client, sim_docs_tfidf, path=doc_to_search_for)
+        
+
 def main(src_paths, image_src_path):
     
     # Create the client instance
