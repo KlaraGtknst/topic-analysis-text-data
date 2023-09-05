@@ -36,6 +36,7 @@ class QueryPage(Frame):
         self.query_button = Button(self, text="Query", command=self.run_query)
         # # visualizing query results
         self.wordCloud_results_button = Button(self, text="Word Cloud", state='disabled', command=lambda: visualize_texts.get_one_visualization(option='wordcloud', paths=results[self.chosen_query_type.get()][self.chosen_doc.get()]))
+        self.termFreq_results_button = Button(self, text="Term Frequency", state='disabled', command=lambda: visualize_texts.get_one_visualization(option='term_frequency', paths=results[self.chosen_query_type.get()][self.chosen_doc.get()]))
 
         # drop down menu 
         # # for document option
@@ -58,10 +59,11 @@ class QueryPage(Frame):
         self.query_info_label = Label(self, text="Keine Query gestartet.")
         self.query_result_status_label = Label(self, text="Kein Query Resultat.")
         self.query_result_content_label = Label(self, text="-")
-        self.vis_query_res_label = Label(self, text="Visualisiere Query Resultat mittels WordCloud:")
+        self.vis_query_res_wordCloud_label = Label(self, text="Visualisiere Query Resultat mittels WordCloud:")
+        self.vis_query_res_termFreq_label = Label(self, text="Visualisiere Query Resultat mittels Term Frequency:")
 
-        self.labels.extend([self.doc_options_label, self.query_options_label, self.query_info_label, self.query_result_status_label, self.vis_query_res_label, self.exit_label])
-        self.buttons.extend([self.doc_options, self.query_dropdown, self.query_button, self.query_result_content_label, self.wordCloud_results_button, self.exit_button])
+        self.labels.extend([self.doc_options_label, self.query_options_label, self.query_info_label, self.query_result_status_label, self.vis_query_res_wordCloud_label, self.vis_query_res_termFreq_label,self.exit_label])
+        self.buttons.extend([self.doc_options, self.query_dropdown, self.query_button, self.query_result_content_label, self.wordCloud_results_button, self.termFreq_results_button, self.exit_button])
 
 
 
@@ -86,6 +88,7 @@ class QueryPage(Frame):
             self.query_result_status_label.config(text=f'Query Resultat for {doc_to_search_for}:')
             self.query_result_content_label.config(text='\n'.join(results['TF-IDF'][doc_to_search_for]))
             self.wordCloud_results_button.config(state='active')
+            self.termFreq_results_button.config(state='active')
 
         elif query_type == 'cluster':
             cluster_results = query_database.get_docs_from_same_cluster(elastic_search_client = client, path_to_doc = doc_to_search_for, n_results=NUM_RESULTS)
@@ -95,6 +98,7 @@ class QueryPage(Frame):
             self.query_result_status_label.config(text=f'Query Resultat for {doc_to_search_for}:')
             self.query_result_content_label.config(text='\n'.join(results["cluster"][doc_to_search_for]))
             self.wordCloud_results_button.config(state='active')
+            self.termFreq_results_button.config(state='active')
 
         elif query_type == 'Doc2Vec':
             train_corpus = list(db_elasticsearch.get_tagged_input_documents(src_paths=glob.glob(SRC_PATH)))
@@ -105,6 +109,7 @@ class QueryPage(Frame):
             self.query_result_status_label.config(text=f'Query Resultat for {doc_to_search_for}:')
             self.query_result_content_label.config(text='\n'.join(results["Doc2Vec"][doc_to_search_for]))
             self.wordCloud_results_button.config(state='active')
+            self.termFreq_results_button.config(state='active')
 
 
 class ImgPage(Frame):
