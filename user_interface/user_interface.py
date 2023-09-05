@@ -9,9 +9,10 @@ from elasticSearch import db_elasticsearch
 from gensim.models.doc2vec import Doc2Vec
 
 # TODO
-src_paths = glob.glob('/Users/klara/Documents/uni/bachelorarbeit/data/0/*.pdf')
+SRC_PATH = glob.glob('/Users/klara/Documents/uni/bachelorarbeit/data/0/*.pdf')
 NUM_DIMENSIONS = 55
 NUM_COMPONENTS = 2
+NUM_RESULTS = 4
 
  # Create the client instance
 client = Elasticsearch("http://localhost:9200")
@@ -23,17 +24,14 @@ def run_wordCloud():
 
 
 def run_query():
-    print('start')
-    NUM_RESULTS = 4
     doc_to_search_for = chosen_doc.get()
     query_info_label.config(text=f'Query gestartet für {doc_to_search_for}.')
-
     query_type = chosen_query_type.get()
     print(query_type)
 
     if query_type == 'TF-IDF':
         # alter src_path & client address if necessary
-        tfidf_results = query_database.get_sim_docs_tfidf(doc_to_search_for)
+        tfidf_results = query_database.get_sim_docs_tfidf(doc_to_search_for, src_paths=SRC_PATH)
         results['tfidf'] = {doc_to_search_for: ['/'.join(doc_to_search_for.split('/')[:-1]) + '/' + doc for doc in tfidf_results.values()]}
 
         query_result_status_label.config(text=f'Query Resultat for {doc_to_search_for}:')
@@ -48,13 +46,14 @@ def run_query():
         query_result_content_label.config(text='\n'.join(results["cluster"][doc_to_search_for]))
 
     elif query_type == 'Doc2Vec':
-        train_corpus = list(db_elasticsearch.get_tagged_input_documents(src_paths))
+        train_corpus = list(db_elasticsearch.get_tagged_input_documents(SRC_PATH))
         d2v_model = Doc2Vec(train_corpus, vector_size=NUM_DIMENSIONS, window=2, min_count=2, workers=4, epochs=40)
         doc2vec_result = query_database.search_in_db(path=doc_to_search_for, client=client, model=d2v_model)
         results['Doc2Vec'] = {doc_to_search_for: doc2vec_result.values()}
 
         query_result_status_label.config(text=f'Query Resultat for {doc_to_search_for}:')
         query_result_content_label.config(text='\n'.join(results["Doc2Vec"][doc_to_search_for]))
+
 
 
 # build appearance of window
@@ -93,10 +92,6 @@ query_result_status_label = Label(window, text="Kein Query Resultat.")
 query_result_content_label = Label(window, text="-")
 labels.extend([doc_options_label, wordCloud_label, query_options_label, query_info_label, query_result_status_label, exit_label])
 buttons.extend([doc_options, wordCloud_button, query_dropdown, query_button, query_result_content_label, exit_button])
-
-
-
-
 
 
 
