@@ -8,6 +8,7 @@ from elasticSearch.queries.query_documents_tfidf import *
 
  # Create the client instance
 client = Elasticsearch("http://localhost:9200")
+results = {}
 
 # Button functions
 def button_action():
@@ -32,18 +33,16 @@ def run_query():
         sim_docs_tfidf = TfidfVectorizer(input='content', preprocessor=TfidfTextPreprocessor().fit_transform, min_df=3, max_df=int(len(docs)*0.07))
         sim_docs_document_term_matrix = sim_docs_tfidf.fit(docs)
         tfidf_results = query_database.find_document_tfidf(client, sim_docs_tfidf, path=doc_to_search_for)
+        results['tfidf'] = {doc_to_search_for: ['/'.join(doc_to_search_for.split('/')[:-1]) + '/' + doc for doc in tfidf_results.values()]}
         #image_paths = [image_src_path + file_name.split('.')[0] + '.png' for file_name in list(tfidf_results.values())]
-        query_info_label.config(text=f'Query Resultat: {tfidf_results}.')
+        query_info_label.config(text=f'Query Resultat: {results["tfidf"][doc_to_search_for]}.')
 
     elif query_type == 'cluster':
-        print('cluster')
-        #query_database.main(src_paths, None)
-        print('-' * 40, f'Query for same cluster as {doc_to_search_for} in database', '-' * 40)
         cluster_results = query_database.get_docs_from_same_cluster(elastic_search_client = client, path_to_doc = doc_to_search_for, n_results=NUM_RESULTS)
         result = [hit['_source']['path'] for hit in cluster_results['hits']['hits']]
         print('Cluster results: ',  result)
-        #results['cluster'] = {doc_to_search_for: [hit['_source']['path'] for hit in cluster_results['hits']['hits']]}
-        query_info_label.config(text=f'Query Resultat: {result}.')
+        results['cluster'] = {doc_to_search_for: result}
+        query_info_label.config(text=f'Query Resultat: {results["cluster"][doc_to_search_for]}.')
 # build appearance of window
 # window
 window = Tk()
