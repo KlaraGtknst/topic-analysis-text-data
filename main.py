@@ -68,6 +68,8 @@ if __name__ == '__main__':
         # python3 main.py 'convert_pdf2image.py' -i '/Users/klara/Documents/uni/bachelorarbeit/data/0/SAC29-14.pdf' -o '/Users/klara/Downloads/'
         # python3 main.py 'convert_pdf2image.py' -d '/Users/klara/Documents/uni/bachelorarbeit/data/0/*.pdf' -o '/Users/klara/Documents/uni/bachelorarbeit/images/'
         # python3 main.py 'convert_pdf2image.py' -d'/Users/klara/Downloads/*.pdf' -o '/Users/klara/Downloads/'
+        # pdf below does not work, pdf schief
+        # python3 main.py 'convert_pdf2image.py' -i '/Users/klara/Documents/uni/bachelorarbeit/data/0/SAC34-38.pdf' -o '/Users/klara/Downloads/'
         convert_pdf2image.main(file_paths, out_file)
 
     elif file_to_run[0] == 'PCA_image_clustering.py':
