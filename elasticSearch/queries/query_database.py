@@ -180,7 +180,7 @@ def main(src_paths, image_src_path):
     sim_docs_tfidf = TfidfVectorizer(input='content', preprocessor=TfidfTextPreprocessor().fit_transform, min_df=3, max_df=int(len(docs)*0.07))
     sim_docs_document_term_matrix = sim_docs_tfidf.fit(docs)
     tfidf_results = find_document_tfidf(client, sim_docs_tfidf, path=doc_to_search_for)
-    image_paths = [image_src_path + file_name.split('.')[0] + '.png' for file_name in list(tfidf_results.values())]
+    #image_paths = [image_src_path + file_name.split('.')[0] + '.png' for file_name in list(tfidf_results.values())]
 
     #create_image_matrix(image_paths, 2)
     print('-' * 40, f'TFIDF results for {doc_to_search_for} in database', '-' * 40)
