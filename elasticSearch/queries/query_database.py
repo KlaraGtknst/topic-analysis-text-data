@@ -172,7 +172,7 @@ def main(src_paths, image_src_path):
     NUM_RESULTS = 5
     cluster_results = get_docs_from_same_cluster(elastic_search_client = client, path_to_doc = doc_to_search_for, n_results=NUM_RESULTS)
     print('Cluster results: ',  [hit['_source']['path'] for hit in cluster_results['hits']['hits']])
-    results['tfidf'] = {doc_to_search_for: [hit['_source']['path'] for hit in cluster_results['hits']['hits']]}
+    results['cluster'] = {doc_to_search_for: [hit['_source']['path'] for hit in cluster_results['hits']['hits']]}
 
 
     # query database for a document using tfidf
