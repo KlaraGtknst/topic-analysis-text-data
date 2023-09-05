@@ -69,12 +69,13 @@ def get_one_visualization(option:str, paths: list) -> None:
     This function plots a word cloud of the tokens of the document.
     '''
     tokens = []
+    first_doc = paths[0].split('/')[-1]
     for path in paths:
         tokens.extend(preprocess_doc(path))
     if option == 'wordcloud':
-        word_cloud(tokens, file_name=path.split('/')[-1])
+        word_cloud(tokens, file_name= first_doc if (len(paths) == 1) else f'multiple docs similar to {first_doc}')
     elif option == 'term_frequency':
-        term_frequency(tokens, file_name=path.split('/')[-1])
+        term_frequency(tokens, file_name=first_doc if (len(paths) == 1) else f'multiple docs similar to {first_doc}')
     else:
         print('Error: No valid option chosen.')
 

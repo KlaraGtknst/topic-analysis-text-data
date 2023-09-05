@@ -60,7 +60,7 @@ def search_in_db(client: Elasticsearch, model: Doc2Vec, path: str):
     
     scores = {}
     for hit in result['hits']['hits']:
-        scores[hit['_score']] = hit['_source']['path'].split('/')[-1]
+        scores[hit['_score']] = hit['_source']['path']
     return scores
 
 
@@ -98,7 +98,7 @@ def find_document_tfidf(client: Elasticsearch, model: TfidfVectorizer, path: str
     
     scores = {}
     for hit in result['hits']['hits']:
-        scores[hit['_score']] = hit['_source']['path'].split('/')[-1]
+        scores[hit['_score']] = hit['_source']['path']
     return scores
 
 
