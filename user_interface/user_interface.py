@@ -9,7 +9,8 @@ from elasticSearch import db_elasticsearch
 from gensim.models.doc2vec import Doc2Vec
 
 # TODO
-SRC_PATH = glob.glob('/Users/klara/Documents/uni/bachelorarbeit/data/0/*.pdf')
+SRC_PATH = '/Users/klara/Documents/uni/bachelorarbeit/data/0/*.pdf'
+DOC_PATH = '/Users/klara/Downloads/*.pdf'
 NUM_DIMENSIONS = 55
 NUM_COMPONENTS = 2
 NUM_RESULTS = 4
@@ -24,7 +25,7 @@ results = {}
 
 
 
-class PageOne(Frame):
+class QueryPage(Frame):
 
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
@@ -35,14 +36,13 @@ class PageOne(Frame):
 
         # buttons
         self.buttons = []
-        self.exit_button = Button(self, text="Beenden", command=self.quit)
-        self.wordCloud_button = Button(self, text="Word Cloud", command=self.run_wordCloud)
+        self.exit_button = Button(self,  text="Visualization Page", command=lambda: controller.show_frame(ImgPage))
         # # querying db
         self.query_button = Button(self, text="Query", command=self.run_query)
 
         # drop down menu 
         # # for document option
-        self.docs = glob.glob('/Users/klara/Downloads/*.pdf')
+        self.docs = glob.glob(DOC_PATH)
         self.chosen_doc = StringVar(self)
         self.chosen_doc.set(self.docs[0]) # default value
         self.doc_options = OptionMenu(self, self.chosen_doc, *self.docs)
@@ -55,15 +55,14 @@ class PageOne(Frame):
 
         # labels
         self.labels = []
-        self.wordCloud_label = Label(self, text="Ich führe eine Wordcloud aus:\nKlicke auf 'Word Cloud'.")
         self.doc_options_label = Label(self, text="Wähle ein Doc:\nKlicke auf 'Ändern'.")
         self.query_options_label = Label(self, text="Wähle ein Query Typ:\nKlicke auf 'Ändern'.")
-        self.exit_label = Label(self, text="Der Beenden Button schliesst das Programm.")
+        self.exit_label = Label(self, text="Visit the visualization page:\nKlicke auf 'Visualisierung'.")
         self.query_info_label = Label(self, text="Keine Query gestartet.")
         self.query_result_status_label = Label(self, text="Kein Query Resultat.")
         self.query_result_content_label = Label(self, text="-")
-        self.labels.extend([self.doc_options_label, self.wordCloud_label, self.query_options_label, self.query_info_label, self.query_result_status_label, self.exit_label])
-        self.buttons.extend([self.doc_options, self.wordCloud_button, self.query_dropdown, self.query_button, self.query_result_content_label, self.exit_button])
+        self.labels.extend([self.doc_options_label, self.query_options_label, self.query_info_label, self.query_result_status_label, self.exit_label])
+        self.buttons.extend([self.doc_options, self.query_dropdown, self.query_button, self.query_result_content_label, self.exit_button])
 
 
 
@@ -71,10 +70,6 @@ class PageOne(Frame):
         for row in range(len(self.labels)):
             self.labels[row].grid(row=row, column=0)
             self.buttons[row].grid(row=row, column=1)
-
-    # Button functions
-    def run_wordCloud(self):
-        visualize_texts.main([self.chosen_doc.get()], '/Users/klara/Downloads/')
 
 
     def run_query(self):
@@ -100,7 +95,7 @@ class PageOne(Frame):
             self.query_result_content_label.config(text='\n'.join(results["cluster"][doc_to_search_for]))
 
         elif query_type == 'Doc2Vec':
-            train_corpus = list(db_elasticsearch.get_tagged_input_documents(SRC_PATH))
+            train_corpus = list(db_elasticsearch.get_tagged_input_documents(src_paths=glob.glob(SRC_PATH)))
             d2v_model = Doc2Vec(train_corpus, vector_size=NUM_DIMENSIONS, window=2, min_count=2, workers=4, epochs=40)
             doc2vec_result = query_database.search_in_db(path=doc_to_search_for, client=client, model=d2v_model)
             results['Doc2Vec'] = {doc_to_search_for: doc2vec_result.values()}
@@ -115,26 +110,58 @@ class StartPage(Frame):
         label = Label(self, text="Start Page", font=12)
         label.pack(pady=10,padx=10)
 
-        button = Button(self, text="Visit Page 1",
-                            command=lambda: controller.show_frame(PageOne))
+        button = Button(self, text="Visit Query Page",
+                            command=lambda: controller.show_frame(QueryPage))
         button.pack()
 
-        button2 = Button(self, text="Visit Page 2",
-                            command=lambda: controller.show_frame(PageTwo))
+        button2 = Button(self, text="Visit Visualization Page",
+                            command=lambda: controller.show_frame(ImgPage))
         button2.pack()
 
-class PageTwo(Frame):
+class ImgPage(Frame):
 
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
         self.controller = controller
-        label = Label(self, text="This is page 2", font=controller.title_font)
-        label.pack(side="top", fill="x", pady=10)
-        button = Button(self, text="Go to the start page",
-                           command=lambda: controller.show_frame(StartPage))
-        button.pack()
 
-class SeaofBTCapp(Tk):
+        # labels
+        labels = []
+        self.wordCloud_label = Label(self, text="Ich führe eine Wordcloud aus:\nKlicke auf 'Word Cloud'.")
+        self.termFrequency_label = Label(self, text="Ich führe eine Term Frequency aus:\nKlicke auf 'Term Frequency'.")
+        self.doc_options_label = Label(self, text="Wähle ein Doc:\nKlicke auf 'Ändern'.")
+        self.exit_label = Label(self, text="Visit the query page:\nKlicke auf 'Query'.")
+      
+
+        # buttons
+        buttons = []
+        self.wordCloud_button = Button(self, text="Word Cloud", command=self.run_wordCloud)
+        self.termFrequency_button = Button(self, text="Term Frequency", command=self.run_term_frq)
+        exit_button = Button(self, text="Go to the start page",
+                           command=lambda: controller.show_frame(StartPage))
+
+        # drop down menu 
+        # # for document option
+        self.docs = glob.glob(DOC_PATH)
+        self.chosen_doc = StringVar(self)
+        self.chosen_doc.set(self.docs[0]) # default value
+        self.doc_options = OptionMenu(self, self.chosen_doc, *self.docs)
+
+        labels.extend([self.doc_options_label, self.wordCloud_label, self.termFrequency_label, self.exit_label])
+        buttons.extend([self.doc_options, self.wordCloud_button, self.termFrequency_button, exit_button])
+
+        # place elements on canvas
+        for row in range(len(labels)):
+            labels[row].grid(row=row, column=0)
+            buttons[row].grid(row=row, column=1)
+
+    # Button functions
+    def run_wordCloud(self):
+        visualize_texts.get_one_visualization(option='wordcloud', paths=[self.chosen_doc.get()])
+
+    def run_term_frq(self):
+        visualize_texts.get_one_visualization(option='term_frequency', paths=[self.chosen_doc.get()])
+
+class Frame_Controller(Tk):
 
     def __init__(self, *args, **kwargs):
         Tk.__init__(self, *args, **kwargs)
@@ -144,21 +171,19 @@ class SeaofBTCapp(Tk):
         container.grid_columnconfigure(0, weight=1)
         self.title_font = ("Helvetica", 12, "bold")
         self.frames = {}
-        for F in (StartPage, PageOne, PageTwo):
+        for F in (StartPage, QueryPage, ImgPage):
             frame = F(container, self)
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
-        print(self.frames)
         self.show_frame(StartPage)
 
     def show_frame(self, cont):
         frame = self.frames[cont]
-        print(cont)
         frame.tkraise()
 
 
 
 # run window
 def main():
-    app = SeaofBTCapp()
+    app = Frame_Controller()
     app.mainloop()

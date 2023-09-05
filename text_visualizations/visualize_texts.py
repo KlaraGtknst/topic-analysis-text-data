@@ -49,6 +49,34 @@ def word_cloud(tokens: list, file_name: str, outpath: str = None) -> None:
     except ValueError:
         print('Error: No words to plot.')
 
+def preprocess_doc(path:str) -> list:
+    '''
+    :param path: path to one document
+    :return: list of preprocessed (filtered and stemmed) tokens
+    '''
+    text = pdf_to_str(path)
+    tokens = tokenize(text)
+    filtered_tokens = remove_stop_words(tokens)
+    stemmed_filtered_tokens = stemming(filtered_tokens)
+    return stemmed_filtered_tokens
+
+def get_one_visualization(option:str, paths: list) -> None:
+    '''
+    :param option: 'wordcloud' or 'term_frequency'
+    :param path: paths to documents
+    :return: None
+
+    This function plots a word cloud of the tokens of the document.
+    '''
+    tokens = []
+    for path in paths:
+        tokens.extend(preprocess_doc(path))
+    if option == 'wordcloud':
+        word_cloud(tokens, file_name=path.split('/')[-1])
+    elif option == 'term_frequency':
+        term_frequency(tokens, file_name=path.split('/')[-1])
+    else:
+        print('Error: No valid option chosen.')
 
 def main(file_paths, out_file):
 
