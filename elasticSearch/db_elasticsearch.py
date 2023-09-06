@@ -157,7 +157,7 @@ def insert_documents(src_paths: list, model: Doc2Vec, client: Elasticsearch, goo
                     "pca_kmeans_cluster": pca_df_row['cluster'] if pca_df_row is not None else None,
                     "text": text,
                     "path": path,
-                    "image": str(b64_image),
+                    "image": str(b64_image) # TODO: statt str... b46_image.decode('ASCII'),
                 })
             except ApiError as err:
                 counter += 1
