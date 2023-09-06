@@ -175,6 +175,20 @@ def find_sim_docs_hugging_face_sentTrans(path: str, client: Elasticsearch=None):
     embedding = huggingface_model.encode(pdf_to_str(path))
     return get_db_search_results(client, embedding, 'huggingface_sent_transformer')
 
+
+def find_sim_docs_inferSent(src_paths:list, path: str, client: Elasticsearch=None):
+    text = pdf_to_str(path)
+    MODEL_PATH = '/Users/klara/Developer/Uni/encoder/infersent1.pkl'
+    W2V_PATH = '/Users/klara/Developer/Uni/GloVe/glove.840B.300d.txt'
+    inferSent_model, docs = init_infer(model_path=MODEL_PATH, w2v_path=W2V_PATH, file_paths=src_paths, version=1)
+    infer_embeddings = inferSent_model.encode(docs, tokenize=True)
+    encoded_infersent_embedding, ae_infer_encoder = autoencoder_emb_model(input_shape=infer_embeddings.shape[1], latent_dim=2048, data=infer_embeddings)
+
+    inferSent_embedding = inferSent_model.encode([text, text], tokenize=True)
+    compressed_infersent_embedding = ae_infer_encoder.predict(x=inferSent_embedding)[0]
+    return get_db_search_results(client, compressed_infersent_embedding, 'inferSent_AE')
+
+
 def get_db_search_results(client: Elasticsearch, embedding: np.array, field: str, num_res:int=10):
     result = client.search(index='bahamas', knn={
             "field": field,
@@ -188,17 +202,6 @@ def get_db_search_results(client: Elasticsearch, embedding: np.array, field: str
         scores[hit['_score']] = hit['_source']['path']
     return scores
 
-def find_sim_docs_inferSent(src_paths:list, path: str, client: Elasticsearch=None):
-    text = pdf_to_str(path)
-    MODEL_PATH = '/Users/klara/Developer/Uni/encoder/infersent1.pkl'
-    W2V_PATH = '/Users/klara/Developer/Uni/GloVe/glove.840B.300d.txt'
-    inferSent_model, docs = init_infer(model_path=MODEL_PATH, w2v_path=W2V_PATH, file_paths=src_paths, version=1)
-    infer_embeddings = inferSent_model.encode(docs, tokenize=True)
-    encoded_infersent_embedding, ae_infer_encoder = autoencoder_emb_model(input_shape=infer_embeddings.shape[1], latent_dim=2048, data=infer_embeddings)
-
-    inferSent_embedding = inferSent_model.encode([text, text], tokenize=True)
-    compressed_infersent_embedding = ae_infer_encoder.predict(x=inferSent_embedding)[0]
-    return get_db_search_results(client, compressed_infersent_embedding, 'inferSent_AE')
 
 def main(src_paths, image_src_path):
     
