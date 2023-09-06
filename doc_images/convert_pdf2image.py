@@ -8,11 +8,11 @@ run this code by typing and altering the path:
     python3 convert_pdf2image.py -d'/Users/klara/Downloads/*.pdf' -o '/Users/klara/Downloads/'
 '''
 
-def pdf_to_png(file_path: list, outpath: str = None) -> None:
+def pdf_to_png(file_path: list, outpath: str = None, save: bool= True) -> list:
     '''
     :param file_path: list of paths (to files); type has to be a list of strings
     :param outpath: path to output folder; if not set, the output folder is the same as the input folder.
-    :return: None
+    :return: list of images
 
     This function converts a PDF file to a PNG file.
     The name of the PNG file is the same as the PDF file with .png instead of .pdf.
@@ -22,6 +22,7 @@ def pdf_to_png(file_path: list, outpath: str = None) -> None:
     https://pymupdf.readthedocs.io/en/latest/pixmap.html#Pixmap.set_dpi
     '''
     broken_files = []
+    images = []
     for path in file_path:
         file_name = (path.split('.')[0]).split('/')[-1]
         outpath = outpath if outpath else '/'.join(path.split('/')[:-1])
@@ -29,13 +30,16 @@ def pdf_to_png(file_path: list, outpath: str = None) -> None:
         try:
             pix = doc[0].get_pixmap()  # render first page to an image
             pix.set_dpi(75, 75) # image resolution
-            pix.save(f"{outpath}/{file_name}.png")
+            images.append(pix)
+            if save:
+                pix.save(f"{outpath}/{file_name}.png")
         except:
             # print(f'file {path} could not be converted to png')
             broken_files.append(path)
 
     if broken_files:
         print(f'files {broken_files} could not be converted to png')
+    return images
 
 def main(file_paths, outpath):
 

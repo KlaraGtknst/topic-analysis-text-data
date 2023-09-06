@@ -1,5 +1,7 @@
+import base64
 import glob
 from tkinter import *
+#from tkPDFViewer import tkPDFViewer as pdf
 
 from elasticsearch import Elasticsearch
 from text_visualizations import visualize_texts
@@ -7,6 +9,7 @@ from elasticSearch.queries import query_database
 from elasticSearch.queries.query_documents_tfidf import *
 from elasticSearch import db_elasticsearch
 from gensim.models.doc2vec import Doc2Vec
+from doc_images import pdf_matrix, convert_pdf2image
 
 # TODO
 SRC_PATH = '/Users/klara/Documents/uni/bachelorarbeit/data/0/*.pdf'
@@ -44,6 +47,10 @@ class QueryPage(Frame):
         self.chosen_query_type = StringVar(self)
         self.chosen_query_type.set(self.query_options[0]) # default value
         self.query_dropdown = OptionMenu(self, self.chosen_query_type, *self.query_options)
+
+        # Checkbox
+        self.display_query_res_matrix = IntVar()
+        Checkbutton(self, text="display result matrix", variable=self.display_query_res_matrix).grid(row=2, column=3)
 
 
         # labels
@@ -85,9 +92,19 @@ class QueryPage(Frame):
         elif query_type == 'cluster':
             cluster_results = query_database.get_docs_from_same_cluster(elastic_search_client = client, path_to_doc = doc_to_search_for, n_results=NUM_RESULTS)
             result = [hit['_source']['path'] for hit in cluster_results['hits']['hits']]
+            b64_images = [hit['_source']['image'] for hit in cluster_results['hits']['hits']] if 'image' in list(cluster_results['hits']['hits'][0]['_source'].keys()) else None
             results[query_type] = {doc_to_search_for: result}
 
-            self.react_on_results(doc_to_search_for, query_type)
+            #b64_images = [(base64.b64decode(img)) for img in b64_images]
+            #print(b64_images)
+
+            #images = convert_pdf2image.pdf_to_png(results[query_type][doc_to_search_for], outpath=None, save=False)
+            #b64_images = [base64.b64encode(img_file) for img_file in images]
+            self.react_on_results(doc_to_search_for, query_type, b64_images)
+            #if self.display_query_res_matrix.get():
+                
+                #pdf_matrix.create_image_matrix(input_files=images, dim=NUM_RESULTS/2, output_path= None)
+
 
         elif query_type == 'Doc2Vec':
             train_corpus = list(db_elasticsearch.get_tagged_input_documents(src_paths=glob.glob(SRC_PATH)))
@@ -119,11 +136,33 @@ class QueryPage(Frame):
             self.react_on_results(doc_to_search_for, query_type)
 
 
-    def react_on_results(self, doc_to_search_for, query_type):
+    def react_on_results(self, doc_to_search_for, query_type, b64_images: list=None):
         self.query_result_status_label.config(text=f'Query Resultat for {doc_to_search_for}:')
         self.query_result_content_label.config(text='\n'.join(results[query_type][doc_to_search_for]))
         self.wordCloud_results_button.config(state='active')
         self.termFreq_results_button.config(state='active')
+        
+        if b64_images and self.display_query_res_matrix.get():
+
+            #print(b64_images)
+            #np.savetxt('b64images.txt',b64_images)
+            for i in range(1):#len(b64_images)):
+                #print(b64_images[i][-100:])
+                #print(list(b64_images[i]))
+                b64img = base64.b64decode(b64_images[i][1:])#bytes(b64_images[i][2:-1], 'utf-8')
+                # print(type(b64img))
+                #print(b64img[-100:])
+                #b64img = re.sub(r'\"', '', re.sub(r'\'', '', re.sub(r'b\'', '', b64img)))
+                #print(b64img[-100:])
+                #b64img = b64img[1:-1]
+                
+                '''with open("b64images2.json", "w") as outfile:
+                    json.dump({i:b64img}, outfile)'''
+                #np.savetxt('b64images.txt',{1:b64img})
+                im = PhotoImage(data=b64img)
+
+                self.imglabel = Label(self, image=im)
+                self.imglabel.grid(row=i, column=3)
 
 
 
