@@ -105,7 +105,7 @@ def get_docs_from_same_cluster(elastic_search_client: Elasticsearch, path_to_doc
     }
 
     # results
-    search_results = elastic_search_client.search(index='bahamas', query=query, source_includes=['path'], size=n_results)
+    search_results = elastic_search_client.search(index='bahamas', query=query, source_includes=['path', 'image'], size=n_results) 
 
     # Extract and process the search results
     '''print('Query Document: ', doc_id, ' of cluster ', cluster, '\n')
@@ -199,7 +199,7 @@ def find_sim_docs_inferSent(src_paths:list, path: str, client: Elasticsearch=Non
 
     inferSent_embedding = inferSent_model.encode([text, text], tokenize=True)
     compressed_infersent_embedding = ae_infer_encoder.predict(x=inferSent_embedding)[0]
-    return get_db_search_results(client, inferSent_embedding, 'inferSent_AE')
+    return get_db_search_results(client, compressed_infersent_embedding, 'inferSent_AE')
 
 def main(src_paths, image_src_path):
     
@@ -215,7 +215,7 @@ def main(src_paths, image_src_path):
 
     # Cluster query
     doc_to_search_for = src_paths[0]
-    '''print('-' * 40, f'Query for same cluster as {doc_to_search_for} in database', '-' * 40)
+    print('-' * 40, f'Query for same cluster as {doc_to_search_for} in database', '-' * 40)
     NUM_RESULTS = 5
     cluster_results = get_docs_from_same_cluster(elastic_search_client = client, path_to_doc = doc_to_search_for, n_results=NUM_RESULTS)
     print('Cluster results: ',  [hit['_source']['path'] for hit in cluster_results['hits']['hits']])
@@ -234,18 +234,19 @@ def main(src_paths, image_src_path):
     print(doc_to_search_for.split('/')[:-1])
     print()
     results['tfidf'] = {doc_to_search_for: ['/'.join(doc_to_search_for.split('/')[:-1]) + '/' + doc for doc in tfidf_results.values()]}
-    #results.to_json('results/results.json')
-    print(results)
-    #json_obj = json.dumps(results)
-    with open("results/results.json", "w") as outfile:
-        json.dump(results, outfile)'''
     
-    '''# universal sentence encoder
+    # universal sentence encoder
     univSentEncRes = find_sim_docs_google_univSentEnc(doc_to_search_for)
-    results['universal_sent_encoder'] = {doc_to_search_for: list(univSentEncRes.values())}'''
+    results['universal_sent_encoder'] = {doc_to_search_for: list(univSentEncRes.values())}
 
     # hugging face sentence transformer 
-    '''hugFaceSentTransRes = find_sim_docs_hugging_face_sentTrans(path=doc_to_search_for)
-    results['hugging_face_sentence_transformer'] = {doc_to_search_for: list(hugFaceSentTransRes.values())}'''
+    hugFaceSentTransRes = find_sim_docs_hugging_face_sentTrans(path=doc_to_search_for)
+    results['hugging_face_sentence_transformer'] = {doc_to_search_for: list(hugFaceSentTransRes.values())}
+    
+    # inferSent
+    inferSentRes = find_sim_docs_inferSent(src_paths=src_paths, path=doc_to_search_for, client=client)
+    results['inferSent'] = {doc_to_search_for: list(inferSentRes.values())}
 
     print(results)
+    with open("results/results.json", "w") as outfile:
+        json.dump(results, outfile)
