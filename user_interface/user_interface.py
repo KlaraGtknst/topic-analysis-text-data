@@ -143,23 +143,16 @@ class QueryPage(Frame):
         self.termFreq_results_button.config(state='active')
         
         if b64_images and self.display_query_res_matrix.get():
+            self.images = []
 
             for i in range(len(b64_images)):
-                
-                b64img = base64.b64decode(b64_images[i])
+                #b64img = base64.b64decode(b64_images[i])
                 b64img = b64_images[i]
-              
-                #b64img = re.sub(r'\"', '', re.sub(r'\'', '', re.sub(r'b\'', '', b64img)))
-               
                 b64img = b64img[2:-1]
-                
-                '''with open("b64images2.json", "w") as outfile:
-                    json.dump({i:b64img}, outfile)'''
-              
-                im = PhotoImage(data=b64img)    # TODO: reduce size of image
-
-                self.imglabel = Label(self, image=im)
-                self.imglabel.grid(row=i, column=3)
+                im = PhotoImage(data=b64img, height=70, width=70)    # TODO: reduce size of image
+                imglabel = Label(self, image=im)
+                imglabel.grid(row=i, column=3)
+                self.images.append(im)
 
 
 
