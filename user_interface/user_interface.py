@@ -144,7 +144,7 @@ class QueryPage(Frame):
         
         if b64_images and self.display_query_res_matrix.get():
 
-            for i in range(1):#len(b64_images)):
+            for i in range(len(b64_images)):
                 
                 b64img = base64.b64decode(b64_images[i])
                 b64img = b64_images[i]
@@ -156,7 +156,7 @@ class QueryPage(Frame):
                 '''with open("b64images2.json", "w") as outfile:
                     json.dump({i:b64img}, outfile)'''
               
-                im = PhotoImage(data=b64img)
+                im = PhotoImage(data=b64img)    # reduce size of image
 
                 self.imglabel = Label(self, image=im)
                 self.imglabel.grid(row=i, column=3)
