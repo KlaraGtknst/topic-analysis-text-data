@@ -156,7 +156,7 @@ class QueryPage(Frame):
                 '''with open("b64images2.json", "w") as outfile:
                     json.dump({i:b64img}, outfile)'''
               
-                im = PhotoImage(data=b64img)    # reduce size of image
+                im = PhotoImage(data=b64img)    # TODO: reduce size of image
 
                 self.imglabel = Label(self, image=im)
                 self.imglabel.grid(row=i, column=3)
