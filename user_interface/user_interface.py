@@ -97,16 +97,7 @@ class QueryPage(Frame):
             b64_images = [hit['_source']['image'] for hit in cluster_results['hits']['hits']] if 'image' in list(cluster_results['hits']['hits'][0]['_source'].keys()) else None
             results[query_type] = {doc_to_search_for: result}
 
-            #b64_images = [(base64.b64decode(img)) for img in b64_images]
-            #print(b64_images)
-
-            #images = convert_pdf2image.pdf_to_png(results[query_type][doc_to_search_for], outpath=None, save=False)
-            #b64_images = [base64.b64encode(img_file) for img_file in images]
             self.react_on_results(doc_to_search_for, query_type, b64_images)
-            #if self.display_query_res_matrix.get():
-                
-                #pdf_matrix.create_image_matrix(input_files=images, dim=NUM_RESULTS/2, output_path= None)
-
 
         elif query_type == 'Doc2Vec':
             train_corpus = list(db_elasticsearch.get_tagged_input_documents(src_paths=glob.glob(SRC_PATH)))
