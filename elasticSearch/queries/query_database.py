@@ -150,7 +150,7 @@ def get_sim_docs_tfidf(doc_to_search_for, src_paths='/Users/klara/Documents/Uni/
     sim_docs_document_term_matrix = sim_docs_tfidf.fit(docs)
     return find_document_tfidf(client, sim_docs_tfidf, path=doc_to_search_for)
         
-# TODO: test
+
 def find_sim_docs_google_univSentEnc(path: str, client: Elasticsearch=None):
     '''
     :param client: Elasticsearch client
@@ -160,12 +160,9 @@ def find_sim_docs_google_univSentEnc(path: str, client: Elasticsearch=None):
     if client is None:
         client = Elasticsearch("http://localhost:9200")
     google_model = google_univ_sent_encoding_aux()
-    embedding = embed([pdf_to_str(path)], google_model).numpy().tolist()[0],
-    print(embedding)
-   
+    embedding = embed([pdf_to_str(path)], google_model).numpy().flatten().tolist()
     return get_db_search_results(client, embedding, 'google_univ_sent_encoding')
 
-# TODO: test if it works
 def find_sim_docs_hugging_face_sentTrans(path: str, client: Elasticsearch=None):
     '''
     :param client: Elasticsearch client
@@ -217,8 +214,8 @@ def main(src_paths, image_src_path):
     results = {}
 
     # Cluster query
-    '''doc_to_search_for = src_paths[0]
-    print('-' * 40, f'Query for same cluster as {doc_to_search_for} in database', '-' * 40)
+    doc_to_search_for = src_paths[0]
+    '''print('-' * 40, f'Query for same cluster as {doc_to_search_for} in database', '-' * 40)
     NUM_RESULTS = 5
     cluster_results = get_docs_from_same_cluster(elastic_search_client = client, path_to_doc = doc_to_search_for, n_results=NUM_RESULTS)
     print('Cluster results: ',  [hit['_source']['path'] for hit in cluster_results['hits']['hits']])
@@ -243,6 +240,12 @@ def main(src_paths, image_src_path):
     with open("results/results.json", "w") as outfile:
         json.dump(results, outfile)'''
     
-    # universal sentence encoder
-    path = 
-    find_sim_docs_google_univSentEnc(path)
+    '''# universal sentence encoder
+    univSentEncRes = find_sim_docs_google_univSentEnc(doc_to_search_for)
+    results['universal_sent_encoder'] = {doc_to_search_for: list(univSentEncRes.values())}'''
+
+    # hugging face sentence transformer 
+    '''hugFaceSentTransRes = find_sim_docs_hugging_face_sentTrans(path=doc_to_search_for)
+    results['hugging_face_sentence_transformer'] = {doc_to_search_for: list(hugFaceSentTransRes.values())}'''
+
+    print(results)
