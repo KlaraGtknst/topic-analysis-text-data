@@ -149,12 +149,13 @@ class QueryPage(Frame):
             for i in range(1):#len(b64_images)):
                 #print(b64_images[i][-100:])
                 #print(list(b64_images[i]))
-                b64img = base64.b64decode(b64_images[i][1:])#bytes(b64_images[i][2:-1], 'utf-8')
+                b64img = base64.b64decode(b64_images[i])#bytes(b64_images[i][2:-1], 'utf-8')
+                b64img = b64_images[i]
                 # print(type(b64img))
                 #print(b64img[-100:])
                 #b64img = re.sub(r'\"', '', re.sub(r'\'', '', re.sub(r'b\'', '', b64img)))
                 #print(b64img[-100:])
-                #b64img = b64img[1:-1]
+                b64img = b64img[2:-1]
                 
                 '''with open("b64images2.json", "w") as outfile:
                     json.dump({i:b64img}, outfile)'''
