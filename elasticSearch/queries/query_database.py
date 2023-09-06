@@ -11,17 +11,18 @@ from elasticSearch.queries.query_documents_tfidf import *
 from text_embeddings.universal_sent_encoder_tensorFlow import *
 from text_embeddings.hugging_face_sentence_transformer import *
 from text_embeddings.TFIDF.preprocessing.TfidfTextPreprocessor import *
+from text_embeddings.InferSent.infer_pretrained import *
 
 '''------search in existing database-------
 run this code by typing and altering the path:
     python3 query_database.py -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/images/'
 '''
 
-def infer_embedding_vector(model: Elasticsearch, path: str):
+def infer_doc2vec_embedding(model: Elasticsearch, path: str):
     '''
     :param model: trained Doc2Vec model
     :param path: path to the document to be searched for
-    :return: the embedding vector of the document to be searched for
+    :return: the doc2vec embedding vector of the document to be searched for
 
     This function infers the embedding vector of the document to be searched for.
     The document is preprocessed in the same way as the documents stored in the database.
@@ -30,14 +31,14 @@ def infer_embedding_vector(model: Elasticsearch, path: str):
     '''
     return model.infer_vector(simple_preprocess(pdf_to_str(path)))
 
-def search_in_db(client: Elasticsearch, model: Doc2Vec, path: str):
+def search_sim_doc2vec_docs_in_db(client: Elasticsearch, model: Doc2Vec, path: str):
     '''
     :param client: Elasticsearch client
     :param model: Doc2Vec model
     :param path: path to the document to be searched for
     :return: None
 
-    The field of interest in the database, i.e. the one to be searched for, is the embedding. 
+    The field of interest in the database, i.e. the one to be searched for, is the doc2vec embedding. 
     The embedding is inferred from the document text using the trained Doc2Vec model.
     The document text is preprocessed in the same way as the documents stored in the database.
     Since the base64 encoding of the image is very long, it is excluded from the search result.
@@ -50,18 +51,7 @@ def search_in_db(client: Elasticsearch, model: Doc2Vec, path: str):
 
     cf. https://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html#search-api-knn for information about knn in elasticsearch.
     '''
-    #print(type(infer_embedding_vector(model, path)))
-    result = client.search(index='bahamas', knn={
-            "field": "embedding",
-            "query_vector": infer_embedding_vector(model, path),
-            "k": 10,
-            "num_candidates": 100
-        }, source_excludes=['image'])
-    
-    scores = {}
-    for hit in result['hits']['hits']:
-        scores[hit['_score']] = hit['_source']['path']
-    return scores
+    return get_db_search_results(client, infer_doc2vec_embedding(model, path), 'doc2vec')
 
 
 def find_document_tfidf(client: Elasticsearch, model: TfidfVectorizer, path: str):
@@ -89,17 +79,8 @@ def find_document_tfidf(client: Elasticsearch, model: TfidfVectorizer, path: str
     embedding = model.transform([pdf_to_str(path)])
     embedding = np.ravel(embedding.todense())
     embedding = np.append(embedding, 1 if np.array([entry  == 0 for entry in embedding]).all() else 0)
-    result = client.search(index='bahamas', knn={
-            "field": "sim_docs_tfidf",
-            "query_vector": embedding,
-            "k": 10,
-            "num_candidates": 100
-        }, source_excludes=['image'])
-    
-    scores = {}
-    for hit in result['hits']['hits']:
-        scores[hit['_score']] = hit['_source']['path']
-    return scores
+   
+    return get_db_search_results(client, embedding, 'sim_docs_tfidf')
 
 
 def get_docs_from_same_cluster(elastic_search_client: Elasticsearch, path_to_doc: str, n_results: int = 5) -> list:
@@ -169,6 +150,59 @@ def get_sim_docs_tfidf(doc_to_search_for, src_paths='/Users/klara/Documents/Uni/
     sim_docs_document_term_matrix = sim_docs_tfidf.fit(docs)
     return find_document_tfidf(client, sim_docs_tfidf, path=doc_to_search_for)
         
+# TODO: test
+def find_sim_docs_google_univSentEnc(path: str, client: Elasticsearch=None):
+    '''
+    :param client: Elasticsearch client
+    :param path: path to document to be searched for
+    :return list of ten most similar scores and documents in database in terms of google universal sentence encoding
+    '''    
+    if client is None:
+        client = Elasticsearch("http://localhost:9200")
+    google_model = google_univ_sent_encoding_aux()
+    embedding = embed([pdf_to_str(path)], google_model).numpy().tolist()[0],
+    print(embedding)
+   
+    return get_db_search_results(client, embedding, 'google_univ_sent_encoding')
+
+# TODO: test if it works
+def find_sim_docs_hugging_face_sentTrans(path: str, client: Elasticsearch=None):
+    '''
+    :param client: Elasticsearch client
+    :param path: path to document to be searched for
+    :return list of ten most similar scores and documents in database in terms of huggingface sentence transformers embedding
+    '''
+    if client is None:
+        client = Elasticsearch("http://localhost:9200")
+    huggingface_model = init_hf_sentTrans_model()
+    embedding = huggingface_model.encode(pdf_to_str(path))
+    return get_db_search_results(client, embedding, 'huggingface_sent_transformer')
+
+def get_db_search_results(client: Elasticsearch, embedding: np.array, field: str, num_res:int=10):
+    result = client.search(index='bahamas', knn={
+            "field": field,
+            "query_vector": embedding,
+            "k": num_res,
+            "num_candidates": 100
+        }, source_excludes=['image'])
+    
+    scores = {}
+    for hit in result['hits']['hits']:
+        scores[hit['_score']] = hit['_source']['path']
+    return scores
+
+# TODO: test if it works
+def find_sim_docs_inferSent(src_paths:list, path: str, client: Elasticsearch=None):
+    text = pdf_to_str(path)
+    MODEL_PATH = '/Users/klara/Developer/Uni/encoder/infersent1.pkl'
+    W2V_PATH = '/Users/klara/Developer/Uni/GloVe/glove.840B.300d.txt'
+    inferSent_model, docs = init_infer(model_path=MODEL_PATH, w2v_path=W2V_PATH, file_paths=src_paths, version=1)
+    infer_embeddings = inferSent_model.encode(docs, tokenize=True)
+    encoded_infersent_embedding, ae_infer_encoder = autoencoder_emb_model(input_shape=infer_embeddings.shape[1], latent_dim=2048, data=infer_embeddings)
+
+    inferSent_embedding = inferSent_model.encode([text, text], tokenize=True)
+    compressed_infersent_embedding = ae_infer_encoder.predict(x=inferSent_embedding)[0]
+    return get_db_search_results(client, inferSent_embedding, 'inferSent_AE')
 
 def main(src_paths, image_src_path):
     
@@ -183,7 +217,7 @@ def main(src_paths, image_src_path):
     results = {}
 
     # Cluster query
-    doc_to_search_for = src_paths[0]
+    '''doc_to_search_for = src_paths[0]
     print('-' * 40, f'Query for same cluster as {doc_to_search_for} in database', '-' * 40)
     NUM_RESULTS = 5
     cluster_results = get_docs_from_same_cluster(elastic_search_client = client, path_to_doc = doc_to_search_for, n_results=NUM_RESULTS)
@@ -207,4 +241,8 @@ def main(src_paths, image_src_path):
     print(results)
     #json_obj = json.dumps(results)
     with open("results/results.json", "w") as outfile:
-        json.dump(results, outfile)
+        json.dump(results, outfile)'''
+    
+    # universal sentence encoder
+    path = 
+    find_sim_docs_google_univSentEnc(path)

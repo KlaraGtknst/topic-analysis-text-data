@@ -29,7 +29,7 @@ def init_db(client: Elasticsearch, num_dimensions: int, sim_docs_vocab_size: int
 
     This function initializes the database by creating an index (i.e. the structure for an entry of type 'bahamas' database).
     The index contains the following fields:
-    - embedding: a dense vector of num_dimensions dimensions. This is the vector numerical representation of the document. Its similarity is measured by cosine similarity.
+    - doc2vec: a dense vector of num_dimensions dimensions. This is the vector numerical representation of the document. Its similarity is measured by cosine similarity.
     - text: the text of the document. The text is not tokenized, stemmed etc.
     - path: the path to the document on the local maschine.
     - image: the image of the document (i.e. information about the document layout). The image is encoded in base64 and has 500 dpi.
@@ -39,7 +39,7 @@ def init_db(client: Elasticsearch, num_dimensions: int, sim_docs_vocab_size: int
     '''
     client.indices.create(index='bahamas', mappings={
         "properties": {
-            "embedding": {
+            "doc2vec": {
                 "type": "dense_vector",
                 "dims": num_dimensions,
                 "index": True,
@@ -104,7 +104,7 @@ def insert_documents(src_paths: list, model: Doc2Vec, client: Elasticsearch, goo
     :return: None
 
     This function inserts the documents into the database 'bahamas'. The documents are inserted as follows:
-    - embedding: the embedding is inferred from the document text using the trained Doc2Vec model.
+    - doc2vec: the embedding is inferred from the document text using the trained Doc2Vec model.
         The text is preprocessed using the gensim function 'simple_preprocess', which returns a list of tokens, i.e. unicode strings,
         which are lowercased and tokenized. (cf. https://tedboy.github.io/nlps/generated/generated/gensim.utils.simple_preprocess.html).
     - text: the text of the document. The text is not tokenized, stemmed etc.
@@ -148,7 +148,7 @@ def insert_documents(src_paths: list, model: Doc2Vec, client: Elasticsearch, goo
 
             try:
                 client.create(index='bahamas', id=id, document={
-                    "embedding": model.infer_vector(simple_preprocess(pdf_to_str(path))),
+                    "doc2vec": model.infer_vector(simple_preprocess(pdf_to_str(path))),
                     "sim_docs_tfidf": np.ravel(np.array(sim_doc_tfidf_vectorization[i])),
                     "google_univ_sent_encoding": embed([text], google_model).numpy().tolist()[0],
                     "huggingface_sent_transformer": huggingface_model.encode(text),
@@ -248,19 +248,6 @@ def tfidf_aux(src_paths: list) -> tuple:
 
     return flag_matrix, sim_docs_tfidf
 
-def google_univ_sent_encoding_aux():
-    '''
-    :param src_paths: paths to the documents to be inserted into the database
-    :return: document-term matrix and the trained tfidf vectorizer model
-    '''
-    try:
-        module_url = "https://tfhub.dev/google/universal-sentence-encoder/4"
-        model = hub.load(module_url)
-    except:
-        module_url = "https://tfhub.dev/google/universal-sentence-encoder-large/5"
-        model = hub.load(module_url)
-    return model
-
 
 def show_best_search_results(scores, src_paths, image_src_path=None):
     # create image matrix of 9 most similar images for query image
@@ -298,33 +285,33 @@ def main(src_paths, image_src_path):
     client.options(ignore_status=[400,404]).indices.delete(index='bahamas')
 
     # delete old index and create new one
-    if ('bahamas' not in client.indices.get_alias(index='*')) or (client.indices.get_mapping(index='bahamas')['bahamas']['mappings']['properties']['embedding']['dims'] != NUM_DIMENSIONS):
+    if ('bahamas' not in client.indices.get_alias(index='*')) or (client.indices.get_mapping(index='bahamas')['bahamas']['mappings']['properties']['doc2vec']['dims'] != NUM_DIMENSIONS):
         client.options(ignore_status=[400,404]).indices.delete(index='bahamas')
         init_db(client, num_dimensions=NUM_DIMENSIONS, sim_docs_vocab_size=sim_docs_vocab_size, n_components=NUM_COMPONENTS)
     
     # training corpus
     train_corpus = list(get_tagged_input_documents(src_paths))
 
-    # model 
+    # doc2vec model 
     # infrequent words are discarded, since retaining them can make model worse
     # iteration for 10s-of-thousands of documents: 10-20; more for smaller datasets
-    model = Doc2Vec(train_corpus, vector_size=NUM_DIMENSIONS, window=2, min_count=2, workers=4, epochs=40)
+    doc2vec_model = Doc2Vec(train_corpus, vector_size=NUM_DIMENSIONS, window=2, min_count=2, workers=4, epochs=40)
 
     # build a vocabulary (i.e. list of unique words); accessable via model.wv.index_to_key
-    model.build_vocab(train_corpus, update=True)
+    doc2vec_model.build_vocab(train_corpus, update=True)
 
     # train the model
-    model.train(train_corpus, total_examples=model.corpus_count, epochs=model.epochs)
+    doc2vec_model.train(train_corpus, total_examples=doc2vec_model.corpus_count, epochs=doc2vec_model.epochs)
 
     # assess the model
     # here: using training corpus -> overfitting, not representative
-    #assess_model(model, train_corpus)
+    #assess_model(doc2vec_model, train_corpus)
 
     # PCA + KMeans clustering
     pca_cluster_df = get_cluster_PCA_df(src_path= image_src_path, n_cluster= 4, n_components= NUM_COMPONENTS, preprocess_image_size=600)
 
     # insert documents into database
-    insert_documents(src_paths, model, client, image_path=image_src_path, google_model=google_model, huggingface_model=huggingface_model, sim_doc_tfidf_vectorization=tfidf_matrix, pca_df=pca_cluster_df, inferSent_model=infersent, inferEncoder=ae_infer_encoder)
+    insert_documents(src_paths, doc2vec_model, client, image_path=image_src_path, google_model=google_model, huggingface_model=huggingface_model, sim_doc_tfidf_vectorization=tfidf_matrix, pca_df=pca_cluster_df, inferSent_model=infersent, inferEncoder=ae_infer_encoder)
 
     # alternatively, use AsyncElasticsearch or time.sleep(1)
     client.indices.refresh(index="bahamas")
@@ -334,7 +321,7 @@ def main(src_paths, image_src_path):
     # sample query for a document
     '''path = src_paths[50]
     print('\n' + '-' * 40, path, '-' * 40)
-    scores = search_in_db(client, model, path)
+    scores = search_sim_doc2vec_docs_in_db(client, doc2vec_model, path)
     for score in list(scores.keys()):
         print(score, scores[score])
 

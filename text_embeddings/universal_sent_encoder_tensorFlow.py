@@ -80,6 +80,19 @@ def print_info_abt_embeddings(message_embeddings: list, messages: list) -> None:
         message_embedding_snippet = ", ".join((str(x) for x in message_embedding[:3]))
         print("Embedding: [{}, ...]\n".format(message_embedding_snippet))
 
+def google_univ_sent_encoding_aux():
+    '''
+    :param src_paths: paths to the documents to be inserted into the database
+    :return: document-term matrix and the trained tfidf vectorizer model
+    '''
+    try:
+        module_url = "https://tfhub.dev/google/universal-sentence-encoder/4"
+        model = hub.load(module_url)
+    except:
+        module_url = "https://tfhub.dev/google/universal-sentence-encoder-large/5"
+        model = hub.load(module_url)
+    return model
+
 def main(file_paths, outpath):
     # if load of URL does not work, use: "https://tfhub.dev/google/universal-sentence-encoder/4", cf. https://www.kaggle.com/code/nicapotato/universal-sentence-encoder-semantic-similarity
     module_url = "https://tfhub.dev/google/universal-sentence-encoder-large/5"

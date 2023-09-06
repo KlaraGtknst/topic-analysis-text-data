@@ -20,11 +20,6 @@ client = Elasticsearch("http://localhost:9200")
 results = {}
 
 
-
-
-
-
-
 class QueryPage(Frame):
 
     def __init__(self, parent, controller):
@@ -45,7 +40,7 @@ class QueryPage(Frame):
         self.chosen_doc.set(self.docs[0]) # default value
         self.doc_options = OptionMenu(self, self.chosen_doc, *self.docs)
         # # for query type
-        self.query_options = ['TF-IDF', 'cluster', 'Doc2Vec']#, 'InferSent', 'Universal Sentence Encoder', 'Hugging Face Sentence Transformer']
+        self.query_options = ['TF-IDF', 'cluster', 'Doc2Vec', 'Universal Sentence Encoder', 'Hugging Face Sentence Transformer', 'InferSent']
         self.chosen_query_type = StringVar(self)
         self.chosen_query_type.set(self.query_options[0]) # default value
         self.query_dropdown = OptionMenu(self, self.chosen_query_type, *self.query_options)
@@ -83,33 +78,53 @@ class QueryPage(Frame):
         if query_type == 'TF-IDF':
             # alter src_path & client address if necessary
             tfidf_results = query_database.get_sim_docs_tfidf(doc_to_search_for, src_paths=SRC_PATH)
-            results['TF-IDF'] = {doc_to_search_for: list(tfidf_results.values())}
+            results[query_type] = {doc_to_search_for: list(tfidf_results.values())}
 
-            self.query_result_status_label.config(text=f'Query Resultat for {doc_to_search_for}:')
-            self.query_result_content_label.config(text='\n'.join(results['TF-IDF'][doc_to_search_for]))
-            self.wordCloud_results_button.config(state='active')
-            self.termFreq_results_button.config(state='active')
+            self.react_on_results(doc_to_search_for, query_type)
 
         elif query_type == 'cluster':
             cluster_results = query_database.get_docs_from_same_cluster(elastic_search_client = client, path_to_doc = doc_to_search_for, n_results=NUM_RESULTS)
             result = [hit['_source']['path'] for hit in cluster_results['hits']['hits']]
-            results['cluster'] = {doc_to_search_for: result}
+            results[query_type] = {doc_to_search_for: result}
 
-            self.query_result_status_label.config(text=f'Query Resultat for {doc_to_search_for}:')
-            self.query_result_content_label.config(text='\n'.join(results["cluster"][doc_to_search_for]))
-            self.wordCloud_results_button.config(state='active')
-            self.termFreq_results_button.config(state='active')
+            self.react_on_results(doc_to_search_for, query_type)
 
         elif query_type == 'Doc2Vec':
             train_corpus = list(db_elasticsearch.get_tagged_input_documents(src_paths=glob.glob(SRC_PATH)))
             d2v_model = Doc2Vec(train_corpus, vector_size=NUM_DIMENSIONS, window=2, min_count=2, workers=4, epochs=40)
-            doc2vec_result = query_database.search_in_db(path=doc_to_search_for, client=client, model=d2v_model)
-            results['Doc2Vec'] = {doc_to_search_for: list(doc2vec_result.values())}
+            doc2vec_result = query_database.search_sim_doc2vec_docs_in_db(path=doc_to_search_for, client=client, model=d2v_model)
+            results[query_type] = {doc_to_search_for: list(doc2vec_result.values())}
 
-            self.query_result_status_label.config(text=f'Query Resultat for {doc_to_search_for}:')
-            self.query_result_content_label.config(text='\n'.join(results["Doc2Vec"][doc_to_search_for]))
-            self.wordCloud_results_button.config(state='active')
-            self.termFreq_results_button.config(state='active')
+            self.react_on_results(doc_to_search_for, query_type)
+
+        elif query_type == 'Universal Sentence Encoder':
+            # TODO: test if this works
+            univSentEnc_result = query_database.find_sim_docs_google_univSentEnc(path=doc_to_search_for, client=client)
+            results[query_type] = {doc_to_search_for: list(univSentEnc_result.values())}
+
+            self.react_on_results(doc_to_search_for, query_type)
+
+        elif query_type == 'Hugging Face Sentence Transformer':
+            # TODO: test if this works
+            hf_sentTrans_result = query_database.find_sim_docs_hugging_face_sentTrans(path=doc_to_search_for, client=client)
+            results[query_type] = {doc_to_search_for: list(hf_sentTrans_result.values())}
+
+            self.react_on_results(doc_to_search_for, query_type)
+
+        elif query_type == 'InferSent':
+            # TODO: test if this works
+            infersent_result = query_database.find_sim_docs_inferSent(src_paths= glob.glob(SRC_PATH), path=doc_to_search_for, client=client)
+            results[query_type] = {doc_to_search_for: list(infersent_result.values())}
+
+            self.react_on_results(doc_to_search_for, query_type)
+
+
+    def react_on_results(self, doc_to_search_for, query_type):
+        self.query_result_status_label.config(text=f'Query Resultat for {doc_to_search_for}:')
+        self.query_result_content_label.config(text='\n'.join(results[query_type][doc_to_search_for]))
+        self.wordCloud_results_button.config(state='active')
+        self.termFreq_results_button.config(state='active')
+
 
 
 class ImgPage(Frame):
