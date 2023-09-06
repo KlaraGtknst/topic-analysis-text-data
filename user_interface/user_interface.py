@@ -1,5 +1,6 @@
 import base64
 import glob
+import io
 from tkinter import *
 #from tkPDFViewer import tkPDFViewer as pdf
 
@@ -10,6 +11,7 @@ from elasticSearch.queries.query_documents_tfidf import *
 from elasticSearch import db_elasticsearch
 from gensim.models.doc2vec import Doc2Vec
 from doc_images import pdf_matrix, convert_pdf2image
+from PIL import Image
 
 # TODO
 SRC_PATH = '/Users/klara/Documents/uni/bachelorarbeit/data/0/*.pdf'
@@ -149,9 +151,16 @@ class QueryPage(Frame):
                 #b64img = base64.b64decode(b64_images[i])
                 b64img = b64_images[i]
                 b64img = b64img[2:-1]
-                im = PhotoImage(data=b64img, height=70, width=70)    # TODO: reduce size of image
+                buffer = io.BytesIO()
+                imgdata = base64.b64decode(b64img)
+                img = Image.open(io.BytesIO(imgdata))
+                new_img = img.resize((70, 70))
+                new_img.save(buffer, format="PNG")
+                b64img = base64.b64encode(buffer.getvalue())
+                
+                im = PhotoImage(data=b64img, height=70, width=70)
                 imglabel = Label(self, image=im)
-                imglabel.grid(row=i, column=3)
+                imglabel.grid(row=i, column= 4 + int(i / 5))
                 self.images.append(im)
 
 
