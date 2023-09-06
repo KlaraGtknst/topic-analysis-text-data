@@ -188,7 +188,6 @@ def get_db_search_results(client: Elasticsearch, embedding: np.array, field: str
         scores[hit['_score']] = hit['_source']['path']
     return scores
 
-# TODO: test if it works
 def find_sim_docs_inferSent(src_paths:list, path: str, client: Elasticsearch=None):
     text = pdf_to_str(path)
     MODEL_PATH = '/Users/klara/Developer/Uni/encoder/infersent1.pkl'
