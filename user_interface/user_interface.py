@@ -117,21 +117,18 @@ class QueryPage(Frame):
             self.react_on_results(doc_to_search_for, query_type)
 
         elif query_type == 'Universal Sentence Encoder':
-            # TODO: test if this works
             univSentEnc_result = query_database.find_sim_docs_google_univSentEnc(path=doc_to_search_for, client=client)
             results[query_type] = {doc_to_search_for: list(univSentEnc_result.values())}
 
             self.react_on_results(doc_to_search_for, query_type)
 
         elif query_type == 'Hugging Face Sentence Transformer':
-            # TODO: test if this works
             hf_sentTrans_result = query_database.find_sim_docs_hugging_face_sentTrans(path=doc_to_search_for, client=client)
             results[query_type] = {doc_to_search_for: list(hf_sentTrans_result.values())}
 
             self.react_on_results(doc_to_search_for, query_type)
 
         elif query_type == 'InferSent':
-            # TODO: test if this works
             infersent_result = query_database.find_sim_docs_inferSent(src_paths= glob.glob(SRC_PATH), path=doc_to_search_for, client=client)
             results[query_type] = {doc_to_search_for: list(infersent_result.values())}
 
@@ -157,7 +154,7 @@ class QueryPage(Frame):
                 new_img = img.resize((70, 70))
                 new_img.save(buffer, format="PNG")
                 b64img = base64.b64encode(buffer.getvalue())
-                
+
                 im = PhotoImage(data=b64img, height=70, width=70)
                 imglabel = Label(self, image=im)
                 imglabel.grid(row=i, column= 4 + int(i / 5))
