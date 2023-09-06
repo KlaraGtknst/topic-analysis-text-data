@@ -30,6 +30,7 @@ def create_image_matrix(input_files: list, dim: int= 10, output_path: str = None
 
     This function creates a matrix of the first dim x dim images from input_files.
     '''
+    dim = dim if type(dim)==int else int(dim)
     if len(input_files) < dim*dim:
         raise ValueError('Input files must have at least dim*dim elements.')
     fig, axs = plt.subplots(dim, dim, figsize=(dim, dim))
