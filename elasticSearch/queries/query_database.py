@@ -146,7 +146,7 @@ def get_sim_docs_tfidf(doc_to_search_for, src_paths='/Users/klara/Documents/Uni/
     client = Elasticsearch(client_addr)
     src_paths = glob.glob(src_paths)
     docs = get_docs_from_file_paths(src_paths)
-    sim_docs_tfidf = TfidfVectorizer(input='content', preprocessor=TfidfTextPreprocessor().fit_transform, min_df=3, max_df=int(len(docs)*0.07))
+    sim_docs_tfidf = TfidfVectorizer(input='content', preprocessor=TfidfTextPreprocessor().transform, min_df=3, max_df=int(len(docs)*0.07))
     sim_docs_document_term_matrix = sim_docs_tfidf.fit(docs)
     return find_document_tfidf(client, sim_docs_tfidf, path=doc_to_search_for)
         
@@ -190,17 +190,14 @@ def find_sim_docs_inferSent(src_paths:list, path: str, client: Elasticsearch=Non
 
 
 def get_db_search_results(client: Elasticsearch, embedding: np.array, field: str, num_res:int=10):
-    result = client.search(index='bahamas', knn={
+    results = client.search(index='bahamas', knn={
             "field": field,
             "query_vector": embedding,
             "k": num_res,
             "num_candidates": 100
-        }, source_excludes=['image'])
+        }, source_includes=['path', 'image'])
     
-    scores = {}
-    for hit in result['hits']['hits']:
-        scores[hit['_score']] = hit['_source']['path']
-    return scores
+    return results
 
 
 def main(src_paths, image_src_path):

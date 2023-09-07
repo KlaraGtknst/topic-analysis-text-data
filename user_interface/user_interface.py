@@ -87,46 +87,59 @@ class QueryPage(Frame):
         if query_type == 'TF-IDF':
             # alter src_path & client address if necessary
             tfidf_results = query_database.get_sim_docs_tfidf(doc_to_search_for, src_paths=SRC_PATH)
-            results[query_type] = {doc_to_search_for: list(tfidf_results.values())}
 
-            self.react_on_results(doc_to_search_for, query_type)
+            self.react_on_results(doc_to_search_for, query_type, tfidf_results)
 
         elif query_type == 'cluster':
             cluster_results = query_database.get_docs_from_same_cluster(elastic_search_client = client, path_to_doc = doc_to_search_for, n_results=NUM_RESULTS)
-            result = [hit['_source']['path'] for hit in cluster_results['hits']['hits']]
-            b64_images = [hit['_source']['image'] for hit in cluster_results['hits']['hits']] if 'image' in list(cluster_results['hits']['hits'][0]['_source'].keys()) else None
-            results[query_type] = {doc_to_search_for: result}
 
-            self.react_on_results(doc_to_search_for, query_type, b64_images)
+            self.react_on_results(doc_to_search_for, query_type, cluster_results)
 
         elif query_type == 'Doc2Vec':
             train_corpus = list(db_elasticsearch.get_tagged_input_documents(src_paths=glob.glob(SRC_PATH)))
             d2v_model = Doc2Vec(train_corpus, vector_size=NUM_DIMENSIONS, window=2, min_count=2, workers=4, epochs=40)
             doc2vec_result = query_database.search_sim_doc2vec_docs_in_db(path=doc_to_search_for, client=client, model=d2v_model)
-            results[query_type] = {doc_to_search_for: list(doc2vec_result.values())}
 
-            self.react_on_results(doc_to_search_for, query_type)
+            self.react_on_results(doc_to_search_for, query_type, doc2vec_result)
 
         elif query_type == 'Universal Sentence Encoder':
             univSentEnc_result = query_database.find_sim_docs_google_univSentEnc(path=doc_to_search_for, client=client)
-            results[query_type] = {doc_to_search_for: list(univSentEnc_result.values())}
 
-            self.react_on_results(doc_to_search_for, query_type)
+            self.react_on_results(doc_to_search_for, query_type, univSentEnc_result)
 
         elif query_type == 'Hugging Face Sentence Transformer':
             hf_sentTrans_result = query_database.find_sim_docs_hugging_face_sentTrans(path=doc_to_search_for, client=client)
-            results[query_type] = {doc_to_search_for: list(hf_sentTrans_result.values())}
 
-            self.react_on_results(doc_to_search_for, query_type)
+            self.react_on_results(doc_to_search_for, query_type, hf_sentTrans_result)
 
         elif query_type == 'InferSent':
             infersent_result = query_database.find_sim_docs_inferSent(src_paths= glob.glob(SRC_PATH), path=doc_to_search_for, client=client)
-            results[query_type] = {doc_to_search_for: list(infersent_result.values())}
 
-            self.react_on_results(doc_to_search_for, query_type)
+            self.react_on_results(doc_to_search_for, query_type, infersent_result)
+
+    def get_result_images(self, query_results):
+        '''
+        :param query_results: results of querying the database. Data includes paths to most similar documents and their images as b64 strings.
+        :return: list of paths to most similar documents, list of b64 strings of images
+        '''
+        result = [hit['_source']['path'] for hit in query_results['hits']['hits']]
+        b64_images = [hit['_source']['image'] for hit in query_results['hits']['hits']] if 'image' in list(query_results['hits']['hits'][0]['_source'].keys()) else None
+        return result, b64_images
 
 
-    def react_on_results(self, doc_to_search_for, query_type, b64_images: list=None):
+    def react_on_results(self, doc_to_search_for, query_type, query_results):
+        '''
+        :param doc_to_search_for: path to document to search for
+        :param query_type: type of query
+        :param query_results: results of querying the database. Data includes paths to most similar documents and their images as b64 strings.
+        :return: None
+        
+        This method saves the results in a dictionary, updates the query result status label, the query result content label and the wordCloud and termFreq buttons.
+        If the query result contains images and the display-checkbox is checked, it displays them on the canvas.
+        '''
+        result, b64_images = self.get_result_images(query_results)
+        results[query_type] = {doc_to_search_for: result}
+        
         self.query_result_status_label.config(text=f'Query Resultat for {doc_to_search_for}:')
         self.query_result_content_label.config(text='\n'.join(results[query_type][doc_to_search_for]))
         self.wordCloud_results_button.config(state='active')
@@ -136,7 +149,6 @@ class QueryPage(Frame):
             self.images = []
 
             for i in range(len(b64_images)):
-                #b64img = base64.b64decode(b64_images[i])
                 b64img = b64_images[i]
                 b64img = b64img[2:-1]
                 buffer = io.BytesIO()
@@ -148,7 +160,7 @@ class QueryPage(Frame):
 
                 im = PhotoImage(data=b64img, height=70, width=70)
                 imglabel = Label(self, image=im)
-                imglabel.grid(row=i, column= 4 + int(i / 5))
+                imglabel.grid(row=i % 5, column= 4 + int(i / 5))
                 self.images.append(im)
 
 
