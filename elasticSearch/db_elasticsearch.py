@@ -239,7 +239,7 @@ def tfidf_aux(src_paths: list) -> tuple:
     '''
     docs = get_docs_from_file_paths(src_paths)
     # usage of custom preprocessor
-    sim_docs_tfidf = TfidfVectorizer(input='content', preprocessor=TfidfTextPreprocessor().fit_transform, min_df=3, max_df=int(len(docs)*0.07))
+    sim_docs_tfidf = TfidfVectorizer(input='content', preprocessor=TfidfTextPreprocessor().transform, min_df=3, max_df=int(len(docs)*0.07))
     sim_docs_document_term_matrix = sim_docs_tfidf.fit_transform(docs).todense()
 
     # add flags, which indicate if the document is represented by an all zero vector

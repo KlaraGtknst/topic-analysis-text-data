@@ -8,12 +8,6 @@ class TfidfTextPreprocessor():
   def __init__(self):
     pass
 
-  def fit(self, X, y=None):
-    return self
-  
-  def fit_transform(self, X, y=None):
-    return self.transform(X)
-
   def transform(self, X, y=None):
     data = [X] if type(X) == str else X
     txt_preproc = TfidfPreprocessingSteps(data)
