@@ -5,6 +5,7 @@ import pickle
 from tkinter import *
 
 from elasticsearch import Elasticsearch
+from text_embeddings.InferSent.infer_pretrained import autoencoder_emb_model, init_infer
 from text_embeddings.universal_sent_encoder_tensorFlow import *
 from text_embeddings.hugging_face_sentence_transformer import *
 from elasticSearch.queries.query_documents_tfidf import *
@@ -31,6 +32,15 @@ def save_model(model, model_name):
     elif 'tfidf' in model_name:
         with open(f'models/{model_name}_vectorizer.pk', 'wb') as fin:
             pickle.dump(model, fin)
+
+    elif 'infer' in model_name:
+        with open(f'models/{model_name}.pkl', 'wb') as file:  
+            pickle.dump(model, file)
+
+    elif 'ae' in model_name:
+        with open(f'models/{model_name}.pkl', 'wb') as file:  
+            pickle.dump(model, file)
+
     print(" 4 Saved model to disk")
 
 
@@ -42,7 +52,14 @@ def load_model(model_name):
     elif 'hugging' in model_name:
         return init_hf_sentTrans_model()
     elif 'infer' in model_name:
-        print('help')
+        print('loading inferSent model')
+        with open(f'models/{model_name}.pkl', 'rb') as file:  
+            return pickle.load(file)
+        
+    elif 'ae' in model_name:
+        print('loading ae model')
+        with open(f'models/{model_name}.pkl', 'rb') as file:  
+            return pickle.load(file)
     elif 'tfidf' in model_name:
         return pickle.load(open('models/tfidf_vectorizer.pk', 'rb'))
     else:
@@ -50,6 +67,8 @@ def load_model(model_name):
 
 def main(path=None):
     path = glob.glob('/Users/klara/Downloads/*.pdf')[0]
+    src_path='/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf'
+    src_paths = glob.glob(src_path)
     # Doc2Vec
     '''train_corpus = list(db_elasticsearch.get_tagged_input_documents(src_paths=glob.glob(SRC_PATH)))
     d2v_model = Doc2Vec(train_corpus, vector_size=NUM_DIMENSIONS, window=2, min_count=2, workers=4, epochs=40)
@@ -61,10 +80,10 @@ def main(path=None):
     print(d2v_model.infer_vector(simple_preprocess(pdf_to_str(path))))'''
 
     # TF-IDF
-    src_paths='/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf'
+    '''
     client_addr="http://localhost:9200"
     client = Elasticsearch(client_addr)
-    src_paths = glob.glob(src_paths)
+    
     docs = get_docs_from_file_paths(src_paths)
     sim_docs_tfidf = TfidfVectorizer(input='content', preprocessor=TfidfTextPreprocessor().transform, min_df=3, max_df=int(len(docs)*0.07))
     sim_docs_document_term_matrix = sim_docs_tfidf.fit(docs)
@@ -74,4 +93,30 @@ def main(path=None):
     embedding = np.ravel(embedding.todense())
     embedding = np.append(embedding, 1 if np.array([entry  == 0 for entry in embedding]).all() else 0)
     print(embedding)
-   
+    '''
+    
+    # InferSent + AE
+    infer_model_name = 'infersent_model'
+    ae_model_name = 'ae_model'
+    text = pdf_to_str(path)
+    # InferSent
+    if (not os.path.exists(f"models/{infer_model_name}.pkl")):
+        MODEL_PATH = '/Users/klara/Developer/Uni/encoder/infersent1.pkl'
+        W2V_PATH = '/Users/klara/Developer/Uni/GloVe/glove.840B.300d.txt'
+        inferSent_model, docs = init_infer(model_path=MODEL_PATH, w2v_path=W2V_PATH, file_paths=src_paths, version=1)
+        save_model(inferSent_model, infer_model_name)
+    else:
+        inferSent_model = load_model(infer_model_name)
+        docs = get_docs_from_file_paths(src_paths)
+
+    # AE
+    if (not os.path.exists(f"models/{ae_model_name}.pkl")):
+        infer_embeddings = inferSent_model.encode(docs, tokenize=True)
+        encoded_infersent_embedding, ae_infer_encoder = autoencoder_emb_model(input_shape=infer_embeddings.shape[1], latent_dim=2048, data=infer_embeddings)
+        save_model(ae_infer_encoder, ae_model_name)
+    else:
+        ae_infer_encoder = load_model(ae_model_name)
+
+    inferSent_embedding = inferSent_model.encode([text, text], tokenize=True)
+    compressed_infersent_embedding = ae_infer_encoder.predict(x=inferSent_embedding)[0]
+    print(compressed_infersent_embedding)

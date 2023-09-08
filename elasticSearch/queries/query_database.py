@@ -171,29 +171,36 @@ def find_sim_docs_hugging_face_sentTrans(path: str, client: Elasticsearch=None):
 
 
 def find_sim_docs_inferSent(src_paths:list, path: str, client: Elasticsearch=None):
+    if client is None:
+        client = Elasticsearch("http://localhost:9200")
+    infer_model_name = 'infersent_model'
+    ae_model_name = 'ae_model'
     text = pdf_to_str(path)
-    infer_model_name = 'inferSent_AE'
-    ae_model_name = 'AE_inferSent'
     # InferSent
-    if (not os.path.isdir(f"models/{infer_model_name}.json")) and (not os.path.isdir(f"models/{infer_model_name}.pth")):
+    # train new model
+    if not os.path.exists(f"models/{infer_model_name}.pkl"):
         MODEL_PATH = '/Users/klara/Developer/Uni/encoder/infersent1.pkl'
         W2V_PATH = '/Users/klara/Developer/Uni/GloVe/glove.840B.300d.txt'
         inferSent_model, docs = init_infer(model_path=MODEL_PATH, w2v_path=W2V_PATH, file_paths=src_paths, version=1)
         save_model(inferSent_model, infer_model_name)
+    # load model
     else:
-        inferSent_model = load_model(inferSent_model)
+        inferSent_model = load_model(infer_model_name)
         docs = get_docs_from_file_paths(src_paths)
 
     # AE
-    if (not os.path.isdir(f"models/{ae_model_name}.json")) and (not os.path.isdir(f"models/{ae_model_name}.pth")):
+    # train new model
+    if not os.path.exists(f"models/{ae_model_name}.pkl"):
         infer_embeddings = inferSent_model.encode(docs, tokenize=True)
         encoded_infersent_embedding, ae_infer_encoder = autoencoder_emb_model(input_shape=infer_embeddings.shape[1], latent_dim=2048, data=infer_embeddings)
         save_model(ae_infer_encoder, ae_model_name)
+    # load model
     else:
         ae_infer_encoder = load_model(ae_model_name)
 
     inferSent_embedding = inferSent_model.encode([text, text], tokenize=True)
     compressed_infersent_embedding = ae_infer_encoder.predict(x=inferSent_embedding)[0]
+
     return get_db_search_results(client, compressed_infersent_embedding, 'inferSent_AE')
 
 
