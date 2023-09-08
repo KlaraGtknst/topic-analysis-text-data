@@ -106,9 +106,9 @@ def insert_documents(src_paths: list, model: Doc2Vec, client: Elasticsearch, goo
     This function inserts the documents into the database 'bahamas'. The documents are inserted as follows:
     - doc2vec: the embedding is inferred from the document text using the trained Doc2Vec model.
         The text is preprocessed using the gensim function 'simple_preprocess', which returns a list of tokens, i.e. unicode strings,
-        which are lowercased and tokenized. (cf. https://tedboy.github.io/nlps/generated/generated/gensim.utils.simple_preprocess.html).
+        which are lowercase and tokenized. (cf. https://tedboy.github.io/nlps/generated/generated/gensim.utils.simple_preprocess.html).
     - text: the text of the document. The text is not tokenized, stemmed etc.
-    - path: the path to the document on the local maschine.
+    - path: the path to the document on the local machine.
     - image: the image of the document (i.e. information about the document layout). The image is encoded in base64 and has 500 dpi.
     
     The documents receive an id which is the name of the document (i.e. the name of the pdf file without the extension).
@@ -117,7 +117,7 @@ def insert_documents(src_paths: list, model: Doc2Vec, client: Elasticsearch, goo
     cf. https://www.codespeedy.com/convert-image-to-base64-string-in-python/ for information about converting images to base64
     '''
     counter = 0
-    image_path = image_path if image_path else (path.split('data/0/')[0] + 'images/images/')
+    image_path = image_path if image_path else (src_paths.split('data/0/')[0] + 'images/images/')
 
     for i in range(len(src_paths)):
         path = src_paths[i]
@@ -157,7 +157,7 @@ def insert_documents(src_paths: list, model: Doc2Vec, client: Elasticsearch, goo
                     "pca_kmeans_cluster": pca_df_row['cluster'] if pca_df_row is not None else None,
                     "text": text,
                     "path": path,
-                    "image": str(b64_image) # TODO: statt str... b46_image.decode('ASCII'),
+                    "image": b64_image.decode('ASCII')#str(b64_image) # TODO: statt str... b64_image.decode('ASCII'),
                 })
             except ApiError as err:
                 counter += 1
