@@ -128,3 +128,6 @@ dmypy.json
 
 # exclude temp Office files
 ~$*
+
+# models
+models/
