@@ -2,6 +2,9 @@ from elasticsearch import ConflictError, Elasticsearch
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 from gensim.utils import simple_preprocess
 from pyspark.mllib.linalg import Vectors
+from gensim.test.utils import get_tmpfile
+from tkinter import *
+from tensorflow.python.keras.models import model_from_json
 import pdb # use breakpoint() for debugging when running the code from the command line
 # own modules
 from text_embeddings.preprocessing.read_pdf import *
@@ -12,13 +15,14 @@ from text_embeddings.universal_sent_encoder_tensorFlow import *
 from text_embeddings.hugging_face_sentence_transformer import *
 from text_embeddings.TFIDF.preprocessing.TfidfTextPreprocessor import *
 from text_embeddings.InferSent.infer_pretrained import *
+from text_embeddings.save_models import *
 
 '''------search in existing database-------
 run this code by typing and altering the path:
     python3 query_database.py -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/images/'
 '''
 
-def infer_doc2vec_embedding(model: Elasticsearch, path: str):
+def infer_doc2vec_embedding(model: Doc2Vec, path: str):
     '''
     :param model: trained Doc2Vec model
     :param path: path to the document to be searched for
@@ -31,7 +35,7 @@ def infer_doc2vec_embedding(model: Elasticsearch, path: str):
     '''
     return model.infer_vector(simple_preprocess(pdf_to_str(path)))
 
-def search_sim_doc2vec_docs_in_db(client: Elasticsearch, model: Doc2Vec, path: str):
+def search_sim_doc2vec_docs_in_db(client: Elasticsearch, path: str, model: Doc2Vec=None):
     '''
     :param client: Elasticsearch client
     :param model: Doc2Vec model
@@ -51,6 +55,8 @@ def search_sim_doc2vec_docs_in_db(client: Elasticsearch, model: Doc2Vec, path: s
 
     cf. https://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html#search-api-knn for information about knn in elasticsearch.
     '''
+    if model is None:
+        model = load_model('doc2vec_model.pkl')
     return get_db_search_results(client, infer_doc2vec_embedding(model, path), 'doc2vec')
 
 
@@ -105,22 +111,7 @@ def get_docs_from_same_cluster(elastic_search_client: Elasticsearch, path_to_doc
     }
 
     # results
-    search_results = elastic_search_client.search(index='bahamas', query=query, source_includes=['path', 'image'], size=n_results) 
-
-    # Extract and process the search results
-    '''print('Query Document: ', doc_id, ' of cluster ', cluster, '\n')
-    for hit in search_results['hits']['hits']:
-        # Access the relevant fields from the hit
-        source = hit['_source']
-        document_id = hit['_id']
-        score = hit['_score']
-        
-        # Process the data as needed
-        print(f"Document ID: {document_id}, Score: {score}")
-        print("Source Data:", source)
-        print("-" * 20)'''
-
-    return search_results
+    return elastic_search_client.search(index='bahamas', query=query, source_includes=['path', 'image'], size=n_results) 
 
 
 def get_number_docs_in_db(client: Elasticsearch) -> int:
@@ -178,11 +169,25 @@ def find_sim_docs_hugging_face_sentTrans(path: str, client: Elasticsearch=None):
 
 def find_sim_docs_inferSent(src_paths:list, path: str, client: Elasticsearch=None):
     text = pdf_to_str(path)
-    MODEL_PATH = '/Users/klara/Developer/Uni/encoder/infersent1.pkl'
-    W2V_PATH = '/Users/klara/Developer/Uni/GloVe/glove.840B.300d.txt'
-    inferSent_model, docs = init_infer(model_path=MODEL_PATH, w2v_path=W2V_PATH, file_paths=src_paths, version=1)
-    infer_embeddings = inferSent_model.encode(docs, tokenize=True)
-    encoded_infersent_embedding, ae_infer_encoder = autoencoder_emb_model(input_shape=infer_embeddings.shape[1], latent_dim=2048, data=infer_embeddings)
+    infer_model_name = 'inferSent_AE'
+    ae_model_name = 'AE_inferSent'
+    # InferSent
+    if (not os.path.isdir(f"models/{infer_model_name}.json")) and (not os.path.isdir(f"models/{infer_model_name}.pth")):
+        MODEL_PATH = '/Users/klara/Developer/Uni/encoder/infersent1.pkl'
+        W2V_PATH = '/Users/klara/Developer/Uni/GloVe/glove.840B.300d.txt'
+        inferSent_model, docs = init_infer(model_path=MODEL_PATH, w2v_path=W2V_PATH, file_paths=src_paths, version=1)
+        save_model(inferSent_model, infer_model_name)
+    else:
+        inferSent_model = load_model(inferSent_model)
+        docs = get_docs_from_file_paths(src_paths)
+
+    # AE
+    if (not os.path.isdir(f"models/{ae_model_name}.json")) and (not os.path.isdir(f"models/{ae_model_name}.pth")):
+        infer_embeddings = inferSent_model.encode(docs, tokenize=True)
+        encoded_infersent_embedding, ae_infer_encoder = autoencoder_emb_model(input_shape=infer_embeddings.shape[1], latent_dim=2048, data=infer_embeddings)
+        save_model(ae_infer_encoder, ae_model_name)
+    else:
+        ae_infer_encoder = load_model(ae_model_name)
 
     inferSent_embedding = inferSent_model.encode([text, text], tokenize=True)
     compressed_infersent_embedding = ae_infer_encoder.predict(x=inferSent_embedding)[0]

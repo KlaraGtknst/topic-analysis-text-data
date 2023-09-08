@@ -7,6 +7,8 @@ from elasticsearch import Elasticsearch
 import torch
 from text_visualizations import visualize_texts
 from elasticSearch.queries import query_database
+from text_embeddings.universal_sent_encoder_tensorFlow import *
+from text_embeddings.hugging_face_sentence_transformer import *
 from elasticSearch.queries.query_documents_tfidf import *
 from elasticSearch import db_elasticsearch
 from gensim.models.doc2vec import Doc2Vec
@@ -43,6 +45,31 @@ def save_model(model, model_name):
         model_path = f'models/{model_name}.pth'
         torch.save(model, model_path)
     print(" 4 Saved model to disk")
+
+
+def load_model(model_name):
+    if 'doc2vec' in model_name:
+        return Doc2Vec.load(f'models/{model_name}')
+    elif 'universal' in model_name:
+        return google_univ_sent_encoding_aux()
+    elif 'hugging' in model_name:
+        return init_hf_sentTrans_model()
+    elif 'infer' in model_name:
+        print('help')
+    elif 'tfidf' in model_name:
+        return tfidf_aux()
+    try:
+        # load json and create model
+        json_file = open(f'models/{model_name}.json', 'r')
+        loaded_model_json = json_file.read()
+        json_file.close()
+        loaded_model = model_from_json(loaded_model_json)
+        # load weights into new model
+        loaded_model.load_weights(f"models/{model_name}.h5")
+    except:
+        loaded_model = torch.load(f'models/{model_name}.pth')
+    print("Loaded model from disk")
+    return loaded_model
 
 if __name__ == '__main__':
     train_corpus = list(db_elasticsearch.get_tagged_input_documents(src_paths=glob.glob(SRC_PATH)))
