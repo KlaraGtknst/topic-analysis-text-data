@@ -96,10 +96,8 @@ class QueryPage(Frame):
 
             self.react_on_results(doc_to_search_for, query_type, cluster_results)
 
-        elif query_type == 'Doc2Vec':# TODO: test loaded model
-            #train_corpus = list(db_elasticsearch.get_tagged_input_documents(src_paths=glob.glob(SRC_PATH)))
-            #d2v_model = Doc2Vec(train_corpus, vector_size=NUM_DIMENSIONS, window=2, min_count=2, workers=4, epochs=40)
-            doc2vec_result = query_database.search_sim_doc2vec_docs_in_db(path=doc_to_search_for, client=client, model=None)#d2v_model)
+        elif query_type == 'Doc2Vec':
+            doc2vec_result = query_database.search_sim_doc2vec_docs_in_db(path=doc_to_search_for, client=client, model=None)
 
             self.react_on_results(doc_to_search_for, query_type, doc2vec_result)
 

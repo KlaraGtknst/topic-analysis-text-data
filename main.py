@@ -2,7 +2,7 @@ from user_interface.cli import *
 from text_visualizations import visualize_texts
 from text_embeddings.preprocessing import read_pdf
 from text_embeddings.InferSent import infer_pretrained
-from text_embeddings import universal_sent_encoder_tensorFlow
+from text_embeddings import universal_sent_encoder_tensorFlow, save_models
 from text_embeddings import hugging_face_sentence_transformer
 from elasticSearch import db_elasticsearch
 from elasticSearch.queries import query_documents_tfidf, query_database
@@ -91,6 +91,10 @@ if __name__ == '__main__':
     elif file_to_run[0] == 'user_interface.py':
         # python3 main.py 'user_interface.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf'
         user_interface.main()
+
+    elif file_to_run[0] == 'save_models.py':
+        # python3 main.py 'save_models.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf'
+        save_models.main()
 
     else:
         print('Error: No file to run.')
