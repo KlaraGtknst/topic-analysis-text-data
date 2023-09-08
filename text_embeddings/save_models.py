@@ -21,6 +21,13 @@ NUM_COMPONENTS = 2
 NUM_RESULTS = 4
 
 def save_model(model, model_name):
+    '''
+    :param model: The model to be saved.
+    :param model_name: The name/ type of the model.
+
+    Saves the model to the models folder.
+    If the folder models does not exist, it will be created.
+    '''
 
     if not os.path.exists('models'):
         os.mkdir('models')
@@ -41,27 +48,36 @@ def save_model(model, model_name):
         with open(f'models/{model_name}.pkl', 'wb') as file:  
             pickle.dump(model, file)
 
-    print(" 4 Saved model to disk")
 
 
 def load_model(model_name):
+    '''
+    :param model_name: The name/ type of the model.
+    :return: The model.
+    
+    Loads the model from the models folder.
+    '''
+
     if 'doc2vec' in model_name:
         return Doc2Vec.load('models/doc2vec_model.pkl')
+    
     elif 'universal' in model_name:
         return google_univ_sent_encoding_aux()
+    
     elif 'hugging' in model_name:
         return init_hf_sentTrans_model()
+    
     elif 'infer' in model_name:
-        print('loading inferSent model')
+        with open(f'models/{model_name}.pkl', 'rb') as file:  
+            return pickle.load(file)    
+        
+    elif 'ae' in model_name:
         with open(f'models/{model_name}.pkl', 'rb') as file:  
             return pickle.load(file)
         
-    elif 'ae' in model_name:
-        print('loading ae model')
-        with open(f'models/{model_name}.pkl', 'rb') as file:  
-            return pickle.load(file)
     elif 'tfidf' in model_name:
         return pickle.load(open('models/tfidf_vectorizer.pk', 'rb'))
+    
     else:
         print(f'{model_name} not found')
 
