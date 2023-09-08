@@ -15,7 +15,7 @@ from text_embeddings.universal_sent_encoder_tensorFlow import *
 from text_embeddings.hugging_face_sentence_transformer import *
 from text_embeddings.TFIDF.preprocessing.TfidfTextPreprocessor import *
 from text_embeddings.InferSent.infer_pretrained import *
-from text_embeddings.save_models import *
+from text_embeddings import save_models
 
 '''------search in existing database-------
 run this code by typing and altering the path:
@@ -35,10 +35,10 @@ def infer_doc2vec_embedding(model: Doc2Vec, path: str):
     '''
     return model.infer_vector(simple_preprocess(pdf_to_str(path)))
 
-def search_sim_doc2vec_docs_in_db(client: Elasticsearch, path: str, model: Doc2Vec=None):
+def search_sim_doc2vec_docs_in_db(client: Elasticsearch, path: str, src_paths='/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf', doc2vec_model: Doc2Vec=None):
     '''
     :param client: Elasticsearch client
-    :param model: Doc2Vec model
+    :param doc2vec_model: Doc2Vec model
     :param path: path to the document to be searched for
     :return: None
 
@@ -55,9 +55,10 @@ def search_sim_doc2vec_docs_in_db(client: Elasticsearch, path: str, model: Doc2V
 
     cf. https://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html#search-api-knn for information about knn in elasticsearch.
     '''
-    if model is None:
-        model = load_model('doc2vec')
-    return get_db_search_results(client, infer_doc2vec_embedding(model, path), 'doc2vec')
+    if doc2vec_model is None:
+        #model = save_models.load_model('doc2vec')
+        doc2vec_model = save_models.get_model('doc2vec', src_paths)
+    return get_db_search_results(client, infer_doc2vec_embedding(doc2vec_model, path), 'doc2vec')
 
 
 def find_document_tfidf(client: Elasticsearch, model: TfidfVectorizer, path: str):
@@ -141,7 +142,9 @@ def get_sim_docs_tfidf(doc_to_search_for, src_paths='/Users/klara/Documents/Uni/
     sim_docs_tfidf = TfidfVectorizer(input='content', preprocessor=TfidfTextPreprocessor().transform, min_df=3, max_df=int(len(docs)*0.07))
     sim_docs_document_term_matrix = sim_docs_tfidf.fit(docs)'''
     client = Elasticsearch(client_addr)
-    sim_docs_tfidf = load_model('tfidf')
+    #sim_docs_tfidf = save_models.load_model('tfidf')
+    sim_docs_tfidf = save_models.get_model('tfidf', src_paths)
+    
     return find_document_tfidf(client, sim_docs_tfidf, path=doc_to_search_for)
         
 
@@ -178,25 +181,30 @@ def find_sim_docs_inferSent(src_paths:list, path: str, client: Elasticsearch=Non
     text = pdf_to_str(path)
     # InferSent
     # train new model
-    if not os.path.exists(f"models/{infer_model_name}.pkl"):
+    '''if not os.path.exists(f"models/{infer_model_name}.pkl"):
         MODEL_PATH = '/Users/klara/Developer/Uni/encoder/infersent1.pkl'
         W2V_PATH = '/Users/klara/Developer/Uni/GloVe/glove.840B.300d.txt'
         inferSent_model, docs = init_infer(model_path=MODEL_PATH, w2v_path=W2V_PATH, file_paths=src_paths, version=1)
-        save_model(inferSent_model, infer_model_name)
+        save_models.save_model(inferSent_model, infer_model_name)
     # load model
     else:
-        inferSent_model = load_model(infer_model_name)
-        docs = get_docs_from_file_paths(src_paths)
+        inferSent_model = save_models.load_model(infer_model_name)
+        docs = get_docs_from_file_paths(src_paths)'''
+
+    inferSent_model = save_models.get_model(infer_model_name, src_paths)
+    
 
     # AE
     # train new model
-    if not os.path.exists(f"models/{ae_model_name}.pkl"):
+    '''if not os.path.exists(f"models/{ae_model_name}.pkl"):
         infer_embeddings = inferSent_model.encode(docs, tokenize=True)
         encoded_infersent_embedding, ae_infer_encoder = autoencoder_emb_model(input_shape=infer_embeddings.shape[1], latent_dim=2048, data=infer_embeddings)
-        save_model(ae_infer_encoder, ae_model_name)
+        save_models.save_model(ae_infer_encoder, ae_model_name)
     # load model
     else:
-        ae_infer_encoder = load_model(ae_model_name)
+        ae_infer_encoder = save_models.load_model(ae_model_name)'''
+
+    ae_infer_encoder = save_models.get_model(ae_model_name, src_paths)
 
     inferSent_embedding = inferSent_model.encode([text, text], tokenize=True)
     compressed_infersent_embedding = ae_infer_encoder.predict(x=inferSent_embedding)[0]

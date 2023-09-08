@@ -88,7 +88,7 @@ def train_model(model_name, src_paths, client:Elasticsearch=None):
     :return: The trained model.
     '''
     if 'doc2vec' in model_name:
-        train_corpus = list(get_tagged_input_documents(src_paths=glob.glob(SRC_PATH)))
+        train_corpus = list(get_tagged_input_documents(src_paths=glob.glob(src_paths)))
         d2v_model = Doc2Vec(train_corpus, vector_size=NUM_DIMENSIONS, window=2, min_count=2, workers=4, epochs=40)
         return d2v_model
     
@@ -126,6 +126,20 @@ def train_model(model_name, src_paths, client:Elasticsearch=None):
     
     else:
         print(f'{model_name} not found')
+
+    
+def get_model(model_name, src_paths):
+    '''
+    :param model_name: The name/ type of the model.
+    :param src_paths: The paths to the documents to be used for training.
+    :return: The model.
+    '''
+    try: # model exists
+        model = load_model(model_name)
+    except: # model does not exist, create and save it
+        model = save_models.train_model(model_name, src_paths)
+        save_models.save_model(model, model_name)
+    return model
 
 def main(path=None):
     path = glob.glob('/Users/klara/Downloads/*.pdf')[0]

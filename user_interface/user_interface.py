@@ -97,7 +97,7 @@ class QueryPage(Frame):
             self.react_on_results(doc_to_search_for, query_type, cluster_results)
 
         elif query_type == 'Doc2Vec':
-            doc2vec_result = query_database.search_sim_doc2vec_docs_in_db(path=doc_to_search_for, client=client, model=None)
+            doc2vec_result = query_database.search_sim_doc2vec_docs_in_db(path=doc_to_search_for, client=client, doc2vec_model=None, src_paths=SRC_PATH)
 
             self.react_on_results(doc_to_search_for, query_type, doc2vec_result)
 
