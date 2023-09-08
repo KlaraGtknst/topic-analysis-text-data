@@ -36,7 +36,7 @@ def save_model(model, model_name):
 
 def load_model(model_name):
     if 'doc2vec' in model_name:
-        return Doc2Vec.load(f'models/{model_name}')
+        return Doc2Vec.load('models/doc2vec_model.pkl')
     elif 'universal' in model_name:
         return google_univ_sent_encoding_aux()
     elif 'hugging' in model_name:
@@ -44,7 +44,6 @@ def load_model(model_name):
     elif 'infer' in model_name:
         print('help')
     elif 'tfidf' in model_name:
-       
         return pickle.load(open('models/tfidf_vectorizer.pk', 'rb'))
     else:
         print(f'{model_name} not found')

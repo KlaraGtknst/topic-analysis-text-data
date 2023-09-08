@@ -56,7 +56,7 @@ def search_sim_doc2vec_docs_in_db(client: Elasticsearch, path: str, model: Doc2V
     cf. https://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html#search-api-knn for information about knn in elasticsearch.
     '''
     if model is None:
-        model = load_model('doc2vec_model.pkl')
+        model = load_model('doc2vec')
     return get_db_search_results(client, infer_doc2vec_embedding(model, path), 'doc2vec')
 
 
