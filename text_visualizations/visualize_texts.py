@@ -12,7 +12,9 @@ run this code by typing and altering the path:
 def term_frequency(tokens: list, file_name: str, outpath: str = None) -> None:
     '''
     :param tokens: list of tokens
-    :return: None
+    :param file_name: name of the file
+    :param outpath: path to save the term frequency
+    :return: None; if return_png is true, the term frequency will be returned as png
 
     This function plots the term frequency of the tokens.
     '''
@@ -26,11 +28,12 @@ def term_frequency(tokens: list, file_name: str, outpath: str = None) -> None:
     plt.show()
 
 
-def word_cloud(tokens: list, file_name: str, outpath: str = None) -> None:
+def word_cloud(tokens: list, file_name: str, outpath: str = None, return_img:bool=False) -> None:
     '''
     :param tokens: list of tokens
     :param file_name: name of the file
-    :return: None
+    :param outpath: path to save the wordcloud
+    :return: None; if return_png is true, the wordcloud will be returned as png
 
     This function plots a word cloud of the tokens.
     cf. https://towardsdatascience.com/end-to-end-topic-modeling-in-python-latent-dirichlet-allocation-lda-35ce4ed6b3e0
@@ -38,6 +41,10 @@ def word_cloud(tokens: list, file_name: str, outpath: str = None) -> None:
     try:
         # possible to add stopwords to initiation of worldcloud
         wordcloud = WordCloud(width=800, height=500, random_state=21, contour_width=3, max_font_size=110, background_color='white', max_words=5000).generate(','.join(tokens))
+        print('test')
+        if return_img:
+            wordcloud.to_file(outpath + '/' + file_name)
+            return
         plt.figure(figsize=(15, 10))
         plt.imshow(wordcloud, interpolation="bilinear") # displays image, interpolation: smoother image
         plt.axis('off')
@@ -60,10 +67,11 @@ def preprocess_doc(path:str) -> list:
     stemmed_filtered_tokens = stemming(filtered_tokens)
     return stemmed_filtered_tokens
 
-def get_one_visualization(option:str, paths: list) -> None:
+def get_one_visualization(option:str, paths:list, outpath:str=None) -> None:
     '''
     :param option: 'wordcloud' or 'term_frequency'
     :param path: paths to documents
+    :param outpath: path to save the visualization; if None, the visualization will be shown
     :return: None
 
     This function plots a word cloud of the tokens of the document.
@@ -73,9 +81,9 @@ def get_one_visualization(option:str, paths: list) -> None:
     for path in paths:
         tokens.extend(preprocess_doc(path))
     if option == 'wordcloud':
-        word_cloud(tokens, file_name= first_doc if (len(paths) == 1) else f'multiple docs similar to {first_doc}')
+        word_cloud(tokens, file_name= first_doc if (len(paths) == 1) else f'multiple docs similar to {first_doc}', outpath=outpath, return_img=True)
     elif option == 'term_frequency':
-        term_frequency(tokens, file_name=first_doc if (len(paths) == 1) else f'multiple docs similar to {first_doc}')
+        term_frequency(tokens, file_name=first_doc if (len(paths) == 1) else f'multiple docs similar to {first_doc}', outpath=outpath)
     else:
         print('Error: No valid option chosen.')
 

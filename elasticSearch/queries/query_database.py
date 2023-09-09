@@ -99,6 +99,25 @@ def get_doc_meta_data(elastic_search_client: Elasticsearch, doc_id: str):
     resp = elastic_search_client.get(index='bahamas', id=doc_id,  source_includes=['path', 'text']).body
     return {'_id': resp['_id'], **resp['_source']}
 
+def get_docs_in_db(elastic_search_client: Elasticsearch, indices:list, start:int=0, n_docs:int=10) -> dict:
+    '''
+    :param elastic_search_client: Elasticsearch client
+    :param start: start index of the documents to be returned
+    :param n_docs: number of documents to be returned
+    :return: dictionary of paths and texts to documents in database
+    '''
+    resps = {}
+    elastic_search_client.indices.refresh(index='bahamas')
+
+    # when db index is changes to numbers use range query, cf. https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-range-query.html
+    #resp = elastic_search_client.search(index='bahamas', body={"query": {"range": {}}}, source_includes=['path'])
+
+    # only works when db index is list of pdf names
+    for index in indices:
+        resp = get_doc_meta_data(elastic_search_client, doc_id=index)
+        resps[index] = resp
+    return resps
+
 def get_docs_from_same_cluster(elastic_search_client: Elasticsearch, path_to_doc: str, n_results: int = 5) -> list:
     '''
     :param elastic_search_client: Elasticsearch client
