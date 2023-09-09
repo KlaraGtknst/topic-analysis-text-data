@@ -15,6 +15,7 @@ from elasticSearch.queries.query_database import *
 from doc_images.PCA.PCA_image_clustering import *
 from text_embeddings.TFIDF.preprocessing.TfidfTextPreprocessor import *
 from text_embeddings.InferSent.infer_pretrained import *
+from text_embeddings import save_models 
 
 '''------initiate, fill and search in database-------
 run this code by typing and altering the path:
@@ -88,10 +89,10 @@ def init_db(client: Elasticsearch, num_dimensions: int, sim_docs_vocab_size: int
         },
     })
 
-def insert_documents(src_paths: list, model: Doc2Vec, client: Elasticsearch, google_model, huggingface_model, sim_doc_tfidf_vectorization: np.ndarray, pca_df: pd.DataFrame, inferEncoder, inferSent_model, image_path: str = None):
+def insert_documents(src_paths: list, doc2vec_model: Doc2Vec, client: Elasticsearch, google_model, huggingface_model, sim_doc_tfidf_vectorization: np.ndarray, pca_df: pd.DataFrame, inferEncoder, inferSent_model, image_path: str = None):
     '''
     :param src_paths: path to the documents to be inserted into the database
-    :param model: Doc2Vec model
+    :param doc2vec_model: Doc2Vec model
     :param client: Elasticsearch client
     :param google_model: google universal sentence encoder model
     :param huggingface_model: huggingface sentence transformer model
@@ -148,7 +149,7 @@ def insert_documents(src_paths: list, model: Doc2Vec, client: Elasticsearch, goo
 
             try:
                 client.create(index='bahamas', id=id, document={
-                    "doc2vec": model.infer_vector(simple_preprocess(pdf_to_str(path))),
+                    "doc2vec": doc2vec_model.infer_vector(simple_preprocess(pdf_to_str(path))),
                     "sim_docs_tfidf": np.ravel(np.array(sim_doc_tfidf_vectorization[i])),
                     "google_univ_sent_encoding": embed([text], google_model).numpy().tolist()[0],
                     "huggingface_sent_transformer": huggingface_model.encode(text),
@@ -261,7 +262,55 @@ def main(src_paths, image_src_path):
 
     print('-' * 80)
 
-    # InferSent embedding
+    model_names = ['doc2vec', 'universal', 'hugging', 'infer', 'ae', 'tfidf']
+    models = {}
+    for model_name in model_names:
+        print(model_name)
+        try: # model exists
+            model = save_models.load_model(model_name)
+            models[model_name] = model
+        except: # model does not exist, create and save it
+            model = save_models.train_model(model_name, src_paths)
+            models[model_name] = model
+            save_models.save_model(model, model_name)
+
+    sim_docs_vocab_size = len(list(models['tfidf'].vocabulary_.values()))
+
+    # tfidf embedding incl. all-zero-vector-flag
+    docs = get_docs_from_file_paths(src_paths)
+    sim_docs_document_term_matrix = models['tfidf'].fit_transform(docs).todense()
+    flags = np.array([1 if np.array([entry  == 0 for entry in sim_docs_document_term_matrix[i]]).all() else 0 for i in range(len(sim_docs_document_term_matrix))]).reshape(len(sim_docs_document_term_matrix),1)
+    flag_matrix = np.append(sim_docs_document_term_matrix, flags, axis=1)
+
+    # Create the client instance
+    client = Elasticsearch("http://localhost:9200")
+
+    # delete old index and create new one
+    client.options(ignore_status=[400,404]).indices.delete(index='bahamas')
+    init_db(client, num_dimensions=NUM_DIMENSIONS, sim_docs_vocab_size=sim_docs_vocab_size, n_components=NUM_COMPONENTS)
+
+    # PCA + KMeans clustering
+    pca_cluster_df = get_cluster_PCA_df(src_path= image_src_path, n_cluster= 4, n_components= NUM_COMPONENTS, preprocess_image_size=600)
+
+    # insert documents into database
+    insert_documents(src_paths, doc2vec_model=models['doc2vec'], client=client, image_path=image_src_path, google_model=models['universal'], 
+                     huggingface_model=models['hugging'], sim_doc_tfidf_vectorization=flag_matrix, pca_df=pca_cluster_df, 
+                     inferSent_model=models['infer'], inferEncoder=models['ae'])
+
+    # alternatively, use AsyncElasticsearch or time.sleep(1)
+    client.indices.refresh(index="bahamas")
+
+    # properties in db
+    print(client.indices.get_mapping(index='bahamas'))
+
+    # number of documents in database
+    client.indices.refresh(index='bahamas')
+    resp = client.count(index='bahamas')
+    print('number of documents in database: ', resp['count'])
+
+############################################################################################################
+
+    '''# InferSent embedding
     MODEL_PATH = '/Users/klara/Developer/Uni/encoder/infersent1.pkl'
     W2V_PATH = '/Users/klara/Developer/Uni/GloVe/glove.840B.300d.txt'
     infersent, docs = init_infer(model_path=MODEL_PATH, w2v_path=W2V_PATH, file_paths=src_paths, version=1)
@@ -311,22 +360,10 @@ def main(src_paths, image_src_path):
     pca_cluster_df = get_cluster_PCA_df(src_path= image_src_path, n_cluster= 4, n_components= NUM_COMPONENTS, preprocess_image_size=600)
 
     # insert documents into database
-    insert_documents(src_paths, doc2vec_model, client, image_path=image_src_path, google_model=google_model, huggingface_model=huggingface_model, sim_doc_tfidf_vectorization=tfidf_matrix, pca_df=pca_cluster_df, inferSent_model=infersent, inferEncoder=ae_infer_encoder)
+    insert_documents(src_paths, doc2vec_model=doc2vec_model, client=client, image_path=image_src_path, google_model=google_model, huggingface_model=huggingface_model, sim_doc_tfidf_vectorization=tfidf_matrix, pca_df=pca_cluster_df, inferSent_model=infersent, inferEncoder=ae_infer_encoder)
 
     # alternatively, use AsyncElasticsearch or time.sleep(1)
     client.indices.refresh(index="bahamas")
-    
-    
-
-    # sample query for a document
-    '''path = src_paths[50]
-    print('\n' + '-' * 40, path, '-' * 40)
-    scores = search_sim_doc2vec_docs_in_db(client, doc2vec_model, path)
-    for score in list(scores.keys()):
-        print(score, scores[score])
-
-    # create image matrix of 9 most similar images for query image
-    show_best_search_results(scores, src_paths, image_src_path)'''
 
 
     # properties in db
@@ -335,4 +372,4 @@ def main(src_paths, image_src_path):
     # number of documents in database
     client.indices.refresh(index='bahamas')
     resp = client.count(index='bahamas')
-    print('number of documents in database: ', resp['count'])
+    print('number of documents in database: ', resp['count'])'''
