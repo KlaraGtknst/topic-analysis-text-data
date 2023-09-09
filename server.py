@@ -17,6 +17,14 @@ def index():
 def login():
     return 'login'
 
+# return 10 most similar documents to text x
+@app.route('/documents/<text>')
+def find_most_likely_docs(text:str):
+    # http://127.0.0.1:8000/documents/bahamas
+    elastic_search_client = Elasticsearch("http://localhost:9200")
+    return query_database.text_search_db(elastic_search_client, text=text)
+
+
 # return x documents on page y
 @app.route('/documents/<int:page>/<int:count>')
 def get_docs_per_page(page:int=0, count:int=10):

@@ -89,6 +89,29 @@ def find_document_tfidf(client: Elasticsearch, model: TfidfVectorizer, path: str
    
     return get_db_search_results(client, embedding, 'sim_docs_tfidf')
 
+def text_search_db(elastic_search_client: Elasticsearch, text:str):
+    '''
+    :param elastic_search_client: Elasticsearch client
+    :param text: text to be searched for
+    :return: dictionary of paths and scores of best fitting 10 documents in database
+    '''
+    results = elastic_search_client.search(
+        index='bahamas', 
+        #_source=['text'],
+        body={
+            'size' : 10,
+                'query': {
+                    'match' : {
+                        'text': text
+                    }
+                }
+            },
+        
+        source_includes=['path'])['hits']['hits']
+    print(results)
+    return results
+
+
 def get_doc_meta_data(elastic_search_client: Elasticsearch, doc_id: str):
     '''
     :param elastic_search_client: Elasticsearch client
