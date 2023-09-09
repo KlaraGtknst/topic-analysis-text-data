@@ -131,3 +131,6 @@ dmypy.json
 
 # models
 models/
+
+# temp visualizations
+visualizations/
