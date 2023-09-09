@@ -89,6 +89,15 @@ def find_document_tfidf(client: Elasticsearch, model: TfidfVectorizer, path: str
    
     return get_db_search_results(client, embedding, 'sim_docs_tfidf')
 
+def get_doc_meta_data(elastic_search_client: Elasticsearch, doc_id: str):
+    '''
+    :param elastic_search_client: Elasticsearch client
+    :param doc_id: document id to be searched for; acts as the index in the database
+    :return: path and text of the document
+    '''
+    elastic_search_client.indices.refresh(index='bahamas')
+    resp = elastic_search_client.get(index='bahamas', id=doc_id,  source_includes=['path', 'text']).body
+    return {'_id': resp['_id'], **resp['_source']}
 
 def get_docs_from_same_cluster(elastic_search_client: Elasticsearch, path_to_doc: str, n_results: int = 5) -> list:
     '''
