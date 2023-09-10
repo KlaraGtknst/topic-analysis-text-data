@@ -132,9 +132,8 @@ def get_all_docs_in_db(elastic_search_client: Elasticsearch) -> dict:
 
 
 def get_knn_res(doc_to_search_for:str, query_type:str, elastic_search_client:Elasticsearch, n_results:int):
-    # get cluster
+    # get embediding/ search query data
     elastic_search_client.indices.refresh(index='bahamas')
-    print(doc_to_search_for)
     try:
         resp = elastic_search_client.get(index='bahamas', id=doc_to_search_for,  source_includes=[query_type])
         embedding = resp['_source'][query_type]
@@ -142,7 +141,7 @@ def get_knn_res(doc_to_search_for:str, query_type:str, elastic_search_client:Ela
         # TODO: create embedding even though everything is offline?
         return {'error': 'document not found in database'}
 
-    # results
+    # get similar documents
     results = elastic_search_client.search(index='bahamas', knn={
             "field": query_type,
             "query_vector": embedding,
