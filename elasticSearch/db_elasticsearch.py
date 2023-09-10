@@ -16,6 +16,7 @@ from doc_images.PCA.PCA_image_clustering import *
 from text_embeddings.TFIDF.preprocessing.TfidfTextPreprocessor import *
 from text_embeddings.InferSent.infer_pretrained import *
 from text_embeddings import save_models 
+from constants import *
 
 '''------initiate, fill and search in database-------
 run this code by typing and altering the path:
