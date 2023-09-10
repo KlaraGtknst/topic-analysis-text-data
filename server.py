@@ -30,23 +30,15 @@ def get_all_docs_in_db():
         # text search
         result = query_database.text_search_db(elastic_search_client, text=text, page=page, count=count)
 
+    elif knn_type and knn_source:
+        # http://127.0.0.1:8000/documents?knn_source=SAC1-6&knn_type=sim_docs_tfidf
+        result = query_database.get_knn_res(doc_to_search_for=knn_source, query_type=knn_type, elastic_search_client=elastic_search_client, n_results=count)
 
-    elif knn_source:
-        # knn search
-        print(knn_source, knn_type)
     else:
         # regular list
         result = query_database.get_docs_in_db(elastic_search_client, start=page, n_docs=count)
     # http://127.0.0.1:8000/documents
     return result
-
-# return one document as JSON
-@app.get('/documents/<id>')
-def get_doc_meta_data(id):
-    # http://127.0.0.1:8000/documents/SAC1-6
-    elastic_search_client = Elasticsearch("http://localhost:9200")
-    resp = query_database.get_doc_meta_data(elastic_search_client, doc_id=id)
-    return resp
 
 # return one document as PDF
 @app.route('/documents/pdf/<id>')
@@ -62,7 +54,7 @@ def hello(id):
 # return query for one document with query type x
 @app.route('/documents/<id>/query/<query_type>')
 def get_query(id, query_type): #TODO: async ?
-    # http://127.0.0.1:8000/documents/SAC1-6/query/TF-IDF
+    
     # get path of doc to search for
     elastic_search_client = Elasticsearch("http://localhost:9200")
     doc_to_search_for = query_database.get_doc_meta_data(elastic_search_client, doc_id=id)['path']
