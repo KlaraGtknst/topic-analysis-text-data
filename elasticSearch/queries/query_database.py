@@ -17,6 +17,9 @@ from text_embeddings.TFIDF.preprocessing.TfidfTextPreprocessor import *
 from text_embeddings.InferSent.infer_pretrained import *
 from text_embeddings import save_models
 
+
+SRC_INCLUDES = ['path', 'text']
+
 '''------search in existing database-------
 run this code by typing and altering the path:
     python3 query_database.py -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/images/'
@@ -88,26 +91,44 @@ def find_document_tfidf(client: Elasticsearch, model: TfidfVectorizer, path: str
    
     return get_db_search_results(client, embedding, 'sim_docs_tfidf')
 
-def text_search_db(elastic_search_client: Elasticsearch, text:str):
+def text_search_db(elastic_search_client: Elasticsearch, text:str, page:int=0, count:int=10):
     '''
     :param elastic_search_client: Elasticsearch client
     :param text: text to be searched for
+    :param page: page of the results to be returned
+    :param count: number of results to be returned
     :return: dictionary of paths and scores of best fitting 10 documents in database
     '''
     results = elastic_search_client.search(
         index='bahamas', 
-        #_source=['text'],
-        body={
-            'size' : 10,
-                'query': {
-                    'match' : {
-                        'text': text
-                    }
+        size=count,
+        from_=(page*count),
+        query= {
+                'match' : {
+                    'text': text
                 }
             },
-        
-        source_includes=['path'])['hits']['hits']
-    return results
+        source_includes=SRC_INCLUDES)['hits']['hits']
+    return convert_hits(results)
+
+def convert_hits(results):
+    return [{'_id': result['_id'], '_score': result['_score'], **result['_source']} for result in results]
+
+def get_all_docs_in_db(elastic_search_client: Elasticsearch) -> dict:
+    '''
+    :param elastic_search_client: Elasticsearch client
+    :return: dictionary of paths and scores of all documents in database
+    '''
+    results = elastic_search_client.search(
+        index='bahamas', 
+        body={
+            'size': get_number_docs_in_db(elastic_search_client),
+            'query': {
+                'match_all' : {}
+                }
+            },   
+        source_includes=SRC_INCLUDES)['hits']['hits']
+    return convert_hits(results)
 
 
 def get_doc_meta_data(elastic_search_client: Elasticsearch, doc_id: str):
@@ -117,7 +138,7 @@ def get_doc_meta_data(elastic_search_client: Elasticsearch, doc_id: str):
     :return: path and text of the document
     '''
     elastic_search_client.indices.refresh(index='bahamas')
-    resp = elastic_search_client.get(index='bahamas', id=doc_id,  source_includes=['path', 'text']).body
+    resp = elastic_search_client.get(index='bahamas', id=doc_id,  source_includes=SRC_INCLUDES).body
     return {'_id': resp['_id'], **resp['_source']}
 
 def get_docs_in_db(elastic_search_client: Elasticsearch, indices:list, start:int=0, n_docs:int=10) -> dict:
@@ -127,17 +148,15 @@ def get_docs_in_db(elastic_search_client: Elasticsearch, indices:list, start:int
     :param n_docs: number of documents to be returned
     :return: dictionary of paths and texts to documents in database
     '''
-    resps = {}
-    elastic_search_client.indices.refresh(index='bahamas')
-
-    # when db index is changes to numbers use range query, cf. https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-range-query.html
-    #resp = elastic_search_client.search(index='bahamas', body={"query": {"range": {}}}, source_includes=['path'])
-
-    # only works when db index is list of pdf names
-    for index in indices:
-        resp = get_doc_meta_data(elastic_search_client, doc_id=index)
-        resps[index] = resp
-    return resps
+    results = elastic_search_client.search(
+        index='bahamas', 
+        from_=start*n_docs,
+        size=n_docs,
+        query= {
+                'match_all' : {}
+                },  
+        source_includes=SRC_INCLUDES)['hits']['hits']
+    return convert_hits(results)
 
 def get_docs_from_same_cluster(elastic_search_client: Elasticsearch, path_to_doc: str, n_results: int = 5) -> list:
     '''
@@ -161,7 +180,8 @@ def get_docs_from_same_cluster(elastic_search_client: Elasticsearch, path_to_doc
     }
 
     # results
-    return elastic_search_client.search(index='bahamas', query=query, source_includes=['path', 'image'], size=n_results) 
+    resp = elastic_search_client.search(index='bahamas', query=query, source_includes=SRC_INCLUDES, size=n_results) 
+    return {'_id': resp['_id'], **resp['_source']}
 
 
 def get_number_docs_in_db(client: Elasticsearch) -> int:
@@ -240,7 +260,7 @@ def get_db_search_results(client: Elasticsearch, embedding: np.array, field: str
             "query_vector": embedding,
             "k": num_res,
             "num_candidates": 100
-        }, source_includes=['path', 'image'])
+        }, source_includes=SRC_INCLUDES)
     
     return results
 

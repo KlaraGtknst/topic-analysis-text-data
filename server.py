@@ -1,7 +1,7 @@
 import glob
 import os
 from elasticsearch import Elasticsearch
-from flask import Flask, render_template, send_file, send_from_directory, url_for
+from flask import Flask, render_template, request, send_file, send_from_directory, url_for
 from text_visualizations import visualize_texts
 from elasticSearch.queries import query_database
 # flask --app server run --debug --port 8000
@@ -14,31 +14,36 @@ def index():
 
 # return all documents
 @app.route('/documents')
-def login():
-    return 'login'
+def get_all_docs_in_db():
+    # http://127.0.0.1:8000/documents?page=0&count=10
+    # query parameters
+    args = request.args
+    page = args.get('page', default=0, type=int)
+    count = args.get('count', default=10, type=int)
+    text = args.get('text', default=None, type=str)
+    knn_source = args.get('knn_source', default=None, type=str) # TODO maybe change type to int depending on final _id
+    knn_type = args.get('knn_type', default=None, type=str)
 
-# return 10 most similar documents to text x
-@app.route('/documents/text/<text>')
-def find_most_likely_docs(text:str):
-    # http://127.0.0.1:8000/documents/text/bahamas
+    # client
     elastic_search_client = Elasticsearch("http://localhost:9200")
-    return query_database.text_search_db(elastic_search_client, text=text)
+    if text:
+        # text search
+        result = query_database.text_search_db(elastic_search_client, text=text, page=page, count=count)
 
 
-# return x documents on page y
-@app.route('/documents/<int:page>/<int:count>')
-def get_docs_per_page(page:int=0, count:int=10):
-    # http://127.0.0.1:8000/documents/0/10
-    elastic_search_client = Elasticsearch("http://localhost:9200")
-    # TODO: change to integer when index changed in db
-    doc_ids = glob.glob('/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf')
-    doc_ids= [doc.split('/')[-1].split('.')[0] for doc in  doc_ids[page*count:page*count+count]]
-    return query_database.get_docs_in_db(elastic_search_client, indices=doc_ids, start=page, n_docs=count)
+    elif knn_source:
+        # knn search
+        print(knn_source, knn_type)
+    else:
+        # regular list
+        result = query_database.get_docs_in_db(elastic_search_client, start=page, n_docs=count)
+    # http://127.0.0.1:8000/documents
+    return result
 
 # return one document as JSON
 @app.get('/documents/<id>')
 def get_doc_meta_data(id):
-    print(id) # http://127.0.0.1:8000/documents/SAC1-6
+    # http://127.0.0.1:8000/documents/SAC1-6
     elastic_search_client = Elasticsearch("http://localhost:9200")
     resp = query_database.get_doc_meta_data(elastic_search_client, doc_id=id)
     return resp
