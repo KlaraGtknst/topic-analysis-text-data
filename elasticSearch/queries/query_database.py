@@ -132,6 +132,14 @@ def get_all_docs_in_db(elastic_search_client: Elasticsearch) -> dict:
 
 
 def get_knn_res(doc_to_search_for:str, query_type:str, elastic_search_client:Elasticsearch, n_results:int):
+    '''
+    :param doc_to_search_for: id of the document to be searched for; acts as the index in the database
+    :param query_type: type of the query to be searched for; must be one of:
+        "doc2vec", "sim_docs_tfidf", "google_univ_sent_encoding", "huggingface_sent_transformer", "inferSent_AE", "pca_kmeans_cluster"
+    :param elastic_search_client: Elasticsearch client
+    :param n_results: number of results to be returned
+    :return: dictionary of paths, scores, ids and scores of best fitting 10 documents in database
+    '''
     # get embediding/ search query data
     elastic_search_client.indices.refresh(index='bahamas')
     try:
