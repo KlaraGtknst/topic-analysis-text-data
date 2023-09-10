@@ -26,8 +26,10 @@ def get_all_docs_in_db():
 
     # client
     elastic_search_client = Elasticsearch("http://localhost:9200")
+
     if text:
         # text search
+        # http://127.0.0.1:8000/documents?text=bahamas
         result = query_database.text_search_db(elastic_search_client, text=text, page=page, count=count)
 
     elif knn_type and knn_source:
@@ -37,13 +39,13 @@ def get_all_docs_in_db():
     else:
         # regular list
         result = query_database.get_docs_in_db(elastic_search_client, start=page, n_docs=count)
-    # http://127.0.0.1:8000/documents
+
     return result
 
 # return one document as PDF
-@app.route('/documents/pdf/<id>')
+@app.route('/documents/<id>.pdf')
 def hello(id):
-    # http://127.0.0.1:8000/documents/pdf/SAC1-6
+    # http://127.0.0.1:8000/documents/SAC1-6.pdf
     elastic_search_client = Elasticsearch("http://localhost:9200")
     resp_path = query_database.get_doc_meta_data(elastic_search_client, doc_id=id)['path']
     print(resp_path)
