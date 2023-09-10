@@ -56,7 +56,6 @@ def search_sim_doc2vec_docs_in_db(client: Elasticsearch, path: str, src_paths='/
     cf. https://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html#search-api-knn for information about knn in elasticsearch.
     '''
     if doc2vec_model is None:
-        #model = save_models.load_model('doc2vec')
         doc2vec_model = save_models.get_model('doc2vec', src_paths)
     return get_db_search_results(client, infer_doc2vec_embedding(doc2vec_model, path), 'doc2vec')
 
@@ -108,7 +107,6 @@ def text_search_db(elastic_search_client: Elasticsearch, text:str):
             },
         
         source_includes=['path'])['hits']['hits']
-    print(results)
     return results
 
 
@@ -186,14 +184,7 @@ def get_sim_docs_tfidf(doc_to_search_for, src_paths='/Users/klara/Documents/Uni/
     :param client_addr: address of the Elasticsearch client
     :return: list of paths to documents in the same cluster as the document to be searched for
     '''
-    # TODO
-    '''client = Elasticsearch(client_addr)
-    src_paths = glob.glob(src_paths)
-    docs = get_docs_from_file_paths(src_paths)
-    sim_docs_tfidf = TfidfVectorizer(input='content', preprocessor=TfidfTextPreprocessor().transform, min_df=3, max_df=int(len(docs)*0.07))
-    sim_docs_document_term_matrix = sim_docs_tfidf.fit(docs)'''
     client = Elasticsearch(client_addr)
-    #sim_docs_tfidf = save_models.load_model('tfidf')
     sim_docs_tfidf = save_models.get_model('tfidf', src_paths)
     
     return find_document_tfidf(client, sim_docs_tfidf, path=doc_to_search_for)
@@ -231,30 +222,10 @@ def find_sim_docs_inferSent(src_paths:list, path: str, client: Elasticsearch=Non
     ae_model_name = 'ae_model'
     text = pdf_to_str(path)
     # InferSent
-    # train new model
-    '''if not os.path.exists(f"models/{infer_model_name}.pkl"):
-        MODEL_PATH = '/Users/klara/Developer/Uni/encoder/infersent1.pkl'
-        W2V_PATH = '/Users/klara/Developer/Uni/GloVe/glove.840B.300d.txt'
-        inferSent_model, docs = init_infer(model_path=MODEL_PATH, w2v_path=W2V_PATH, file_paths=src_paths, version=1)
-        save_models.save_model(inferSent_model, infer_model_name)
-    # load model
-    else:
-        inferSent_model = save_models.load_model(infer_model_name)
-        docs = get_docs_from_file_paths(src_paths)'''
-
     inferSent_model = save_models.get_model(infer_model_name, src_paths)
     
 
     # AE
-    # train new model
-    '''if not os.path.exists(f"models/{ae_model_name}.pkl"):
-        infer_embeddings = inferSent_model.encode(docs, tokenize=True)
-        encoded_infersent_embedding, ae_infer_encoder = autoencoder_emb_model(input_shape=infer_embeddings.shape[1], latent_dim=2048, data=infer_embeddings)
-        save_models.save_model(ae_infer_encoder, ae_model_name)
-    # load model
-    else:
-        ae_infer_encoder = save_models.load_model(ae_model_name)'''
-
     ae_infer_encoder = save_models.get_model(ae_model_name, src_paths)
 
     inferSent_embedding = inferSent_model.encode([text, text], tokenize=True)
@@ -278,7 +249,6 @@ def main(src_paths, image_src_path):
     
     # Create the client instance
     client = Elasticsearch("http://localhost:9200")
-
 
     # number of documents in database
     print('number of documents in database: ', get_number_docs_in_db(client))
