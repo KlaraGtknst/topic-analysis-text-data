@@ -1,10 +1,11 @@
 import {NgModule} from '@angular/core';
 import {RouterModule, Routes} from '@angular/router';
 import { HomeComponent } from './home/home.component';
+import { DocumentDetailComponent } from './document-detail/document-detail.component';
 
 const routes: Routes = [
+  { path: ':id', component: DocumentDetailComponent},
   { path: '', component: HomeComponent},
-  // TODO: document query
   // TODO: wordcloud 
   // TODO: term frequency
 ];

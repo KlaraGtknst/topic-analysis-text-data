@@ -13,7 +13,7 @@ export interface Document {
 @Injectable({
   providedIn: 'root'
 })
-export class HomeService {
+export class DocumentService {
 
 
   constructor(private http: HttpClient) {}
@@ -28,4 +28,7 @@ export class HomeService {
     });
   }
 
+  getdoc(id: string): Observable<Document> {
+    return this.http.get<Document>(environment.baseurl + 'documents/' + id);
+  }
 }

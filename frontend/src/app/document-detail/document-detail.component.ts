@@ -1,0 +1,30 @@
+import { Component } from '@angular/core';
+import { Document, DocumentService } from '../document.service';
+import { ActivatedRoute } from '@angular/router';
+import { switchMap } from 'rxjs';
+
+@Component({
+  selector: 'app-document-detail',
+  templateUrl: './document-detail.component.html',
+  styleUrls: ['./document-detail.component.scss']
+})
+export class DocumentDetailComponent {
+  public doc?: Document;
+  public queryType?: string;
+
+  readonly queryTypes = ["doc2vec", "sim_docs_tfidf", "google_univ_sent_encoding", "huggingface_sent_transformer", "inferSent_AE"];
+
+  constructor(
+    private documentService: DocumentService,
+    private route: ActivatedRoute,
+  ) {
+  }
+
+  ngOnInit(): void {
+    this.route.params.pipe( // put observable in pipeline
+      switchMap(({id}) => this.documentService.getdoc(id)), // cleans up old observables. ID property of current observable is further processed
+    ).subscribe(answer => {
+      this.doc = answer;
+    });
+  }
+}

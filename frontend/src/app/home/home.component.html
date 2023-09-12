@@ -8,7 +8,7 @@
     </div>
     <div *ngFor="let doc of documents">
         <h4>
-            {{ doc._id }}
+            <a [routerLink]="doc._id">{{ doc._id }}</a>
         </h4>
         <p style="max-height: 3rem; overflow-y: auto">
             {{ doc.text }}

@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { Document, HomeService } from './home.service';
+import { Document, DocumentService } from '../document.service';
 
 @Component({
   selector: 'app-home',
@@ -11,18 +11,18 @@ export class HomeComponent {
   searchText = '';
   
   constructor(
-    private homeService: HomeService,
+    private documentService: DocumentService,
   ) {
   }
   
   ngOnInit(): void {
-    this.homeService.getdocs().subscribe(answer => {
+    this.documentService.getdocs().subscribe(answer => {
       this.documents = answer;
     });
   }
 
   search() {
-    this.homeService.getdocs(this.searchText).subscribe(answer => {
+    this.documentService.getdocs(this.searchText).subscribe(answer => {
       this.documents = answer;
     });
   }
