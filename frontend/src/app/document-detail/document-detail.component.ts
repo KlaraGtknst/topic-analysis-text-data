@@ -2,6 +2,8 @@ import { Component } from '@angular/core';
 import { Document, DocumentService } from '../document.service';
 import { ActivatedRoute } from '@angular/router';
 import { switchMap } from 'rxjs';
+import { environment } from 'src/environments/environment';
+import { DomSanitizer } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-document-detail',
@@ -14,9 +16,11 @@ export class DocumentDetailComponent {
   public similarDocs: Document[] = [];
 
   readonly queryTypes = ["doc2vec", "sim_docs_tfidf", "google_univ_sent_encoding", "huggingface_sent_transformer", "inferSent_AE", "pca_kmeans_cluster"];
+  readonly baseurl = environment.baseurl;
 
   constructor(
     private documentService: DocumentService,
+    public sanitizer: DomSanitizer,
     private route: ActivatedRoute,
   ) {
   }

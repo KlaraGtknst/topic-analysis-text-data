@@ -61,7 +61,7 @@ class Document(Resource):
         return query_database.get_doc_meta_data(elastic_search_client, doc_id=id)
         
 @api.doc(params=id_doc)
-@api.route('/documents/<id>.pdf', endpoint='pdf')
+@api.route('/documents/<id>/pdf', endpoint='pdf')
 class PDF(Resource):
     # return one document as PDF
     def get(self, id):
@@ -70,7 +70,7 @@ class PDF(Resource):
         resp_path = query_database.get_doc_meta_data(elastic_search_client, doc_id=id)['path']
         print('*'*50)
         print(resp_path)    # FIXME: path is not relative under etc. current dir, cannot be displayed
-        return send_from_directory(resp_path, f'{id}.pdf')
+        return send_file(resp_path)
 
 @api.doc(params=id_doc)
 @api.route('/documents/<id>/wordcloud', endpoint='wordcloud')
