@@ -28,6 +28,15 @@ export class DocumentService {
     });
   }
 
+  getSimilar(knn_type: string, knn_source: string): Observable<Document[]> {
+    return this.http.get<Document[]>(environment.baseurl + 'documents', {
+        params: {
+          knn_type,
+          knn_source,
+        },
+    });
+  }
+
   getdoc(id: string): Observable<Document> {
     return this.http.get<Document>(environment.baseurl + 'documents/' + id);
   }

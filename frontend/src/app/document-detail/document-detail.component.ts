@@ -11,8 +11,9 @@ import { switchMap } from 'rxjs';
 export class DocumentDetailComponent {
   public doc?: Document;
   public queryType?: string;
+  public similarDocs: Document[] = [];
 
-  readonly queryTypes = ["doc2vec", "sim_docs_tfidf", "google_univ_sent_encoding", "huggingface_sent_transformer", "inferSent_AE"];
+  readonly queryTypes = ["doc2vec", "sim_docs_tfidf", "google_univ_sent_encoding", "huggingface_sent_transformer", "inferSent_AE", "pca_kmeans_cluster"];
 
   constructor(
     private documentService: DocumentService,
@@ -22,9 +23,17 @@ export class DocumentDetailComponent {
 
   ngOnInit(): void {
     this.route.params.pipe( // put observable in pipeline
-      switchMap(({id}) => this.documentService.getdoc(id)), // cleans up old observables. ID property of current observable is further processed
+      switchMap(({ id }) => this.documentService.getdoc(id)), // cleans up old observables. ID property of current observable is further processed
     ).subscribe(answer => {
       this.doc = answer;
     });
+  }
+  
+  findSimilar() {
+    if (this.queryType && this.doc) {
+      this.documentService.getSimilar(this.queryType, this.doc._id).subscribe(answer => {
+        this.similarDocs = answer;
+      });
+    }
   }
 }

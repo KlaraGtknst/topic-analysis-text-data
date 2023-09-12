@@ -10,7 +10,7 @@
             </p>
             <div class="mb-3">
                 <label class="form-label" for="queryType">Query Type</label>
-                <select class="form-select" id="queryType" [(ngModel)]="queryType">
+                <select class="form-select" id="queryType" [(ngModel)]="queryType" (change)="findSimilar()">
                     <option *ngFor="let queryType of queryTypes" [value]="queryType">{{ queryType }}</option>
                 </select>
               </div>
@@ -19,6 +19,11 @@
         </div>
         <div class="col-6">
             <h4>PDF</h4>
+            <div class="d-flex">
+                <a *ngFor="let similarDoc of similarDocs" [routerLink]="['..', similarDoc._id]" class="btn btn-outline-secondary">
+                    {{ similarDoc._id }}
+                </a>
+            </div>
         </div>
     </div>
 </div>
