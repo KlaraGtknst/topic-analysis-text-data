@@ -170,7 +170,7 @@ def get_doc_meta_data(elastic_search_client: Elasticsearch, doc_id: str):
     resp = elastic_search_client.get(index='bahamas', id=doc_id,  source_includes=SRC_INCLUDES).body
     return {'_id': resp['_id'], **resp['_source']}
 
-def get_docs_in_db(elastic_search_client: Elasticsearch, indices:list, start:int=0, n_docs:int=10) -> dict:
+def get_docs_in_db(elastic_search_client: Elasticsearch, start:int=0, n_docs:int=10) -> dict:
     '''
     :param elastic_search_client: Elasticsearch client
     :param start: start index of the documents to be returned
