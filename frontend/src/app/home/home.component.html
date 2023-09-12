@@ -1,15 +1,15 @@
-<!--suppress AngularNgOptimizedImage -->
-<p>home works!</p>
-<div>
-    <h2>Documents</h2>
-</div>
-<div *ngFor="let doc of documents">
-    <p>doc </p>
-
-    <h4>
-        {{ doc }}
-    </h4>
-  
+<div class="container">
+    <div>
+        <h2>Documents</h2>
+    </div>
+    <div *ngFor="let doc of documents">
+        <h4>
+            {{ doc._id }}
+        </h4>
+        <p style="max-height: 3rem; overflow-y: auto">
+            {{ doc.text }}
+        </p>
+    </div>    
 </div>
 
 <div class="row justify-content-center align-items-center">
