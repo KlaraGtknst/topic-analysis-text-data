@@ -18,8 +18,14 @@ export class HomeService {
 
   constructor(private http: HttpClient) {}
 
-  getdocs(): Observable<Document[]> {
-    return this.http.get<Document[]>(environment.baseurl + 'documents');
+  getdocs(searchText?: string): Observable<Document[]> {
+    const params: any = {};
+    if (searchText) {
+        params.text = searchText;
+    }
+    return this.http.get<Document[]>(environment.baseurl + 'documents', {
+        params,
+    });
   }
 
 }

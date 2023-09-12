@@ -8,14 +8,21 @@ import { Document, HomeService } from './home.service';
 })
 export class HomeComponent {
   public documents: Document[] = [];
-
+  searchText = '';
+  
   constructor(
     private homeService: HomeService,
   ) {
   }
-
+  
   ngOnInit(): void {
     this.homeService.getdocs().subscribe(answer => {
+      this.documents = answer;
+    });
+  }
+
+  search() {
+    this.homeService.getdocs(this.searchText).subscribe(answer => {
       this.documents = answer;
     });
   }
