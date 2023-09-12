@@ -142,22 +142,25 @@ def get_knn_res(doc_to_search_for:str, query_type:str, elastic_search_client:Ela
     '''
     # get embediding/ search query data
     elastic_search_client.indices.refresh(index='bahamas')
-    try:
-        resp = elastic_search_client.get(index='bahamas', id=doc_to_search_for,  source_includes=[query_type])
-        embedding = resp['_source'][query_type]
-    except:
-        # TODO: create embedding even though everything is offline?
-        return {'error': 'document not found in database'}
+    if query_type != 'pca_kmeans_cluster':
+        try:
+            resp = elastic_search_client.get(index='bahamas', id=doc_to_search_for,  source_includes=[query_type])
+            embedding = resp['_source'][query_type]
+        except:
+            # TODO: create embedding even though everything is offline?
+            return {'error': 'document not found in database'}
 
-    # get similar documents
-    results = elastic_search_client.search(index='bahamas', knn={
-            "field": query_type,
-            "query_vector": embedding,
-            "k": n_results,
-            "num_candidates": 100
-        }, source_includes=SRC_INCLUDES)
+        # get similar documents
+        results = elastic_search_client.search(index='bahamas', knn={
+                "field": query_type,
+                "query_vector": embedding,
+                "k": n_results,
+                "num_candidates": 100
+            }, source_includes=SRC_INCLUDES)
 
-    return convert_hits(results['hits']['hits'])
+        return convert_hits(results['hits']['hits'])
+    else:
+        return get_docs_from_same_cluster(elastic_search_client, doc_to_search_for, n_results)
 
 
 def get_doc_meta_data(elastic_search_client: Elasticsearch, doc_id: str):
@@ -209,8 +212,8 @@ def get_docs_from_same_cluster(elastic_search_client: Elasticsearch, path_to_doc
     }
 
     # results
-    resp = elastic_search_client.search(index='bahamas', query=query, source_includes=SRC_INCLUDES, size=n_results) 
-    return convert_hits(resp)#{'_id': resp['_id'], **resp['_source']}
+    resp = elastic_search_client.search(index='bahamas', query=query, source_includes=SRC_INCLUDES, size=n_results)['hits']['hits']
+    return convert_hits(resp)
 
 
 def get_number_docs_in_db(client: Elasticsearch) -> int:
