@@ -5,12 +5,13 @@ from flask import Flask, render_template, request, send_file, send_from_director
 from flask_restx import Api, Resource, fields # https://stackoverflow.com/questions/60156202/flask-app-wont-launch-importerror-cannot-import-name-cached-property-from-w
 from text_visualizations import visualize_texts
 from elasticSearch.queries import query_database
+from flask_cors import CORS, cross_origin
 # flask --app server run --debug --port 8000
 
 app = Flask(__name__)
 api = Api(app, version='1.0', title='Topic Analysis of large unstructured document data',
     description='API of the project.')
-
+cors = CORS(app)
 
 @api.doc(params={'page': {'description':'Page number', 'type':'int','default':0}, 
                  'count': {'description':'Number of documents per page', 'type':'int','default':10},
