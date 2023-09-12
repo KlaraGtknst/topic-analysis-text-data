@@ -1,0 +1,54 @@
+/* Importing Bootstrap SCSS file. Set color map here */
+
+$primary: #0038f0;
+$danger: #D3242E;
+$warning: #EDBA36;
+
+:root {
+  --bs-link-hover-color: #0038f0;
+  --bs-link-color: #0038f0;
+}
+
+.mat-mdc-radio-button.mat-accent {
+  --mdc-radio-selected-focus-icon-color: #0038f0;
+  --mdc-radio-selected-hover-icon-color: #0038f0;
+  --mdc-radio-selected-icon-color: #0038f0;
+  --mdc-radio-selected-pressed-icon-color: #0038f0;
+  --mat-mdc-radio-checked-ripple-color: #0038f0;
+}
+
+$display-font-sizes: (
+  1: 5vw,
+  2: 3.5vw,
+  3: 3vw,
+  4: 2.5vwm,
+  5: 2vw,
+  6: 1.5vw,
+  7: 1.2vw,
+);
+
+@import "bootstrap/scss/bootstrap";
+@import "@angular/material/prebuilt-themes/deeppurple-amber.css";
+
+@media (orientation: portrait) {
+  :root {
+    --bs-body-font-size: 4vw;
+  }
+}
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+.outlined {
+  border: solid 1px black;
+  border-radius: 10px;
+}
+
+/* Importing Bootstrap SCSS file. */
+@import 'bootstrap/scss/bootstrap';
+
+/* Importing Bootstrap SCSS file. */
+@import 'bootstrap/scss/bootstrap';
+
+/* Importing Bootstrap SCSS file. */
+@import 'bootstrap/scss/bootstrap';

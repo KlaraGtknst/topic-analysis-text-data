@@ -1,86 +1,114 @@
 # Topic analysis text data
+*Project name* is a module that collects different sentence embedding methods in a database to make a large text corpus searchable and accessable.
+
+We provide our pre-trained English sentence encoder from [our paper](https://arxiv.org/abs/1705.02364) and our [SentEval](https://github.com/facebookresearch/SentEval) evaluation toolkit.
+
+**Recent changes**: 
+TODO
+
+## Dependencies
+
+This code is written in Python. Dependencies include:
+
+* Python 2/3
+* [Pytorch](http://pytorch.org/) (recent version)
+* NLTK >= 3
+* Look at requirements.txt
+
+## Download word vectors
+
+Create a environment
+(TODO)
+```bash
+mkdir GloVe
+curl -Lo GloVe/glove.840B.300d.zip http://nlp.stanford.edu/data/glove.840B.300d.zip
+unzip GloVe/glove.840B.300d.zip -d GloVe/
+mkdir fastText
+curl -Lo fastText/crawl-300d-2M.vec.zip https://dl.fbaipublicfiles.com/fasttext/vectors-english/crawl-300d-2M.vec.zip
+unzip fastText/crawl-300d-2M.vec.zip -d fastText/
+```
+
+## Use our sentence encoder
+Get started with the following steps: (TODO)
+
+*0.0) Download our InferSent models (V1 trained with GloVe, V2 trained with fastText)[147MB]:*
+```bash
+mkdir encoder
+curl -Lo encoder/infersent1.pkl https://dl.fbaipublicfiles.com/infersent/infersent1.pkl
+curl -Lo encoder/infersent2.pkl https://dl.fbaipublicfiles.com/infersent/infersent2.pkl
+```
+Note that infersent1 is trained with GloVe (which have been trained on text preprocessed with the PTB tokenizer) and infersent2 is trained with fastText (which have been trained on text preprocessed with the MOSES tokenizer). The latter also removes the padding of zeros with max-pooling which was inconvenient when embedding sentences outside of their batches.
+
+*0.1) Make sure you have the NLTK tokenizer by running the following once:*
+```python
+import nltk
+nltk.download('punkt')
+```
+
+*1) [Load our pre-trained model](https://github.com/facebookresearch/InferSent/blob/master/encoder/demo.ipynb) (in encoder/):*
+```python
+from models import InferSent
+V = 2
+MODEL_PATH = 'encoder/infersent%s.pkl' % V
+params_model = {'bsize': 64, 'word_emb_dim': 300, 'enc_lstm_dim': 2048,
+                'pool_type': 'max', 'dpout_model': 0.0, 'version': V}
+infersent = InferSent(params_model)
+infersent.load_state_dict(torch.load(MODEL_PATH))
+```
+
+*2) Set word vector path for the model:*
+```python
+W2V_PATH = 'fastText/crawl-300d-2M.vec'
+infersent.set_w2v_path(W2V_PATH)
+```
+
+*3) Build the vocabulary of word vectors (i.e keep only those needed):*
+```python
+infersent.build_vocab(sentences, tokenize=True)
+```
+where *sentences* is your list of **n** sentences. You can update your vocabulary using *infersent.update_vocab(sentences)*, or directly load the **K** most common English words with *infersent.build_vocab_k_words(K=100000)*.
+If **tokenize** is True (by default), sentences will be tokenized using NTLK.
+
+*4) Encode your sentences (list of *n* sentences):*
+```python
+embeddings = infersent.encode(sentences, tokenize=True)
+```
+This outputs a numpy array with *n* vectors of dimension **4096**. Speed is around *1000 sentences per second* with batch size 128 on a single GPU.
+
+*5) Visualize the importance that our model attributes to each word:*
+
+We provide a function to visualize the importance of each word in the encoding of a sentence:
+```python
+infersent.visualize('A man plays an instrument.', tokenize=True)
+```
+![Model](https://dl.fbaipublicfiles.com/infersent/visualization.png)
 
 
+## Reference
+TODO
+Please consider citing [[1]](https://arxiv.org/abs/1705.02364) if you found this code useful.
 
-## Getting started
+### Supervised Learning of Universal Sentence Representations from Natural Language Inference Data (EMNLP 2017)
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+[1] A. Conneau, D. Kiela, H. Schwenk, L. Barrault, A. Bordes, [*Supervised Learning of Universal Sentence Representations from Natural Language Inference Data*](https://arxiv.org/abs/1705.02364)
 
 ```
-cd existing_repo
-git remote add origin https://git.ies.uni-kassel.de/kgutekunst/topic-analysis-text-data.git
-git branch -M main
-git push -uf origin main
+@InProceedings{conneau-EtAl:2017:EMNLP2017,
+  author    = {Conneau, Alexis  and  Kiela, Douwe  and  Schwenk, Holger  and  Barrault, Lo\"{i}c  and  Bordes, Antoine},
+  title     = {Supervised Learning of Universal Sentence Representations from Natural Language Inference Data},
+  booktitle = {Proceedings of the 2017 Conference on Empirical Methods in Natural Language Processing},
+  month     = {September},
+  year      = {2017},
+  address   = {Copenhagen, Denmark},
+  publisher = {Association for Computational Linguistics},
+  pages     = {670--680},
+  url       = {https://www.aclweb.org/anthology/D17-1070}
+}
 ```
 
-## Integrate with your tools
+### Related work TODO
+* [J. R Kiros, Y. Zhu, R. Salakhutdinov, R. S. Zemel, A. Torralba, R. Urtasun, S. Fidler - SkipThought Vectors, NIPS 2015](https://arxiv.org/abs/1506.06726)
 
-- [ ] [Set up project integrations](https://git.ies.uni-kassel.de/kgutekunst/topic-analysis-text-data/-/settings/integrations)
-
-## Collaborate with your team
-
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
-
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
 
 ## Authors and acknowledgment
 Show your appreciation to those who have contributed to the project.
