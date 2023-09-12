@@ -4,6 +4,9 @@ import { HomeComponent } from './home/home.component';
 
 const routes: Routes = [
   { path: '', component: HomeComponent},
+  // TODO: document query
+  // TODO: wordcloud 
+  // TODO: term frequency
 ];
 
 @NgModule({
