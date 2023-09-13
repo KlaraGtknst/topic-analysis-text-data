@@ -111,8 +111,11 @@ def get_input_filepath(args: argparse.Namespace) -> list:
     Get a list of input filepaths from the arguments.
     """
     if args.directory:
-        file_paths = glob.glob(args.directory)
-        #return args.directory if args.directory.endswith('/') else args.directory + '/'
+        if args.directory.endswith('*.pdf'):    # one directory
+            file_paths = glob.glob(args.directory)
+        else:   # recursive search through multiple directories
+            file_paths = [os.path.join(r,file) for r,d,f in os.walk(args.directory) for file in f if file.endswith('.pdf')]
+            
     elif args.filename:
         file_paths = args.filename
     else:
