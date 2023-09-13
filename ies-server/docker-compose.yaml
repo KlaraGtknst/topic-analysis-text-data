@@ -1,0 +1,14 @@
+services:
+  elasticsearch:
+    image: elasticsearch:8.8.1
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ports:
+      - '9200:9200'
+      - '9300:9300'
+    volumes:
+      - /mnt/stud/work/kgutekunst/elasticsearch-data:/usr/share/elasticsearch/data
+volumes:
+  elasticsearch-data:
