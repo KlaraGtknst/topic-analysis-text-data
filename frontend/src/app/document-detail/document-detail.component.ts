@@ -17,7 +17,7 @@ export class DocumentDetailComponent {
 
   readonly queryTypes = ["doc2vec", "sim_docs_tfidf", "google_univ_sent_encoding", "huggingface_sent_transformer", "inferSent_AE", "pca_kmeans_cluster"];
   readonly baseurl = environment.baseurl;
-
+  
   constructor(
     private documentService: DocumentService,
     public sanitizer: DomSanitizer,

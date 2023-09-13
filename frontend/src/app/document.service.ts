@@ -40,8 +40,4 @@ export class DocumentService {
   getdoc(id: string): Observable<Document> {
     return this.http.get<Document>(environment.baseurl + 'documents/' + id);
   }
-
-  getWordCloudUrl(id: string) {
-      return this.http.get(environment.baseurl + '/wordcloud/' + id);
-  }
 }

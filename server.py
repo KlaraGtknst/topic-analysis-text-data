@@ -1,11 +1,10 @@
-import glob
 import os
 from elasticsearch import Elasticsearch
-from flask import Flask, render_template, request, send_file, send_from_directory, url_for
-from flask_restx import Api, Resource, fields # https://stackoverflow.com/questions/60156202/flask-app-wont-launch-importerror-cannot-import-name-cached-property-from-w
+from flask import Flask, make_response, request, send_file, send_from_directory
+from flask_restx import Api, Resource # https://stackoverflow.com/questions/60156202/flask-app-wont-launch-importerror-cannot-import-name-cached-property-from-w
 from text_visualizations import visualize_texts
 from elasticSearch.queries import query_database
-from flask_cors import CORS, cross_origin
+from flask_cors import CORS
 # flask --app server run --debug --port 8000
 
 app = Flask(__name__)
@@ -79,17 +78,14 @@ class WordCloud(Resource):
     def get(self, id):
         # http://127.0.0.1:8000/documents/SAC1-6/wordcloud
 
-        if not os.path.exists('visualizations'):
-            os.mkdir('visualizations')
-        
-        path = f'/Users/klara/Downloads/{id}.pdf'
-        img_bytes = visualize_texts.get_one_visualization(option='wordcloud', paths=[path], outpath='visualizations')
-        return img_bytes
-
-        workingdir = os.path.abspath(os.getcwd())
-        filepath = workingdir + '/visualizations/'
-
-        return send_from_directory(filepath, f'{id}.pdf')
+        # get text from document
+        elastic_search_client = Elasticsearch("http://localhost:9200")
+        text = query_database.get_doc_meta_data(elastic_search_client, id)['text']
+        img = visualize_texts.get_one_visualization_from_text(option='wordcloud', texts=[text])
+        bytes = visualize_texts.image_to_byte_array(img)
+        response = make_response(bytes)
+        response.headers.set('Content-Type', 'image/png')
+        return response
 
 @api.doc(params=id_doc)
 @api.route('/documents/<id>/term_frequency', endpoint='term_frequency')

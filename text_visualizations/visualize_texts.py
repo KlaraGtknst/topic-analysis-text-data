@@ -47,7 +47,7 @@ def word_cloud(tokens: list, file_name: str, outpath: str = None, return_img:boo
         print('test')
         if return_img:
             #wordcloud.to_file(outpath + '/' + file_name)
-            return word_cloud.to_image()
+            return wordcloud.to_image()
         plt.figure(figsize=(15, 10))
         plt.imshow(wordcloud, interpolation="bilinear") # displays image, interpolation: smoother image
         plt.axis('off')
@@ -76,6 +76,20 @@ def image_to_byte_array(image: image, format: str = 'png'):
     result = result.getvalue()
     return result
 
+def get_one_visualization_from_text(option:str, texts:list) -> image:
+    '''
+    :param option: 'wordcloud' or 'term_frequency'
+    :param texts: list of texts
+    :return: Image object
+    '''
+    tokens = []
+    for text in texts:
+        tokens.extend(stemming(remove_stop_words(tokenize(text))))
+    if option == 'wordcloud':
+        img = word_cloud(tokens, file_name='file', outpath=None, return_img=True)
+        return img
+
+
 def get_one_visualization(option:str, paths:list, outpath:str=None) -> None:
     '''
     :param option: 'wordcloud' or 'term_frequency'
@@ -91,6 +105,7 @@ def get_one_visualization(option:str, paths:list, outpath:str=None) -> None:
         tokens.extend(preprocess_doc(path))
     if option == 'wordcloud':
         img = word_cloud(tokens, file_name= first_doc if (len(paths) == 1) else f'multiple docs similar to {first_doc}', outpath=outpath, return_img=True)
+        print('HALLLLOOO')
         print(img)
         return image_to_byte_array(img)
     elif option == 'term_frequency':
