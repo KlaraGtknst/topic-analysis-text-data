@@ -19,6 +19,8 @@
               </div>
               <a class="btn btn-primary" routerLink="wordcloud">Word Cloud</a>
               <a class="btn btn-primary" routerLink="termfrequency">Term Frequency</a>
+
+              <img [src]="sanitizer.bypassSecurityTrustResourceUrl(baseurl + '/documents/' + doc?._id + '/wordcloud')" style="width: 100%">
         </div>
         <div class="col-6">
             <h4>PDF</h4>

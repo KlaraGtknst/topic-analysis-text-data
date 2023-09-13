@@ -1,3 +1,5 @@
+import io
+from matplotlib import image
 from text_embeddings.preprocessing.read_pdf import *
 from user_interface.cli import *
 from wordcloud import WordCloud
@@ -18,13 +20,14 @@ def term_frequency(tokens: list, file_name: str, outpath: str = None) -> None:
 
     This function plots the term frequency of the tokens.
     '''
-    plt.figure(figsize=(15, 10))
+    fig = plt.figure(figsize=(15, 10))
     plt.hist(tokens, bins=100, orientation='vertical', color='green')
     plt.xticks(rotation=90, fontsize=5)
     title = 'Term frequency in ' + file_name
     plt.title(title)
     if outpath:
         plt.savefig(outpath + '/' + title, format="pdf", bbox_inches="tight")
+    return fig
     plt.show()
 
 
@@ -43,8 +46,8 @@ def word_cloud(tokens: list, file_name: str, outpath: str = None, return_img:boo
         wordcloud = WordCloud(width=800, height=500, random_state=21, contour_width=3, max_font_size=110, background_color='white', max_words=5000).generate(','.join(tokens))
         print('test')
         if return_img:
-            wordcloud.to_file(outpath + '/' + file_name)
-            return
+            #wordcloud.to_file(outpath + '/' + file_name)
+            return word_cloud.to_image()
         plt.figure(figsize=(15, 10))
         plt.imshow(wordcloud, interpolation="bilinear") # displays image, interpolation: smoother image
         plt.axis('off')
@@ -67,6 +70,12 @@ def preprocess_doc(path:str) -> list:
     stemmed_filtered_tokens = stemming(filtered_tokens)
     return stemmed_filtered_tokens
 
+def image_to_byte_array(image: image, format: str = 'png'):
+    result = io.BytesIO()
+    image.save(result, format=format)
+    result = result.getvalue()
+    return result
+
 def get_one_visualization(option:str, paths:list, outpath:str=None) -> None:
     '''
     :param option: 'wordcloud' or 'term_frequency'
@@ -81,9 +90,12 @@ def get_one_visualization(option:str, paths:list, outpath:str=None) -> None:
     for path in paths:
         tokens.extend(preprocess_doc(path))
     if option == 'wordcloud':
-        word_cloud(tokens, file_name= first_doc if (len(paths) == 1) else f'multiple docs similar to {first_doc}', outpath=outpath, return_img=True)
+        img = word_cloud(tokens, file_name= first_doc if (len(paths) == 1) else f'multiple docs similar to {first_doc}', outpath=outpath, return_img=True)
+        print(img)
+        return image_to_byte_array(img)
     elif option == 'term_frequency':
         term_frequency(tokens, file_name=first_doc if (len(paths) == 1) else f'multiple docs similar to {first_doc}', outpath=outpath)
+        return None
     else:
         print('Error: No valid option chosen.')
 
