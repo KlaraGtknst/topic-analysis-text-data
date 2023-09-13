@@ -11,4 +11,4 @@
 
 date;hostname;pwd    # Ausgabe des Datums, des Hostnamens und des Arbeitsverzeichnisses
 source /mnt/stud/work/kgutekunst/bsc-py/bin/activate    # virtuelle Umgebung aktivieren
-srun python /mnt/stud/work/kgutekunst/topic-analysis-text-data/db_elasticsearch.py -d '/mnt/datasets/Bahamas/SAC/0/*.pdf' -o '/mnt/stud/home/kgutekunst/visualizations/images/'  # Programm ausfuehren
+srun python /mnt/stud/work/kgutekunst/topic-analysis-text-data/db_elasticsearch.py -d '/mnt/datasets/Bahamas' -o '/mnt/stud/home/kgutekunst/visualizations/images/'  # Programm ausfuehren
