@@ -83,7 +83,8 @@ class WordCloud(Resource):
             os.mkdir('visualizations')
         
         path = f'/Users/klara/Downloads/{id}.pdf'
-        visualize_texts.get_one_visualization(option='wordcloud', paths=[path], outpath='visualizations')
+        img_bytes = visualize_texts.get_one_visualization(option='wordcloud', paths=[path], outpath='visualizations')
+        return img_bytes
 
         workingdir = os.path.abspath(os.getcwd())
         filepath = workingdir + '/visualizations/'
