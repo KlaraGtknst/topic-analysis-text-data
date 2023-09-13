@@ -2,7 +2,6 @@ import base64
 import glob
 import io
 import pickle
-from tkinter import *
 
 from elasticsearch import Elasticsearch
 from elasticSearch.db_elasticsearch import *
