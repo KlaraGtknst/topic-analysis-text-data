@@ -149,7 +149,7 @@ def insert_documents(src_paths: list, doc2vec_model: Doc2Vec, client: Elasticsea
             compressed_infersent_embedding = inferEncoder.predict(x=inferSent_embedding)[0]
 
             try:
-                client.create(index='bahamas', id=id, document={
+                client.create(index='bahamas', id=id, document={    # TODO: delete id
                     "doc2vec": doc2vec_model.infer_vector(simple_preprocess(pdf_to_str(path))),
                     "sim_docs_tfidf": np.ravel(np.array(sim_doc_tfidf_vectorization[i])),
                     "google_univ_sent_encoding": embed([text], google_model).numpy().tolist()[0],
