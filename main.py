@@ -10,7 +10,7 @@ from doc_images import pdf_matrix, convert_pdf2image
 from doc_images.PCA import PCA_image_clustering
 from test_functions import word_embeddings
 from elasticSearch.queries import query_database_inferSent
-from user_interface import user_interface
+#from user_interface import user_interface
 #from doc_images.AE import AE_image_clustering
 
 
@@ -90,7 +90,8 @@ if __name__ == '__main__':
 
     elif file_to_run[0] == 'user_interface.py':
         # python3 main.py 'user_interface.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf'
-        user_interface.main()
+        #user_interface.main()
+        print('temporarily not available')
 
     elif file_to_run[0] == 'save_models.py':
         # python3 main.py 'save_models.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf'
