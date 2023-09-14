@@ -24,7 +24,7 @@
         <div class="col-6">
             <h4>PDF</h4>
             <iframe [src]="sanitizer.bypassSecurityTrustResourceUrl(baseurl + '/documents/' + doc?._id + '/pdf')" style="width: 100%; height: 500px;"></iframe>
-            <div class="d-flex">
+            <div class="d-flex align-content-around flex-wrap">
                 <a *ngFor="let similarDoc of similarDocs" [routerLink]="['..', similarDoc._id]" class="btn btn-outline-secondary">
                     {{ similarDoc._id }}
                 </a>
