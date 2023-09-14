@@ -6,8 +6,6 @@ import { DocumentDetailComponent } from './document-detail/document-detail.compo
 const routes: Routes = [
   { path: ':id', component: DocumentDetailComponent},
   { path: '', component: HomeComponent},
-  // TODO: wordcloud 
-  // TODO: term frequency
 ];
 
 @NgModule({
