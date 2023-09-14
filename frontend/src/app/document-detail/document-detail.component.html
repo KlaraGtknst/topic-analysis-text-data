@@ -34,10 +34,16 @@
     <div class="row">
         <div class="col-sm">
             <p *ngIf="queryType" >WordCloud of single document with id {{doc?._id}}</p>
-            <img *ngIf="queryType" [src]="sanitizer.bypassSecurityTrustResourceUrl(baseurl + '/documents/' + doc?._id + '/wordcloud')" style="width: 100%">
         </div>
         <div class="col-sm">
             <p *ngIf="queryType"> WordCloud of most similar documents to document with id {{doc?._id}} in terms of {{ queryType }}</p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm">
+            <img *ngIf="queryType" [src]="sanitizer.bypassSecurityTrustResourceUrl(baseurl + '/documents/' + doc?._id + '/wordcloud')" style="width: 100%">
+        </div>
+        <div class="col-sm">
             <img *ngIf="queryType" [src]="sanitizer.bypassSecurityTrustResourceUrl(baseurl + '/documents/' + doc?._id + '/wordcloud?knn_type=' + queryType)" style="width: 100%">
         </div>
     </div>
