@@ -29,6 +29,7 @@
                     {{ similarDoc._id }}
                 </a>
             </div>
+            <img *ngIf="queryType" [src]="sanitizer.bypassSecurityTrustResourceUrl(baseurl + '/documents/' + doc?._id + '/wordcloud?knn_type=' + queryType)" style="width: 100%">
         </div>
     </div>
 </div>
