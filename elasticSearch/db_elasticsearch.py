@@ -256,8 +256,11 @@ def show_best_search_results(scores, src_paths, image_src_path=None):
     image_paths = [image_src_path + id.split('.')[0]  + '.png' if image_src_path else src_paths.split('.')[0] + '.png' for id in scores.values()]
     create_image_matrix(input_files=image_paths, dim=3, output_path=None)
 
-def main(src_paths, image_src_path):
-    
+
+def init_db(src_paths, image_src_path):
+    '''
+    everything that happens in the main function to fill the database.
+    '''
     NUM_DIMENSIONS = 55
     NUM_COMPONENTS = 2
 
@@ -309,6 +312,10 @@ def main(src_paths, image_src_path):
     resp = client.count(index='bahamas')
     print('number of documents in database: ', resp['count'])
 
+def main(src_paths, image_src_path):
+    init_db(src_paths, image_src_path)
+    
+   
 ############################################################################################################
 
     '''# InferSent embedding
@@ -374,3 +381,12 @@ def main(src_paths, image_src_path):
     client.indices.refresh(index='bahamas')
     resp = client.count(index='bahamas')
     print('number of documents in database: ', resp['count'])'''
+
+if __name__ == '__main__':
+    args = arguments()
+
+    file_paths = get_input_filepath(args)
+    out_file = get_filepath(args, option='output')
+    image_src_path = get_filepath(args, option='image')
+
+    init_db(src_paths=file_paths, image_src_path=image_src_path)
