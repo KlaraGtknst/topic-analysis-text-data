@@ -12,12 +12,14 @@ api = Api(app, version='1.0', title='Topic Analysis of large unstructured docume
     description='API of the project.')
 cors = CORS(app)
 
-@api.doc(params={'page': {'description':'Page number', 'type':'int','default':0}, 
-                 'count': {'description':'Number of documents per page', 'type':'int','default':10},
-                 'text': 'Text to search for', 
-                 'knn_source': 'Document to search for', 
+search_doc = {'count': {'description':'Number of documents per page', 'type':'int','default':10}, 
                  'knn_type': {'description':'Type of knn search', 
-                              'enum':[ "doc2vec","sim_docs_tfidf","google_univ_sent_encoding","huggingface_sent_transformer","inferSent_AE","pca_kmeans_cluster"]}})
+                              'enum':[ "doc2vec","sim_docs_tfidf","google_univ_sent_encoding","huggingface_sent_transformer","inferSent_AE","pca_kmeans_cluster"]}}
+knn_source = {'knn_source': 'Document to search for'}
+page_doc = {'page': {'description':'Page number', 'type':'int','default':0}}
+text_doc = {'text': {'description':'Text to search for', 'type':'string'}}
+@api.doc(params=page_doc | text_doc | knn_source | search_doc)
+                 
 @api.route('/documents', endpoint='documents')
 class Documents(Resource):
     # return all documents
@@ -71,17 +73,29 @@ class PDF(Resource):
         print(resp_path)    # FIXME: path is not relative under etc. current dir, cannot be displayed
         return send_file(resp_path)
 
-@api.doc(params=id_doc)
+@api.doc(params=search_doc)
 @api.route('/documents/<id>/wordcloud', endpoint='wordcloud')
 class WordCloud(Resource):
     # return wordcloud of one document as PNG
     def get(self, id):
         # http://127.0.0.1:8000/documents/SAC1-6/wordcloud
 
-        # get text from document
         elastic_search_client = Elasticsearch("http://localhost:9200")
-        text = query_database.get_doc_meta_data(elastic_search_client, id)['text']
-        img = visualize_texts.get_one_visualization_from_text(option='wordcloud', texts=[text])
+
+        # query parameters
+        args = request.args
+        count = args.get('count', default=10, type=int)
+        knn_type = args.get('knn_type', default=None, type=str)
+
+        if knn_type: # multiple documents as input
+            # http://127.0.0.1:8000/documents/SAC1-6/wordcloud?knn_source=SAC1-6&knn_type=sim_docs_tfidf
+            sim_docs = query_database.get_knn_res(doc_to_search_for=id, query_type=knn_type, elastic_search_client=elastic_search_client, n_results=count)
+            texts = [doc['text'] for doc in sim_docs]
+
+        else:   # one document as input
+            # get text from document
+            texts = [query_database.get_doc_meta_data(elastic_search_client, id)['text']]
+        img = visualize_texts.get_one_visualization_from_text(option='wordcloud', texts=texts)
         bytes = visualize_texts.image_to_byte_array(img)
         response = make_response(bytes)
         response.headers.set('Content-Type', 'image/png')
