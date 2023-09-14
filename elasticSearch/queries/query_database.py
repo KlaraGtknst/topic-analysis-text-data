@@ -19,6 +19,7 @@ from text_embeddings import save_models
 
 
 SRC_INCLUDES = ['path', 'text']
+CLIENT_ADDR = "http://localhost:9200"
 
 '''------search in existing database-------
 run this code by typing and altering the path:
@@ -229,7 +230,7 @@ def get_number_docs_in_db(client: Elasticsearch) -> int:
     return resp[0]['count']
 
 
-def get_sim_docs_tfidf(doc_to_search_for, src_paths='/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf', client_addr="http://localhost:9200"):
+def get_sim_docs_tfidf(doc_to_search_for, src_paths='/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf', client_addr=CLIENT_ADDR):
     '''
     :param doc_to_search_for: path to the document to be searched for
     :param src_paths: path to the document corpus to be searched in
@@ -249,7 +250,7 @@ def find_sim_docs_google_univSentEnc(path: str, client: Elasticsearch=None):
     :return list of ten most similar scores and documents in database in terms of google universal sentence encoding
     '''    
     if client is None:
-        client = Elasticsearch("http://localhost:9200")
+        client = Elasticsearch(CLIENT_ADDR)
     google_model = google_univ_sent_encoding_aux()
     embedding = embed([pdf_to_str(path)], google_model).numpy().flatten().tolist()
     return get_db_search_results(client, embedding, 'google_univ_sent_encoding')
@@ -261,7 +262,7 @@ def find_sim_docs_hugging_face_sentTrans(path: str, client: Elasticsearch=None):
     :return list of ten most similar scores and documents in database in terms of huggingface sentence transformers embedding
     '''
     if client is None:
-        client = Elasticsearch("http://localhost:9200")
+        client = Elasticsearch(CLIENT_ADDR)
     huggingface_model = init_hf_sentTrans_model()
     embedding = huggingface_model.encode(pdf_to_str(path))
     return get_db_search_results(client, embedding, 'huggingface_sent_transformer')
@@ -269,7 +270,7 @@ def find_sim_docs_hugging_face_sentTrans(path: str, client: Elasticsearch=None):
 
 def find_sim_docs_inferSent(src_paths:list, path: str, client: Elasticsearch=None):
     if client is None:
-        client = Elasticsearch("http://localhost:9200")
+        client = Elasticsearch(CLIENT_ADDR)
     infer_model_name = 'infersent_model'
     ae_model_name = 'ae_model'
     text = pdf_to_str(path)
@@ -300,7 +301,7 @@ def get_db_search_results(client: Elasticsearch, embedding: np.array, field: str
 def main(src_paths, image_src_path):
     
     # Create the client instance
-    client = Elasticsearch("http://localhost:9200")
+    client = Elasticsearch(CLIENT_ADDR)
 
     # number of documents in database
     print('number of documents in database: ', get_number_docs_in_db(client))

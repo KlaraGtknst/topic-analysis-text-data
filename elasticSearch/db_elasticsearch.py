@@ -22,6 +22,7 @@ from constants import *
 run this code by typing and altering the path:
     python3 db_elasticsearch.py -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/images/'
 '''
+CLIENT_ADDR = "http://localhost:9200"
 
 def init_db(client: Elasticsearch, num_dimensions: int, sim_docs_vocab_size: int, n_components: int):
     '''
@@ -287,7 +288,7 @@ def init_db(src_paths, image_src_path):
     flag_matrix = np.append(sim_docs_document_term_matrix, flags, axis=1)
 
     # Create the client instance
-    client = Elasticsearch("http://localhost:9200")
+    client = Elasticsearch(CLIENT_ADDR)
 
     # delete old index and create new one
     client.options(ignore_status=[400,404]).indices.delete(index='bahamas')
@@ -338,7 +339,7 @@ def main(src_paths, image_src_path):
     google_model = google_univ_sent_encoding_aux()
 
     # Create the client instance
-    client = Elasticsearch("http://localhost:9200")
+    client = Elasticsearch(CLIENT_ADDR)
     client.options(ignore_status=[400,404]).indices.delete(index='bahamas')
 
     # delete old index and create new one

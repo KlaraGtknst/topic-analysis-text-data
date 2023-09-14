@@ -7,6 +7,7 @@ from elasticSearch.queries import query_database
 from flask_cors import CORS
 # flask --app server run --debug --port 8000
 
+CLIENT_ADDR = "http://localhost:9200"
 app = Flask(__name__)
 api = Api(app, version='1.0', title='Topic Analysis of large unstructured document data',
     description='API of the project.')
@@ -34,7 +35,7 @@ class Documents(Resource):
         knn_type = args.get('knn_type', default=None, type=str)
 
         # client
-        elastic_search_client = Elasticsearch("http://localhost:9200")
+        elastic_search_client = Elasticsearch(CLIENT_ADDR)
 
         if text:
             # text search
@@ -58,7 +59,7 @@ class Document(Resource):
     # return one document as JSON
     def get(self, id):
         # http://127.0.0.1:8000/documents/SAC1-6
-        elastic_search_client = Elasticsearch("http://localhost:9200")
+        elastic_search_client = Elasticsearch(CLIENT_ADDR)
         return query_database.get_doc_meta_data(elastic_search_client, doc_id=id)
         
 @api.doc(params=id_doc)
@@ -67,7 +68,7 @@ class PDF(Resource):
     # return one document as PDF
     def get(self, id):
         # http://127.0.0.1:8000/documents/SAC1-6.pdf
-        elastic_search_client = Elasticsearch("http://localhost:9200")
+        elastic_search_client = Elasticsearch(CLIENT_ADDR)
         resp_path = query_database.get_doc_meta_data(elastic_search_client, doc_id=id)['path']
         print('*'*50)
         print(resp_path)    # FIXME: path is not relative under etc. current dir, cannot be displayed
@@ -80,7 +81,7 @@ class WordCloud(Resource):
     def get(self, id):
         # http://127.0.0.1:8000/documents/SAC1-6/wordcloud
 
-        elastic_search_client = Elasticsearch("http://localhost:9200")
+        elastic_search_client = Elasticsearch(CLIENT_ADDR)
 
         # query parameters
         args = request.args

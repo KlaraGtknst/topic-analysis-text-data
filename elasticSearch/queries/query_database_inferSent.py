@@ -17,6 +17,7 @@ from text_embeddings.InferSent.infer_pretrained import *
 run this code by typing and altering the path:
     python3 query_database.py -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/images/'
 '''
+CLIENT_ADDR = "http://localhost:9200"
 
 def infer_embedding_vector(model: Elasticsearch, path: str):
     '''
@@ -70,7 +71,7 @@ def search_inferSent_emb_in_db(client: Elasticsearch, infer_model, ae_infer_enco
 
 def main(file_paths, outpath):
      # Create the client instance
-    client = Elasticsearch("http://localhost:9200")
+    client = Elasticsearch(CLIENT_ADDR)
 
     nltk.download('punkt')
     V = 1   # trained with GloVe
