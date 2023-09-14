@@ -18,6 +18,7 @@
                 </select>
               </div>
               <a class="btn btn-primary" routerLink="termfrequency">Term Frequency</a>
+              <p *ngIf="!queryType" >WordCloud of single document with id {{doc?._id}}</p>
               <img *ngIf="!queryType" [src]="sanitizer.bypassSecurityTrustResourceUrl(baseurl + '/documents/' + doc?._id + '/wordcloud')" style="width: 100%">
         </div>
         <div class="col-6">
@@ -32,7 +33,7 @@
     </div>
     <div class="row">
         <div class="col-sm">
-            <p>WordCloud of single document with id {{doc?._id}}</p>
+            <p *ngIf="queryType" >WordCloud of single document with id {{doc?._id}}</p>
             <img *ngIf="queryType" [src]="sanitizer.bypassSecurityTrustResourceUrl(baseurl + '/documents/' + doc?._id + '/wordcloud')" style="width: 100%">
         </div>
         <div class="col-sm">
