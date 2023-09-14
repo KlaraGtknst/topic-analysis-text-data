@@ -44,3 +44,11 @@ def pdf_to_png(file_path: list, outpath: str = None, save: bool= True) -> list:
 def main(file_paths, outpath):
 
     pdf_to_png(file_paths, outpath=outpath)
+
+if __name__ == '__main__':
+    args = arguments()
+
+    file_paths = get_input_filepath(args)
+    out_file = get_filepath(args, option='output')
+    image_src_path = get_filepath(args, option='image')
+    pdf_to_png(file_paths, outpath=out_file)
