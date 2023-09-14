@@ -17,9 +17,8 @@
                     <option *ngFor="let queryType of queryTypes" [value]="queryType">{{ queryType }}</option>
                 </select>
               </div>
-              <a class="btn btn-primary" routerLink="wordcloud">Word Cloud</a>
               <a class="btn btn-primary" routerLink="termfrequency">Term Frequency</a>
-              <img [src]="sanitizer.bypassSecurityTrustResourceUrl(baseurl + '/documents/' + doc?._id + '/wordcloud')" style="width: 100%">
+              <img *ngIf="!queryType" [src]="sanitizer.bypassSecurityTrustResourceUrl(baseurl + '/documents/' + doc?._id + '/wordcloud')" style="width: 100%">
         </div>
         <div class="col-6">
             <h4>PDF</h4>
@@ -29,6 +28,15 @@
                     {{ similarDoc._id }}
                 </a>
             </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm">
+            <p>WordCloud of single document with id {{doc?._id}}</p>
+            <img *ngIf="queryType" [src]="sanitizer.bypassSecurityTrustResourceUrl(baseurl + '/documents/' + doc?._id + '/wordcloud')" style="width: 100%">
+        </div>
+        <div class="col-sm">
+            <p *ngIf="queryType"> WordCloud of most similar documents to document with id {{doc?._id}} in terms of {{ queryType }}</p>
             <img *ngIf="queryType" [src]="sanitizer.bypassSecurityTrustResourceUrl(baseurl + '/documents/' + doc?._id + '/wordcloud?knn_type=' + queryType)" style="width: 100%">
         </div>
     </div>
