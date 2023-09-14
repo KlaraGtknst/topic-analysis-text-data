@@ -13,6 +13,7 @@ from gensim.models.doc2vec import Doc2Vec
 from PIL import Image
 from tensorflow.python.keras.models import model_from_json
 from gensim.test.utils import get_tmpfile
+from constants import CLIENT_ADDR
 
 SRC_PATH = '/Users/klara/Documents/uni/bachelorarbeit/data/0/*.pdf'
 DOC_PATH = '/Users/klara/Downloads/*.pdf'
@@ -117,7 +118,7 @@ def train_model(model_name, src_paths, client:Elasticsearch=None):
         
     elif 'tfidf' in model_name:
         if client is None:
-            client = Elasticsearch("http://localhost:9200")
+            client = Elasticsearch(CLIENT_ADDR)
         docs = get_docs_from_file_paths(src_paths)
         sim_docs_tfidf = TfidfVectorizer(input='content', preprocessor=TfidfTextPreprocessor().transform, min_df=3, max_df=int(len(docs)*0.07))
         sim_docs_tfidf.fit(docs)
@@ -160,7 +161,7 @@ def main(path=None):
 
     # TF-IDF
     '''# save and load
-    client_addr="http://localhost:9200"
+    client_addr=CLIENT_ADDR
     client = Elasticsearch(client_addr)
     
     docs = get_docs_from_file_paths(src_paths)

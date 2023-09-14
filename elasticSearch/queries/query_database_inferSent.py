@@ -12,12 +12,12 @@ from text_embeddings.universal_sent_encoder_tensorFlow import *
 from text_embeddings.hugging_face_sentence_transformer import *
 from text_embeddings.TFIDF.preprocessing.TfidfTextPreprocessor import *
 from text_embeddings.InferSent.infer_pretrained import *
+from constants import CLIENT_ADDR
 
 '''------search in existing database-------
 run this code by typing and altering the path:
     python3 query_database.py -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/images/'
 '''
-CLIENT_ADDR = "http://localhost:9200"
 
 def infer_embedding_vector(model: Elasticsearch, path: str):
     '''

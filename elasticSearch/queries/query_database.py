@@ -16,10 +16,10 @@ from text_embeddings.hugging_face_sentence_transformer import *
 from text_embeddings.TFIDF.preprocessing.TfidfTextPreprocessor import *
 from text_embeddings.InferSent.infer_pretrained import *
 from text_embeddings import save_models
+from constants import CLIENT_ADDR
 
 
 SRC_INCLUDES = ['path', 'text']
-CLIENT_ADDR = "http://localhost:9200"
 
 '''------search in existing database-------
 run this code by typing and altering the path:

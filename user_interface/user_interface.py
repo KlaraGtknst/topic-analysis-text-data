@@ -11,6 +11,7 @@ from elasticSearch import db_elasticsearch
 from gensim.models.doc2vec import Doc2Vec
 from doc_images import pdf_matrix, convert_pdf2image
 from PIL import Image
+from constants import CLIENT_ADDR
 
 # TODO
 SRC_PATH = '/Users/klara/Documents/uni/bachelorarbeit/data/0/*.pdf'
@@ -20,7 +21,7 @@ NUM_COMPONENTS = 2
 NUM_RESULTS = 4
 
  # Create the client instance
-client = Elasticsearch("http://localhost:9200")
+client = Elasticsearch(CLIENT_ADDR)
 results = {}
 
 

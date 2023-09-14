@@ -22,7 +22,6 @@ from constants import *
 run this code by typing and altering the path:
     python3 db_elasticsearch.py -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/images/'
 '''
-CLIENT_ADDR = "http://localhost:9200"
 
 def init_db(client: Elasticsearch, num_dimensions: int, sim_docs_vocab_size: int, n_components: int):
     '''

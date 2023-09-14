@@ -1,13 +1,14 @@
 from elasticsearch import Elasticsearch
 import base64
 import json
+from constants import CLIENT_ADDR
 
 '''------Code to test functionality of ElasticSearch-------'''
 
 print('-' * 80)
 
 # Create the client instance
-client = Elasticsearch("http://localhost:9200")
+client = Elasticsearch(CLIENT_ADDR)
 
 # Successful response!
 # print(client.info())
