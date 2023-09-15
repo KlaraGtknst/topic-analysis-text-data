@@ -68,11 +68,11 @@ def load_model(model_name):
         return init_hf_sentTrans_model()
     
     elif 'infer' in model_name:
-        with open(f'models/{model_name}.pkl', 'rb') as file:  
+        with open(f'models/infersent_model.pkl', 'rb') as file:  
             return pickle.load(file)    
         
     elif 'ae' in model_name:
-        with open(f'models/{model_name}.pkl', 'rb') as file:  
+        with open(f'models/ae_model.pkl', 'rb') as file:  
             return pickle.load(file)
         
     elif 'tfidf' in model_name:
