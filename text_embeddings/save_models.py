@@ -72,7 +72,7 @@ def load_model(model_name):
             return pickle.load(file)    
         
     elif 'ae' in model_name:
-        with open(f'models/ae.pkl', 'rb') as file:  # ae_model
+        with open(f'models/ae.pkl', 'rb') as file:  # ae_model, otherwise try: downgrading to tf 2.9 https://github.com/tensorflow/models/issues/10525
             return pickle.load(file)
         
     elif 'tfidf' in model_name:

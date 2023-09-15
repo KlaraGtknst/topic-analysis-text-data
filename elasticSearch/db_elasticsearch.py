@@ -257,7 +257,7 @@ def show_best_search_results(scores, src_paths, image_src_path=None):
     create_image_matrix(input_files=image_paths, dim=3, output_path=None)
 
 
-def init_db(src_paths, image_src_path):
+def init_db_aux(src_paths, image_src_path):
     '''
     everything that happens in the main function to fill the database.
     '''
@@ -313,7 +313,7 @@ def init_db(src_paths, image_src_path):
     print('number of documents in database: ', resp['count'])
 
 def main(src_paths, image_src_path):
-    init_db(src_paths, image_src_path)
+    init_db_aux(src_paths, image_src_path)
     
    
 ############################################################################################################
@@ -389,4 +389,4 @@ if __name__ == '__main__':
     out_file = get_filepath(args, option='output')
     image_src_path = get_filepath(args, option='image')
 
-    init_db(src_paths=file_paths, image_src_path=image_src_path)
+    init_db_aux(src_paths=file_paths, image_src_path=image_src_path)
