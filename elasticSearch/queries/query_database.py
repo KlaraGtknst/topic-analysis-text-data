@@ -3,7 +3,7 @@ from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 from gensim.utils import simple_preprocess
 from pyspark.mllib.linalg import Vectors
 from gensim.test.utils import get_tmpfile
-from tkinter import *
+#from tkinter import *
 from tensorflow.python.keras.models import model_from_json
 import pdb # use breakpoint() for debugging when running the code from the command line
 # own modules
