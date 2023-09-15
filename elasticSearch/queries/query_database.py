@@ -106,8 +106,13 @@ def text_search_db(elastic_search_client: Elasticsearch, text:str, page:int=0, c
         from_=(page*count),
         query= {
                 'match' : {
-                    'text': text
-                }
+                    'text': {
+                        'query':text,
+                        'fuzziness': 'AUTO',
+                        }
+                    
+                },
+                
             },
         source_includes=SRC_INCLUDES)['hits']['hits']
     return convert_hits(results)
