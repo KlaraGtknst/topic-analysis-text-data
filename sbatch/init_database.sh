@@ -1,6 +1,6 @@
 #!/bin/bash      
 #SBATCH --partition=main        # Partition main
-#SBATCH --job-name=allocate-res  # Job-Name
+#SBATCH --job-name=init-db  # Job-Name
 #SBATCH --nodes=1       # 1 Node wird benötigt
 #SBATCH --cpus-per-task=32
 #SBATCH --mem=128g       # 64 GB Hauptspeicher
