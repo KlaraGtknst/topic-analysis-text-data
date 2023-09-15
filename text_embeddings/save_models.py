@@ -72,7 +72,7 @@ def load_model(model_name):
             return pickle.load(file)    
         
     elif 'ae' in model_name:
-        with open(f'models/ae_model.pkl', 'rb') as file:  
+        with open(f'models/ae.pkl', 'rb') as file:  # ae_model
             return pickle.load(file)
         
     elif 'tfidf' in model_name:
