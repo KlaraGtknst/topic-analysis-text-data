@@ -279,16 +279,22 @@ def init_db_aux(src_paths, image_src_path):
             save_models.save_model(model, model_name)
 
     # TODO: commented to save memory
-    #sim_docs_vocab_size = len(list(models['tfidf'].vocabulary_.values()))
+    #sim_docs_vocab_size = len(models['tfidf'].vocabulary_.values())
 
     # tfidf embedding incl. all-zero-vector-flag
+    print('start reading docs')
     docs = get_docs_from_file_paths(src_paths)  # FIXME: lists will be very long- memory problem?
+    print(f'finished getting {len(docs)} docs')
     sim_docs_document_term_matrix = models['tfidf'].fit_transform(docs).todense()
+    print('finished getting tfidf matrix')
     flags = np.array([1 if np.array([entry  == 0 for entry in sim_docs_document_term_matrix[i]]).all() else 0 for i in range(len(sim_docs_document_term_matrix))]).reshape(len(sim_docs_document_term_matrix),1)
+    print('finished adding all-zero flag tfidf matrix')
     flag_matrix = np.append(sim_docs_document_term_matrix, flags, axis=1)
+    print('finished combining tfidf matrix with all zero flag')
 
     # Create the client instance
     client = Elasticsearch(CLIENT_ADDR)
+    print('finished creating client')
 
     # delete old index and create new one, TODO: commented to save memory
     #client.options(ignore_status=[400,404]).indices.delete(index='bahamas')
@@ -296,11 +302,14 @@ def init_db_aux(src_paths, image_src_path):
 
     # PCA + KMeans clustering, FIXME: a lot of memory due to list actions
     pca_cluster_df = get_cluster_PCA_df(src_path= image_src_path, n_cluster= 4, n_components= NUM_COMPONENTS, preprocess_image_size=600)
+    print('finished getting pca cluster df')
 
     # insert documents into database
+    print(f'start inserting {len(src_paths)} documents')
     insert_documents(src_paths, doc2vec_model=models['doc2vec'], client=client, image_path=image_src_path, google_model=models['universal'], 
                      huggingface_model=models['hugging'], sim_doc_tfidf_vectorization=flag_matrix, pca_df=pca_cluster_df, 
                      inferSent_model=models['infer'], inferEncoder=models['ae'])
+    print('finished inserting documents')
 
     # alternatively, use AsyncElasticsearch or time.sleep(1)
     '''client.indices.refresh(index="bahamas")

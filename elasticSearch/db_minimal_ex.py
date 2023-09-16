@@ -17,7 +17,7 @@ from text_embeddings.TFIDF.preprocessing.TfidfTextPreprocessor import *
 from text_embeddings.InferSent.infer_pretrained import *
 from text_embeddings import save_models 
 from constants import *
-from db_elasticsearch import *
+from elasticSearch.db_elasticsearch import *
 
 def main(src_paths, image_src_path):
     NUM_DIMENSIONS = 55
@@ -41,7 +41,8 @@ def main(src_paths, image_src_path):
     #sim_docs_vocab_size = len(list(models['tfidf'].vocabulary_.values()))
 
     # tfidf embedding incl. all-zero-vector-flag
-    src_paths = ['/mnt/datasets/Bahamas/SAC/0/SAC1-6.pdf', '/mnt/datasets/Bahamas/SAC/0/SAC32-4.pdf']
+    
+    src_paths = ['/Users/klara/Documents/uni/bachelorarbeit/data/0/SAC1-6.pdf', '/Users/klara/Documents/uni/bachelorarbeit/data/0/SAC32-4.pdf']#['/mnt/datasets/Bahamas/SAC/0/SAC1-6.pdf', '/mnt/datasets/Bahamas/SAC/0/SAC32-4.pdf']
     docs = get_docs_from_file_paths(src_paths)  # FIXME: lists will be very long- memory problem?
     sim_docs_document_term_matrix = models['tfidf'].fit_transform(docs).todense()
     flags = np.array([1 if np.array([entry  == 0 for entry in sim_docs_document_term_matrix[i]]).all() else 0 for i in range(len(sim_docs_document_term_matrix))]).reshape(len(sim_docs_document_term_matrix),1)

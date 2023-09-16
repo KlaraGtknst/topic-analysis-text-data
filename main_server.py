@@ -16,17 +16,17 @@ if __name__ == '__main__':
     print(file_to_run[0])
 
     if file_to_run[0] == 'convert_pdf2image.py':
-        # python3 main.py 'convert_pdf2image.py' -i '/Users/klara/Documents/uni/bachelorarbeit/data/0/SAC29-14.pdf' -o '/Users/klara/Downloads/'
-        # python3 main.py 'convert_pdf2image.py' -d '/Users/klara/Documents/uni/bachelorarbeit/data/0/*.pdf' -o '/Users/klara/Documents/uni/bachelorarbeit/images/'
-        # python3 main.py 'convert_pdf2image.py' -d'/Users/klara/Downloads/*.pdf' -o '/Users/klara/Downloads/'
+        # python3 main_server.py 'convert_pdf2image.py' -i '/Users/klara/Documents/uni/bachelorarbeit/data/0/SAC29-14.pdf' -o '/Users/klara/Downloads/'
+        # python3 main_server.py 'convert_pdf2image.py' -d '/Users/klara/Documents/uni/bachelorarbeit/data/0/*.pdf' -o '/Users/klara/Documents/uni/bachelorarbeit/images/'
+        # python3 main_server.py 'convert_pdf2image.py' -d'/Users/klara/Downloads/*.pdf' -o '/Users/klara/Downloads/'
         # pdf below does not work, pdf schief
-        # python3 main.py 'convert_pdf2image.py' -i '/Users/klara/Documents/uni/bachelorarbeit/data/0/SAC34-38.pdf' -o '/Users/klara/Downloads/'
+        # python3 main_server.py 'convert_pdf2image.py' -i '/Users/klara/Documents/uni/bachelorarbeit/data/0/SAC34-38.pdf' -o '/Users/klara/Downloads/'
         convert_pdf2image.main(file_paths, out_file)
 
     elif file_to_run[0] == 'db_elasticsearch.py':
-        # python3 main.py 'db_elasticsearch.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/'
+        # python3 main_server.py 'db_elasticsearch.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/'
         db_elasticsearch.main(file_paths, image_src_path)
 
     elif file_to_run[0] == 'db_minimal_ex.py':
-        # python3 main.py 'db_minimal_ex.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/'
+        # python3 main_server.py 'db_minimal_ex.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/'
         db_minimal_ex.main(file_paths, image_src_path)
