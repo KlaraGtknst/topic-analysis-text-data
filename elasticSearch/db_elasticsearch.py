@@ -282,7 +282,7 @@ def init_db_aux(src_paths, image_src_path):
     #sim_docs_vocab_size = len(list(models['tfidf'].vocabulary_.values()))
 
     # tfidf embedding incl. all-zero-vector-flag
-    docs = get_docs_from_file_paths(src_paths)
+    docs = get_docs_from_file_paths(src_paths)  # FIXME: lists will be very long- memory problem?
     sim_docs_document_term_matrix = models['tfidf'].fit_transform(docs).todense()
     flags = np.array([1 if np.array([entry  == 0 for entry in sim_docs_document_term_matrix[i]]).all() else 0 for i in range(len(sim_docs_document_term_matrix))]).reshape(len(sim_docs_document_term_matrix),1)
     flag_matrix = np.append(sim_docs_document_term_matrix, flags, axis=1)
@@ -294,7 +294,7 @@ def init_db_aux(src_paths, image_src_path):
     #client.options(ignore_status=[400,404]).indices.delete(index='bahamas')
     #init_db(client, num_dimensions=NUM_DIMENSIONS, sim_docs_vocab_size=sim_docs_vocab_size, n_components=NUM_COMPONENTS)
 
-    # PCA + KMeans clustering
+    # PCA + KMeans clustering, FIXME: a lot of memory due to list actions
     pca_cluster_df = get_cluster_PCA_df(src_path= image_src_path, n_cluster= 4, n_components= NUM_COMPONENTS, preprocess_image_size=600)
 
     # insert documents into database
