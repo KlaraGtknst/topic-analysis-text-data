@@ -124,7 +124,7 @@ def insert_documents(src_paths: list, doc2vec_model: Doc2Vec, client: Elasticsea
     for i in range(len(src_paths)):
         path = src_paths[i]
         try:
-            id = path.split('/')[-1].split('.')[0]  # document title
+            id = hash(path)#path.split('/')[-1].split('.')[0]  # document title
             if get_doc_meta_data(client, doc_id=id):    # document already in database
                 continue
             else:   # insert new document

@@ -21,3 +21,11 @@ all_paths = [os.path.join(r,file) for r,d,f in os.walk(base_path) for file in f 
 print(all_paths)
 print(len(all_paths))
 # %%
+path = all_paths[0]
+id = path.split('/')[-1].split('.')[0]
+
+# %%
+print(id)
+# %%
+print(hash(path))
+# %%
