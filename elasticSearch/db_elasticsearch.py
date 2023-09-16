@@ -278,7 +278,8 @@ def init_db_aux(src_paths, image_src_path):
             models[model_name] = model
             save_models.save_model(model, model_name)
 
-    sim_docs_vocab_size = len(list(models['tfidf'].vocabulary_.values()))
+    # TODO: commented to save memory
+    #sim_docs_vocab_size = len(list(models['tfidf'].vocabulary_.values()))
 
     # tfidf embedding incl. all-zero-vector-flag
     docs = get_docs_from_file_paths(src_paths)
@@ -289,9 +290,9 @@ def init_db_aux(src_paths, image_src_path):
     # Create the client instance
     client = Elasticsearch(CLIENT_ADDR)
 
-    # delete old index and create new one
-    client.options(ignore_status=[400,404]).indices.delete(index='bahamas')
-    init_db(client, num_dimensions=NUM_DIMENSIONS, sim_docs_vocab_size=sim_docs_vocab_size, n_components=NUM_COMPONENTS)
+    # delete old index and create new one, TODO: commented to save memory
+    #client.options(ignore_status=[400,404]).indices.delete(index='bahamas')
+    #init_db(client, num_dimensions=NUM_DIMENSIONS, sim_docs_vocab_size=sim_docs_vocab_size, n_components=NUM_COMPONENTS)
 
     # PCA + KMeans clustering
     pca_cluster_df = get_cluster_PCA_df(src_path= image_src_path, n_cluster= 4, n_components= NUM_COMPONENTS, preprocess_image_size=600)
@@ -302,7 +303,7 @@ def init_db_aux(src_paths, image_src_path):
                      inferSent_model=models['infer'], inferEncoder=models['ae'])
 
     # alternatively, use AsyncElasticsearch or time.sleep(1)
-    client.indices.refresh(index="bahamas")
+    '''client.indices.refresh(index="bahamas")
 
     # properties in db
     print(client.indices.get_mapping(index='bahamas'))
@@ -310,7 +311,7 @@ def init_db_aux(src_paths, image_src_path):
     # number of documents in database
     client.indices.refresh(index='bahamas')
     resp = client.count(index='bahamas')
-    print('number of documents in database: ', resp['count'])
+    print('number of documents in database: ', resp['count'])'''
 
 def main(src_paths, image_src_path):
     init_db_aux(src_paths, image_src_path)
