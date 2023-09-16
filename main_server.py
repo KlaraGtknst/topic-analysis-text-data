@@ -1,6 +1,7 @@
 from user_interface.cli import *
 from doc_images import convert_pdf2image
 from elasticSearch import db_elasticsearch
+from elasticSearch import db_minimal_ex
 
 # srun --partition=main --mem=128g -n 1 --cpus-per-task=32 --pty /usr/sbin/sshd -D -f ~/sshd/sshd_config
 
@@ -25,3 +26,7 @@ if __name__ == '__main__':
     elif file_to_run[0] == 'db_elasticsearch.py':
         # python3 main.py 'db_elasticsearch.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/'
         db_elasticsearch.main(file_paths, image_src_path)
+
+    elif file_to_run[0] == 'db_minimal_ex.py':
+        # python3 main.py 'db_minimal_ex.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/'
+        db_minimal_ex.main(file_paths, image_src_path)
