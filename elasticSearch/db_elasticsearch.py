@@ -1,6 +1,7 @@
 import collections
+import hashlib
 from http.client import HTTPException
-from elasticsearch import ApiError, ConflictError, Elasticsearch
+from elasticsearch import ApiError, ConflictError, Elasticsearch, NotFoundError
 import base64
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 from gensim.utils import simple_preprocess
@@ -124,11 +125,19 @@ def insert_documents(src_paths: list, doc2vec_model: Doc2Vec, client: Elasticsea
     for i in range(len(src_paths)):
         path = src_paths[i]
         try:
-            id = hash(path)#path.split('/')[-1].split('.')[0]  # document title
-            if get_doc_meta_data(client, doc_id=id):    # document already in database
+            try:
+                    text = pdf_to_str(path)
+            except:
+                # missing EOF marker in pdf
+                print(f'EOF marker missing in {path}.')
+                print(pdf_to_str(path))
+
+            id = hashlib.sha1(bytes(text, encoding='utf-8')) #np.base_repr(hash(path), 36) # avoid negative IDs
+            try:
+                get_doc_meta_data(client, doc_id=id)    # document already in database
                 continue
-            else:   # insert new document
-                image = image_path + id  + '.png'
+            except NotFoundError:   # insert new document
+                image = image_path + path.split('/')[-1].split('.')[0]  + '.png'
                 try:
                     with open(image, "rb") as img_file:
                         b64_image = base64.b64encode(img_file.read())
@@ -136,14 +145,6 @@ def insert_documents(src_paths: list, doc2vec_model: Doc2Vec, client: Elasticsea
                     # bc i did not copy all images from cluster to local machine
                     # dummy (black) picture to avoid not inserting the document into the database
                     b64_image = base64.b64encode(np.zeros([100,100,3],dtype=np.uint8)) # TODO: or insert None
-
-                try:
-                    text = pdf_to_str(path)
-                except:
-                    # missing EOF marker in pdf
-                    print(f'EOF marker missing in {path}.')
-                    print(pdf_to_str(path))
-                
 
                 pca_df_row = pca_df.loc[pca_df.index == image] if image in list(pca_df.index) else None
 
@@ -281,8 +282,7 @@ def init_db_aux(src_paths, image_src_path):
             models[model_name] = model
             save_models.save_model(model, model_name)
 
-    # TODO: commented to save memory
-    #sim_docs_vocab_size = len(models['tfidf'].vocabulary_.values())
+    sim_docs_vocab_size = len(models['tfidf'].vocabulary_.values())
 
     # tfidf embedding incl. all-zero-vector-flag
     print('start reading docs')
@@ -300,8 +300,9 @@ def init_db_aux(src_paths, image_src_path):
     print('finished creating client')
 
     # delete old index and create new one, TODO: commented to save memory
-    #client.options(ignore_status=[400,404]).indices.delete(index='bahamas')
-    #init_db(client, num_dimensions=NUM_DIMENSIONS, sim_docs_vocab_size=sim_docs_vocab_size, n_components=NUM_COMPONENTS)
+    client.options(ignore_status=[400,404]).indices.delete(index='bahamas')
+    init_db(client, num_dimensions=NUM_DIMENSIONS, sim_docs_vocab_size=sim_docs_vocab_size, n_components=NUM_COMPONENTS)
+    print('finished deleting old and creating new index')
 
     # PCA + KMeans clustering, FIXME: a lot of memory due to list actions
     pca_cluster_df = get_cluster_PCA_df(src_path= image_src_path, n_cluster= 4, n_components= NUM_COMPONENTS, preprocess_image_size=600)
