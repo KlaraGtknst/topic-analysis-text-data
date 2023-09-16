@@ -125,44 +125,47 @@ def insert_documents(src_paths: list, doc2vec_model: Doc2Vec, client: Elasticsea
         path = src_paths[i]
         try:
             id = path.split('/')[-1].split('.')[0]  # document title
-            image = image_path + id  + '.png'
-            try:
-                with open(image, "rb") as img_file:
-                    b64_image = base64.b64encode(img_file.read())
-            except FileNotFoundError:
-                # bc i did not copy all images from cluster to local machine
-                # dummy (black) picture to avoid not inserting the document into the database
-                b64_image = base64.b64encode(np.zeros([100,100,3],dtype=np.uint8)) # TODO: or insert None
+            if get_doc_meta_data(client, doc_id=id):    # document already in database
+                continue
+            else:   # insert new document
+                image = image_path + id  + '.png'
+                try:
+                    with open(image, "rb") as img_file:
+                        b64_image = base64.b64encode(img_file.read())
+                except FileNotFoundError:
+                    # bc i did not copy all images from cluster to local machine
+                    # dummy (black) picture to avoid not inserting the document into the database
+                    b64_image = base64.b64encode(np.zeros([100,100,3],dtype=np.uint8)) # TODO: or insert None
 
-            try:
-                text = pdf_to_str(path)
-            except:
-                # missing EOF marker in pdf
-                print(f'EOF marker missing in {path}.')
-                print(pdf_to_str(path))
-            
+                try:
+                    text = pdf_to_str(path)
+                except:
+                    # missing EOF marker in pdf
+                    print(f'EOF marker missing in {path}.')
+                    print(pdf_to_str(path))
+                
 
-            pca_df_row = pca_df.loc[pca_df.index == image] if image in list(pca_df.index) else None
+                pca_df_row = pca_df.loc[pca_df.index == image] if image in list(pca_df.index) else None
 
-            # InferSent embedding
-            inferSent_embedding = inferSent_model.encode([text, text], tokenize=True)
-            compressed_infersent_embedding = inferEncoder.predict(x=inferSent_embedding)[0]
+                # InferSent embedding
+                inferSent_embedding = inferSent_model.encode([text, text], tokenize=True)
+                compressed_infersent_embedding = inferEncoder.predict(x=inferSent_embedding)[0]
 
-            try:
-                client.create(index='bahamas', id=id, document={    # TODO: delete id
-                    "doc2vec": doc2vec_model.infer_vector(simple_preprocess(pdf_to_str(path))),
-                    "sim_docs_tfidf": np.ravel(np.array(sim_doc_tfidf_vectorization[i])),
-                    "google_univ_sent_encoding": embed([text], google_model).numpy().tolist()[0],
-                    "huggingface_sent_transformer": huggingface_model.encode(text),
-                    "inferSent_AE": compressed_infersent_embedding,
-                    "pca_image": pca_df_row['pca_weights'].item() if pca_df_row is not None else None,
-                    "pca_kmeans_cluster": pca_df_row['cluster'] if pca_df_row is not None else None,
-                    "text": text,
-                    "path": path,
-                    "image": b64_image.decode('ASCII')#str(b64_image) # TODO: statt str... b64_image.decode('ASCII'),
-                })
-            except ApiError as err:
-                counter += 1
+                try:
+                    client.create(index='bahamas', id=id, document={    # TODO: delete id
+                        "doc2vec": doc2vec_model.infer_vector(simple_preprocess(pdf_to_str(path))),
+                        "sim_docs_tfidf": np.ravel(np.array(sim_doc_tfidf_vectorization[i])),
+                        "google_univ_sent_encoding": embed([text], google_model).numpy().tolist()[0],
+                        "huggingface_sent_transformer": huggingface_model.encode(text),
+                        "inferSent_AE": compressed_infersent_embedding,
+                        "pca_image": pca_df_row['pca_weights'].item() if pca_df_row is not None else None,
+                        "pca_kmeans_cluster": pca_df_row['cluster'] if pca_df_row is not None else None,
+                        "text": text,
+                        "path": path,
+                        "image": b64_image.decode('ASCII')#str(b64_image) # TODO: statt str... b64_image.decode('ASCII'),
+                    })
+                except ApiError as err:
+                    counter += 1
         except ConflictError as err:
             continue
     if counter > 0:
@@ -312,7 +315,7 @@ def init_db_aux(src_paths, image_src_path):
     print('finished inserting documents')
 
     # alternatively, use AsyncElasticsearch or time.sleep(1)
-    '''client.indices.refresh(index="bahamas")
+    client.indices.refresh(index="bahamas")
 
     # properties in db
     print(client.indices.get_mapping(index='bahamas'))
@@ -320,77 +323,11 @@ def init_db_aux(src_paths, image_src_path):
     # number of documents in database
     client.indices.refresh(index='bahamas')
     resp = client.count(index='bahamas')
-    print('number of documents in database: ', resp['count'])'''
+    print('number of documents in database: ', resp['count'])
 
 def main(src_paths, image_src_path):
     init_db_aux(src_paths, image_src_path)
     
-   
-############################################################################################################
-
-    '''# InferSent embedding
-    MODEL_PATH = '/Users/klara/Developer/Uni/encoder/infersent1.pkl'
-    W2V_PATH = '/Users/klara/Developer/Uni/GloVe/glove.840B.300d.txt'
-    infersent, docs = init_infer(model_path=MODEL_PATH, w2v_path=W2V_PATH, file_paths=src_paths, version=1)
-    infer_embeddings = infersent.encode(docs, tokenize=True)
-    encoded_infersent_embedding, ae_infer_encoder = autoencoder_emb_model(input_shape=infer_embeddings.shape[1], latent_dim=2048, data=infer_embeddings)
-
-
-    # tfidf embedding incl. all-zero-vector-flag
-    tfidf_matrix, sim_docs_tfidf = tfidf_aux(src_paths)
-    sim_docs_vocab_size = len(list(sim_docs_tfidf.vocabulary_.values()))
-    #print(f'Vocabulary size (sim): {sim_docs_vocab_size}')
-
-    # huggingface sentence transformer
-    huggingface_model = init_hf_sentTrans_model()
-
-    # google universal sentence encoder
-    google_model = google_univ_sent_encoding_aux()
-
-    # Create the client instance
-    client = Elasticsearch(CLIENT_ADDR)
-    client.options(ignore_status=[400,404]).indices.delete(index='bahamas')
-
-    # delete old index and create new one
-    if ('bahamas' not in client.indices.get_alias(index='*')) or (client.indices.get_mapping(index='bahamas')['bahamas']['mappings']['properties']['doc2vec']['dims'] != NUM_DIMENSIONS):
-        client.options(ignore_status=[400,404]).indices.delete(index='bahamas')
-        init_db(client, num_dimensions=NUM_DIMENSIONS, sim_docs_vocab_size=sim_docs_vocab_size, n_components=NUM_COMPONENTS)
-    
-    # training corpus
-    train_corpus = list(get_tagged_input_documents(src_paths))
-
-    # doc2vec model 
-    # infrequent words are discarded, since retaining them can make model worse
-    # iteration for 10s-of-thousands of documents: 10-20; more for smaller datasets
-    doc2vec_model = Doc2Vec(train_corpus, vector_size=NUM_DIMENSIONS, window=2, min_count=2, workers=4, epochs=40)
-
-    # build a vocabulary (i.e. list of unique words); accessable via model.wv.index_to_key
-    doc2vec_model.build_vocab(train_corpus, update=True)
-
-    # train the model
-    doc2vec_model.train(train_corpus, total_examples=doc2vec_model.corpus_count, epochs=doc2vec_model.epochs)
-
-    # assess the model
-    # here: using training corpus -> overfitting, not representative
-    #assess_model(doc2vec_model, train_corpus)
-
-    # PCA + KMeans clustering
-    pca_cluster_df = get_cluster_PCA_df(src_path= image_src_path, n_cluster= 4, n_components= NUM_COMPONENTS, preprocess_image_size=600)
-
-    # insert documents into database
-    insert_documents(src_paths, doc2vec_model=doc2vec_model, client=client, image_path=image_src_path, google_model=google_model, huggingface_model=huggingface_model, sim_doc_tfidf_vectorization=tfidf_matrix, pca_df=pca_cluster_df, inferSent_model=infersent, inferEncoder=ae_infer_encoder)
-
-    # alternatively, use AsyncElasticsearch or time.sleep(1)
-    client.indices.refresh(index="bahamas")
-
-
-    # properties in db
-    print(client.indices.get_mapping(index='bahamas'))
-
-    # number of documents in database
-    client.indices.refresh(index='bahamas')
-    resp = client.count(index='bahamas')
-    print('number of documents in database: ', resp['count'])'''
 
 if __name__ == '__main__':
     args = arguments()
