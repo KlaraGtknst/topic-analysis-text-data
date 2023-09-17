@@ -126,14 +126,13 @@ def insert_documents(src_paths: list, doc2vec_model: Doc2Vec, client: Elasticsea
         path = src_paths[i]
         try:
             try:
-                    text = pdf_to_str(path)
+                text = pdf_to_str(path)
             except:
                 # missing EOF marker in pdf
                 print(f'EOF marker missing in {path}.')
-                print(pdf_to_str(path))
+                continue
 
-            # TODO: cannot convert hash object to string ('utf-8' codec can't decode byte 0x87 in position 0: invalid start byte): hashlib.sha1(bytes(path, encoding='utf-8')).digest()
-            id = hashlib.sha1(bytes(text, encoding='utf-8')) # return bytes in range 0-255
+            id = hashlib.sha256(bytes(path, encoding='utf-8')).hexdigest()  # base 16
             try:
                 get_doc_meta_data(client, doc_id=id)    # document already in database
                 continue
