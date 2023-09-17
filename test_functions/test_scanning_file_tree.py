@@ -1,5 +1,6 @@
 # %%
 import glob
+import hashlib
 import os
 base_path = '/Users/klara/Documents/uni/bachelorarbeit'
 print(base_path)
@@ -28,4 +29,11 @@ id = path.split('/')[-1].split('.')[0]
 print(id)
 # %%
 print(hash(path))
+# %%
+print('test', hashlib.sha1(bytes(path, encoding='utf-8')).digest())
+print('test', hashlib.sha1(bytes(path, encoding='utf-8')))
+
+# %%
+print((hashlib.sha1(bytes(path, encoding='utf-8'))).__str__())
+
 # %%
