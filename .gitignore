@@ -134,3 +134,6 @@ models/
 
 # temp visualizations
 visualizations/
+
+# temp data
+test.ann
