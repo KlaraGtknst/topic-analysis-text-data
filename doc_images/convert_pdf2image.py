@@ -26,17 +26,20 @@ def pdf_to_png(file_path: list, outpath: str = None, save: bool= True) -> list:
     for path in file_path:
         file_name = (path.split('.')[0]).split('/')[-1]
         outpath = outpath if outpath else '/'.join(path.split('/')[:-1])
-        doc = fitz.open(path)  # open document
-        try:
-            pix = doc[0].get_pixmap()  # render first page to an image
-            pix.set_dpi(75, 75) # image resolution
-            #images.append(pix)
-            if save:
-                pix.save(f"{outpath}/{file_name}.png")
-            doc.close()
-        except:
-            # print(f'file {path} could not be converted to png')
-           ''' broken_files.append(path)
+        img_path = f"{outpath}/{file_name}.png"
+        if (not os.path.exists(img_path)):  # only documents that have not been converted yet
+            doc = fitz.open(path)  # open document
+            try:
+                pix = doc[0].get_pixmap()  # render first page to an image
+                pix.set_dpi(75, 75) # image resolution
+                #images.append(pix)
+                
+                if save:
+                    pix.save(img_path)
+                doc.close()
+            except:
+                # print(f'file {path} could not be converted to png')
+                ''' broken_files.append(path)
 
     if broken_files:
         print(f'files {broken_files} could not be converted to png')'''
