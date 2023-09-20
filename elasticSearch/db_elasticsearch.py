@@ -154,8 +154,18 @@ def insert_document(src_path, pca_df, image_path, models, client_addr=CLIENT_ADD
                 # missing EOF marker in pdf
                 print(f'EOF marker missing in {path}.')
                 return
+            
+            BLOCK_SIZE = 65536 # The size of each read from the file
+            file_hash = hashlib.sha256() # Create the hash object, can use something other than `.sha256()` if you wish
+            with open(path, 'rb') as f: # Open the file to read it's bytes
+                fb = f.read(BLOCK_SIZE) # Read from the file. Take in the amount declared above
+                while len(fb) > 0: # While there is still data being read from the file
+                    file_hash.update(fb) # Update the hash
+                    fb = f.read(BLOCK_SIZE)
+            id = file_hash.hexdigest()
+            f.close()
 
-            id = hashlib.sha256(bytes(path, encoding='utf-8')).hexdigest()  # base 16
+            #hashlib.sha256(bytes(path, encoding='utf-8')).hexdigest()  # base 16
             try:
                 get_doc_meta_data(client, doc_id=id)    # document already in database
                 return
