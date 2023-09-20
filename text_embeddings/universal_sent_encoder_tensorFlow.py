@@ -86,7 +86,10 @@ def google_univ_sent_encoding_aux():
     :return: document-term matrix and the trained tfidf vectorizer model
     '''
     try:
-        module_url = "https://tfhub.dev/google/universal-sentence-encoder/4"
+        local_url = "/Users/klara/Developer/Uni/topic-analysis-text-data/models/universal-sentence-encoder_4"
+        server_url = "/mnt/stud/work/kgutekunst/topic-analysis-text-data/models/universal-sentence-encoder_4"
+        module_url = local_url if os.path.exists(local_url) else server_url
+        #"https://tfhub.dev/google/universal-sentence-encoder/4"
         model = hub.load(module_url)
     except:
         module_url = "https://tfhub.dev/google/universal-sentence-encoder-large/5"
