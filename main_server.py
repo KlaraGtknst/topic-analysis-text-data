@@ -1,3 +1,4 @@
+from constants import CLIENT_ADDR
 from user_interface.cli import *
 from doc_images import convert_pdf2image
 from elasticSearch import db_elasticsearch
@@ -12,7 +13,7 @@ if __name__ == '__main__':
     out_file = get_filepath(args, option='output')
     image_src_path = get_filepath(args, option='image')
     file_to_run = args.file_to_run
-    print(file_to_run[0])
+    client_addr = args.client_addr if args.client_addr else CLIENT_ADDR
 
     if file_to_run[0] == 'convert_pdf2image.py':
         # python3 main_server.py 'convert_pdf2image.py' -i '/Users/klara/Documents/uni/bachelorarbeit/data/0/SAC29-14.pdf' -o '/Users/klara/Downloads/'
@@ -24,4 +25,4 @@ if __name__ == '__main__':
 
     elif file_to_run[0] == 'db_elasticsearch.py':
         # python3 main_server.py 'db_elasticsearch.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/'
-        db_elasticsearch.main(file_paths, image_src_path)
+        db_elasticsearch.main(file_paths, image_src_path, client_addr)

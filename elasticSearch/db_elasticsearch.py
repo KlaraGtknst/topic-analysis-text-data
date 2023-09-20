@@ -266,7 +266,7 @@ def show_best_search_results(scores, src_paths, image_src_path=None):
     create_image_matrix(input_files=image_paths, dim=3, output_path=None)
 
 
-def init_db_aux(src_paths, image_src_path):
+def init_db_aux(src_paths, image_src_path, client_addr=CLIENT_ADDR):
     '''
     everything that happens in the main function to fill the database.
     '''
@@ -290,7 +290,7 @@ def init_db_aux(src_paths, image_src_path):
     sim_docs_vocab_size = len(models['tfidf'].vocabulary_.values())
 
     # Create the client instance
-    client = Elasticsearch(CLIENT_ADDR)
+    client = Elasticsearch(client_addr)
     print('finished creating client')
 
     # delete old index and create new one, TODO: commented to save memory

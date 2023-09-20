@@ -45,6 +45,8 @@ def arguments():
                                 help="directory, which contains input iamge files. Used for, e.g., db_elasticsearch.py", metavar="DIRECTORY")
     common_options.add_argument("-n", "--number", dest="number", required=False, type=int,
                                 help="custom number which may influence programm. For instance, if set for pdf_matrix.py, it determines number of dimensions.",)
+    common_options.add_argument("-a", "--clientAddr", dest="client_addr", required=False,
+                                help="address of elasticsearch client on server.")
 
 
     return parser.parse_args()
