@@ -122,7 +122,7 @@ def insert_documents(src_paths: list, doc2vec_model: Doc2Vec, client: Elasticsea
     counter = 0
     image_path = image_path if image_path else (src_paths.split('data/0/')[0] + 'images/images/')
 
-    for i in range(len(src_paths)):
+    for i in range(len(src_paths)): # TODO: function mit input ein Pfad (nicht rekursiv) und multi processing, ca 100 mal parallel
         path = src_paths[i]
         try:
             try:
@@ -157,7 +157,7 @@ def insert_documents(src_paths: list, doc2vec_model: Doc2Vec, client: Elasticsea
                 inferSent_embedding = inferSent_model.encode([text, text], tokenize=True)
                 compressed_infersent_embedding = inferEncoder.predict(x=inferSent_embedding)[0]
 
-                try:
+                try:    # TODO: alle models auf einmal im Speicher Problem?
                     client.create(index='bahamas', id=id, document={    # TODO: delete id
                         "doc2vec": doc2vec_model.infer_vector(simple_preprocess(pdf_to_str(path))),
                         "sim_docs_tfidf": np.ravel(np.array(flag_matrix)),
