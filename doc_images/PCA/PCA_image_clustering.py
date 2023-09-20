@@ -36,7 +36,7 @@ def preprocess_images(image_paths: list, img_size: int)-> np.ndarray:
     # Global centering (focus on one feature, centering all samples)
     preprocessed_images_centered = preprocessed_images - np.mean(preprocessed_images, axis=0)
     # Local centering (focus on one sample, centering all features)
-    preprocessed_images_centered -= preprocessed_images_centered.mean(axis=1).reshape(len(preprocessed_images_centered), -1)
+    #preprocessed_images_centered -= preprocessed_images_centered.mean(axis=1).reshape(len(preprocessed_images_centered), -1)
     return preprocessed_images_centered
 
 def plot_grey_images(image: list, title: str = None, save: bool = False) -> None:

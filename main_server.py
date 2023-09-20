@@ -2,7 +2,7 @@ from user_interface.cli import *
 from doc_images import convert_pdf2image
 from elasticSearch import db_elasticsearch
 
-# srun --partition=main --mem=128g -n 1 --cpus-per-task=32 --pty /usr/sbin/sshd -D -f ~/sshd/sshd_config
+# srun --partition=main --mem=16g -n 1 --cpus-per-task=4 --pty /usr/sbin/sshd -D -f ~/sshd/sshd_config
 
 
 if __name__ == '__main__':
