@@ -320,8 +320,8 @@ def init_db_aux(src_paths, image_src_path, client_addr=CLIENT_ADDR):
     resp = client.count(index='bahamas')
     print('number of documents in database: ', resp['count'])
 
-def main(src_paths, image_src_path):
-    init_db_aux(src_paths, image_src_path)
+def main(src_paths, image_src_path, client_addr=CLIENT_ADDR):
+    init_db_aux(src_paths, image_src_path, client_addr=client_addr)
     
 
 if __name__ == '__main__':
@@ -331,4 +331,4 @@ if __name__ == '__main__':
     out_file = get_filepath(args, option='output')
     image_src_path = get_filepath(args, option='image')
 
-    init_db_aux(src_paths=file_paths, image_src_path=image_src_path)
+    init_db_aux(src_paths=file_paths, image_src_path=image_src_path, client_addr=CLIENT_ADDR)
