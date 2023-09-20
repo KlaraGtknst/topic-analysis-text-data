@@ -1,6 +1,8 @@
 import collections
 import hashlib
 from http.client import HTTPException
+from itertools import repeat
+from multiprocess import Pool
 from elasticsearch import ApiError, ConflictError, Elasticsearch, NotFoundError
 import base64
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
@@ -91,7 +93,7 @@ def init_db(client: Elasticsearch, num_dimensions: int, sim_docs_vocab_size: int
         },
     })
 
-def insert_documents(src_paths: list, doc2vec_model: Doc2Vec, client: Elasticsearch, google_model, huggingface_model, tfidf_model: TfidfVectorizer, pca_df: pd.DataFrame, inferEncoder, inferSent_model, image_path: str = None):
+def insert_documents(src_paths: list, pca_df: pd.DataFrame, client: Elasticsearch, image_path: str = None, n_pools: int = 1, client_addr: str = CLIENT_ADDR):
     '''
     :param src_paths: path to the documents to be inserted into the database
     :param doc2vec_model: Doc2Vec model
@@ -119,26 +121,47 @@ def insert_documents(src_paths: list, doc2vec_model: Doc2Vec, client: Elasticsea
     cf. https://stackoverflow.com/questions/8908287/why-do-i-need-b-to-encode-a-string-with-base64 for information about base64 encoding
     cf. https://www.codespeedy.com/convert-image-to-base64-string-in-python/ for information about converting images to base64
     '''
-    counter = 0
     image_path = image_path if image_path else (src_paths.split('data/0/')[0] + 'images/images/')
+    print('start multiprocessing'if n_pools > 1 else 'start single processing')
+    models = get_models(src_paths)
+    if n_pools == 1:    # single processing
+        for src_path in src_paths:
+            insert_document(src_path, pca_df, image_path, client_addr=client_addr, models=models, client=client)
+    else: # multiprocessing, TODO: does not work yet, bc of models is not pickable
+        with Pool(n_pools) as p: 
+            p.starmap(insert_document, list(map(lambda src_path:[src_path, pca_df, image_path, client_addr, models], src_paths)))
 
-    for i in range(len(src_paths)): # TODO: function mit input ein Pfad (nicht rekursiv) und multi processing, ca 100 mal parallel
-        path = src_paths[i]
+def get_models(src_paths: list):
+    model_names = ['doc2vec', 'universal', 'hugging', 'infer', 'ae', 'tfidf']
+    models = {}
+    for model_name in model_names:
+        try: # model exists
+            model = save_models.load_model(model_name)
+            models[model_name] = model
+        except: # model does not exist, create and save it
+            model = save_models.train_model(model_name, src_paths)
+            models[model_name] = model
+            save_models.save_model(model, model_name)
+    return models
+
+def insert_document(src_path, pca_df, image_path, models, client_addr=CLIENT_ADDR, client: Elasticsearch=None):
+        client = client if client else Elasticsearch(client_addr)
+        path = src_path
         try:
             try:
                 text = pdf_to_str(path)
             except:
                 # missing EOF marker in pdf
                 print(f'EOF marker missing in {path}.')
-                continue
+                return
 
             id = hashlib.sha256(bytes(path, encoding='utf-8')).hexdigest()  # base 16
             try:
                 get_doc_meta_data(client, doc_id=id)    # document already in database
-                continue
+                return
             except NotFoundError:   # insert new document
                 # TFIDF embedding
-                tfidf_emb = tfidf_model.transform([text]).todense()
+                tfidf_emb = models['tfidf'].transform([text]).todense()
                 flag = np.array(1 if np.array([entry  == 0 for entry in tfidf_emb]).all() else 0).reshape(len(tfidf_emb),1)
                 flag_matrix = np.append(tfidf_emb, flag, axis=1)
 
@@ -154,15 +177,15 @@ def insert_documents(src_paths: list, doc2vec_model: Doc2Vec, client: Elasticsea
                 pca_df_row = pca_df.loc[pca_df.index == image] if image in list(pca_df.index) else None
 
                 # InferSent embedding
-                inferSent_embedding = inferSent_model.encode([text, text], tokenize=True)
-                compressed_infersent_embedding = inferEncoder.predict(x=inferSent_embedding)[0]
+                inferSent_embedding = models['infer'].encode([text, text], tokenize=True)
+                compressed_infersent_embedding = models['ae'].predict(x=inferSent_embedding)[0]
 
                 try:    # TODO: alle models auf einmal im Speicher Problem?
                     client.create(index='bahamas', id=id, document={    # TODO: delete id
-                        "doc2vec": doc2vec_model.infer_vector(simple_preprocess(pdf_to_str(path))),
+                        "doc2vec": models['doc2vec'].infer_vector(simple_preprocess(pdf_to_str(path))),
                         "sim_docs_tfidf": np.ravel(np.array(flag_matrix)),
-                        "google_univ_sent_encoding": embed([text], google_model).numpy().tolist()[0],
-                        "huggingface_sent_transformer": huggingface_model.encode(text),
+                        "google_univ_sent_encoding": embed([text], models['universal']).numpy().tolist()[0],
+                        "huggingface_sent_transformer": models['hugging'].encode(text),
                         "inferSent_AE": compressed_infersent_embedding,
                         "pca_image": pca_df_row['pca_weights'].item() if pca_df_row is not None else None,
                         "pca_kmeans_cluster": pca_df_row['cluster'] if pca_df_row is not None else None,
@@ -171,11 +194,11 @@ def insert_documents(src_paths: list, doc2vec_model: Doc2Vec, client: Elasticsea
                         "image": b64_image.decode('ASCII')#str(b64_image) # TODO: statt str... b64_image.decode('ASCII'),
                     })
                 except ApiError as err:
-                    counter += 1
+                    print('er1')
+                    return
         except ConflictError as err:
-            continue
-    if counter > 0:
-        print(f'{counter} from {len(src_paths)} documents raised an ApiError error and are thus, not inserted into the database.')
+            print('er2')
+            return
 
 
 
@@ -266,7 +289,7 @@ def show_best_search_results(scores, src_paths, image_src_path=None):
     create_image_matrix(input_files=image_paths, dim=3, output_path=None)
 
 
-def init_db_aux(src_paths, image_src_path, client_addr=CLIENT_ADDR):
+def init_db_aux(src_paths, image_src_path, client_addr=CLIENT_ADDR, n_pools=1):
     '''
     everything that happens in the main function to fill the database.
     '''
@@ -275,7 +298,7 @@ def init_db_aux(src_paths, image_src_path, client_addr=CLIENT_ADDR):
 
     print('-' * 80)
 
-    model_names = ['doc2vec', 'universal', 'hugging', 'infer', 'ae', 'tfidf']
+    '''model_names = ['doc2vec', 'universal', 'hugging', 'infer', 'ae', 'tfidf']
     models = {}
     for model_name in model_names:
         print(model_name)
@@ -286,8 +309,9 @@ def init_db_aux(src_paths, image_src_path, client_addr=CLIENT_ADDR):
             model = save_models.train_model(model_name, src_paths)
             models[model_name] = model
             save_models.save_model(model, model_name)
-
-    sim_docs_vocab_size = len(models['tfidf'].vocabulary_.values())
+    '''
+    sim_docs_vocab_size = len(save_models.load_model("tfidf").vocabulary_.values())
+    #len(models['tfidf'].vocabulary_.values())
 
     # Create the client instance
     client = Elasticsearch(client_addr)
@@ -304,9 +328,7 @@ def init_db_aux(src_paths, image_src_path, client_addr=CLIENT_ADDR):
 
     # insert documents into database
     print(f'start inserting {len(src_paths)} documents')
-    insert_documents(src_paths, doc2vec_model=models['doc2vec'], client=client, image_path=image_src_path, google_model=models['universal'], 
-                     huggingface_model=models['hugging'], tfidf_model=models['tfidf'], pca_df=pca_cluster_df, 
-                     inferSent_model=models['infer'], inferEncoder=models['ae'])
+    insert_documents(src_paths, client=client, image_path=image_src_path, n_pools=n_pools, pca_df=pca_cluster_df)
     print('finished inserting documents')
 
     # alternatively, use AsyncElasticsearch or time.sleep(1)
@@ -320,8 +342,8 @@ def init_db_aux(src_paths, image_src_path, client_addr=CLIENT_ADDR):
     resp = client.count(index='bahamas')
     print('number of documents in database: ', resp['count'])
 
-def main(src_paths, image_src_path, client_addr=CLIENT_ADDR):
-    init_db_aux(src_paths, image_src_path, client_addr=client_addr)
+def main(src_paths, image_src_path, client_addr=CLIENT_ADDR, n_pools=1):
+    init_db_aux(src_paths, image_src_path, client_addr=client_addr, n_pools=n_pools)
     
 
 if __name__ == '__main__':

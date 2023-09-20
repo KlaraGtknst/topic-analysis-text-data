@@ -47,6 +47,8 @@ def arguments():
                                 help="custom number which may influence programm. For instance, if set for pdf_matrix.py, it determines number of dimensions.",)
     common_options.add_argument("-a", "--clientAddr", dest="client_addr", required=False,
                                 help="address of elasticsearch client on server.")
+    common_options.add_argument("-p", "--pools", dest="n_pools", required=False, type=int,
+                                help="Number of Pools, i.e. how many CPUs present to parallize.")
 
 
     return parser.parse_args()
