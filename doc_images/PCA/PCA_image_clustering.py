@@ -35,9 +35,12 @@ def preprocess_images(image_paths: list, img_size: int)-> np.ndarray:
     preprocessed_images = np.array([np.reshape(a=cv2.normalize(cv2.resize(cv2.imread(img, cv2.IMREAD_GRAYSCALE), (img_size, img_size)), None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F), newshape=img_size**2) for img in image_paths])
     # Global centering (focus on one feature, centering all samples)
     preprocessed_images_centered = preprocessed_images - np.mean(preprocessed_images, axis=0)
+    print(preprocessed_images_centered.shape)
+    #print(preprocessed_images_centered.mean(axis=1))
     # Local centering (focus on one sample, centering all features)
-    #preprocessed_images_centered -= preprocessed_images_centered.mean(axis=1).reshape(len(preprocessed_images_centered), -1)
-    return preprocessed_images_centered.ravel()
+    preprocessed_images_centered -= preprocessed_images_centered.mean(axis=1).reshape(len(preprocessed_images_centered), -1)
+    print(preprocessed_images_centered.shape)
+    return preprocessed_images_centered
 
 def plot_grey_images(image: list, title: str = None, save: bool = False) -> None:
     '''

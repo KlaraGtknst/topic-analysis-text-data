@@ -2,6 +2,7 @@ from constants import CLIENT_ADDR
 from user_interface.cli import *
 from doc_images import convert_pdf2image
 from elasticSearch import db_elasticsearch
+from doc_images.PCA import PCA_image_clustering
 
 # srun --partition=main --mem=16g -n 1 --cpus-per-task=4 --pty /usr/sbin/sshd -D -f ~/sshd/sshd_config
 
@@ -26,3 +27,7 @@ if __name__ == '__main__':
     elif file_to_run[0] == 'db_elasticsearch.py':
         # python3 main_server.py 'db_elasticsearch.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/'
         db_elasticsearch.main(file_paths, image_src_path, client_addr)
+
+    elif file_to_run[0] == 'PCA_image_clustering.py':
+        # python3 main_server.py 'PCA_image_clustering.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/'
+        PCA_image_clustering.main(file_paths, image_src_path, outpath=out_file)
