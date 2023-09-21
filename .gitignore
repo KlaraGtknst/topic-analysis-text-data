@@ -137,3 +137,6 @@ visualizations/
 
 # temp data
 test.ann
+
+# images
+results/
