@@ -123,7 +123,7 @@ def insert_documents(src_paths: list, pca_df: pd.DataFrame, client: Elasticsearc
     '''
     image_path = image_path if image_path else (src_paths.split('data/0/')[0] + 'images/images/')
     print('start multiprocessing'if n_pools > 1 else 'start single processing')
-    models = get_models(src_paths)
+    models = get_models(src_paths) if n_pools == 1 else None
     if n_pools == 1:    # single processing
         for src_path in src_paths:
             insert_document(src_path, pca_df, image_path, client_addr=client_addr, models=models, client=client)
@@ -147,6 +147,7 @@ def get_models(src_paths: list):
 def insert_document(src_path, pca_df, image_path, models, client_addr=CLIENT_ADDR, client: Elasticsearch=None):
         client = client if client else Elasticsearch(client_addr)
         path = src_path
+        models = models if models else get_models(src_path)
         try:
             try:
                 text = pdf_to_str(path)
@@ -306,7 +307,7 @@ def init_db_aux(src_paths, image_src_path, client_addr=CLIENT_ADDR, n_pools=1):
     NUM_COMPONENTS = 2
 
     print('-' * 80)
-    
+
     sim_docs_vocab_size = len(save_models.load_model("tfidf").vocabulary_.values())
     #len(models['tfidf'].vocabulary_.values())
 
