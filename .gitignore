@@ -130,12 +130,7 @@ dmypy.json
 ~$*
 
 # models
-models/ae.pkl
-models/ae_model.pkl
-models/doc2vec_model.pkl
-models/infer.pkl
-models/infersent_model.pkl
-models/tfidf_vectorizer.pkl
+models/
 
 # temp visualizations
 visualizations/

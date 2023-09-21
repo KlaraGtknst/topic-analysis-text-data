@@ -165,7 +165,6 @@ def insert_document(src_path, pca_df, image_path, models, client_addr=CLIENT_ADD
             id = file_hash.hexdigest()
             f.close()
 
-            #hashlib.sha256(bytes(path, encoding='utf-8')).hexdigest()  # base 16
             try:
                 get_doc_meta_data(client, doc_id=id)    # document already in database
                 return
@@ -191,7 +190,7 @@ def insert_document(src_path, pca_df, image_path, models, client_addr=CLIENT_ADD
                 compressed_infersent_embedding = models['ae'].predict(x=inferSent_embedding)[0]
 
                 try:    # TODO: alle models auf einmal im Speicher Problem?
-                    client.create(index='bahamas', id=id, document={    # TODO: delete id
+                    client.create(index='bahamas', id=id, document={ 
                         "doc2vec": models['doc2vec'].infer_vector(simple_preprocess(pdf_to_str(path))),
                         "sim_docs_tfidf": np.ravel(np.array(flag_matrix)),
                         "google_univ_sent_encoding": embed([text], models['universal']).numpy().tolist()[0],
@@ -307,19 +306,7 @@ def init_db_aux(src_paths, image_src_path, client_addr=CLIENT_ADDR, n_pools=1):
     NUM_COMPONENTS = 2
 
     print('-' * 80)
-
-    '''model_names = ['doc2vec', 'universal', 'hugging', 'infer', 'ae', 'tfidf']
-    models = {}
-    for model_name in model_names:
-        print(model_name)
-        try: # model exists
-            model = save_models.load_model(model_name)
-            models[model_name] = model
-        except: # model does not exist, create and save it
-            model = save_models.train_model(model_name, src_paths)
-            models[model_name] = model
-            save_models.save_model(model, model_name)
-    '''
+    
     sim_docs_vocab_size = len(save_models.load_model("tfidf").vocabulary_.values())
     #len(models['tfidf'].vocabulary_.values())
 
