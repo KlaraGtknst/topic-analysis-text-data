@@ -2,7 +2,7 @@
 #SBATCH --partition=main        # Partition main
 #SBATCH --job-name=init-db  # Job-Name
 #SBATCH --nodes=1       # 1 Node wird benötigt
-#SBATCH --cpus-per-task=32
+#SBATCH --cpus-per-task=45  #32
 #SBATCH --mem=264g       # 264 GB Hauptspeicher
 #SBATCH --time=32:00:00  # max. Laufzeit 32h
 #SBATCH --output=/mnt/stud/home/kgutekunst/logs/%j.out        # Datei für stdout (logs/ prints != results, e.g., .pdf files) 
@@ -15,5 +15,5 @@ source /mnt/stud/work/kgutekunst/bsc-py/bin/activate    # virtuelle Umgebung akt
 # gpu-v100-1
 # gpu-v100-3
 # gpu-a100-1
-srun python /mnt/stud/work/kgutekunst/topic-analysis-text-data/main_server.py 'db_elasticsearch.py' -p 32 -a 'http://cpu-epyc-1.ies.uni-kassel.de:9200' -d '/mnt/datasets/Bahamas/SAC/0/*.pdf' -D '/mnt/stud/home/kgutekunst/visualizations/images/'  # Programm ausfuehren
+srun python /mnt/stud/work/kgutekunst/topic-analysis-text-data/main_server.py 'db_elasticsearch.py' -p 45 -a 'http://cpu-epyc-1.ies.uni-kassel.de:9200' -d '/mnt/datasets/Bahamas/SAC/0/*.pdf' -D '/mnt/stud/home/kgutekunst/visualizations/images/'  # Programm ausfuehren
 #srun python /mnt/stud/work/kgutekunst/topic-analysis-text-data/db_elasticsearch.py -d '/mnt/datasets/Bahamas' -D '/mnt/stud/home/kgutekunst/visualizations/images/'  # Programm ausfuehren
