@@ -2,7 +2,7 @@
 import math
 from sklearn import decomposition
 from math import sqrt
-from sklearn.cluster import KMeans
+from sklearn.cluster import OPTICS, KMeans
 # own modules
 from text_embeddings.preprocessing.read_pdf import *
 from user_interface.cli import *
@@ -10,6 +10,7 @@ from doc_images.pdf_matrix import *
 from elasticSearch.queries.query_documents_tfidf import *
 from text_embeddings.universal_sent_encoder_tensorFlow import *
 from text_embeddings.hugging_face_sentence_transformer import *
+from doc_images import eigendocs
 
 '''------search in existing database-------
 run this code by typing and altering the path:
@@ -122,6 +123,34 @@ def get_cluster_PCA_df(src_path: str, n_cluster: int, n_components: int = 2, pre
     kmeans = KMeans(n_clusters=n_cluster, random_state=0, n_init="auto").fit(pca_df['pca_weights'].to_list())
     pca_df['cluster'] = kmeans.labels_
     return pca_df
+
+def get_eigendocs_OPTICS_df(src_path: str, n_components: int = 13) -> pd.DataFrame:
+    '''
+    :param src_path: path to the directory of the images
+    :param n_components: number of components to keep
+    :return: dataframe, which contains pca weights, cluster index and the corresponding image paths as index
+    '''
+    # images
+    documents_raw = [plt.imread(fp.path) for fp in os.scandir(src_path) if fp.path.endswith(".png")]
+
+    # preprocessing with Eigendocs
+    max_w, max_h = eigendocs.get_maximum_height_width(documents_raw)
+    documents = eigendocs.proprocess_docs(raw_documents=documents_raw, max_w=max_w, max_h=max_h)
+
+    # image source paths
+    image_src_paths = glob.glob(src_path + '*.png') if src_path.endswith('/') else glob.glob(src_path)
+
+    # PCA with SVD and normalization
+    pca = decomposition.PCA(n_components=n_components, whiten=True, svd_solver="randomized")
+    pca_weights = pca.fit_transform(documents)
+    pca_df = create_pca_df(image_src_paths, pca_weights)
+
+    # clustering
+    clt = OPTICS(cluster_method='dbscan', min_samples=2, max_eps=10, eps=0.5)
+    pca_df['cluster'] = clt.fit_predict(pca_weights)
+
+    return pca_df
+
 
 
 def plot_all_pca_cluster_info(image_src_path: str, img_size: int, num_classes: int, outpath: str = None):
