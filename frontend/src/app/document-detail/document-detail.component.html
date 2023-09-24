@@ -5,11 +5,11 @@
             {{(doc?.path?.split("/")?.pop())?.split(".")?.shift() }}
         </h2>
     </div>
-    <div class="row">
+    <div *ngIf="doc" class="row">
         <div class="col-6">
             <h4>Document id</h4>
             <p style="max-height: 3rem; overflow-y: auto">
-                {{doc?._id}}
+                {{doc._id}}
             </p>
             <div class="mb-3">
                 <label class="form-label" for="queryType">Query Type</label>
@@ -17,13 +17,13 @@
                     <option *ngFor="let queryType of queryTypes" [value]="queryType">{{ queryType }}</option>
                 </select>
               </div>
-              <a class="btn btn-primary" [href]="baseurl + '/documents/' + doc?._id + '/term_frequency'" target="_blank">Term Frequency</a>
-              <p *ngIf="!queryType" >WordCloud of single document with id {{doc?._id}}</p>
-              <img *ngIf="!queryType" [src]="sanitizer.bypassSecurityTrustResourceUrl(baseurl + '/documents/' + doc?._id + '/wordcloud')" style="width: 100%">
+              <a class="btn btn-primary" [href]="baseurl + '/documents/' + doc._id + '/term_frequency'" target="_blank">Term Frequency</a>
+              <p *ngIf="!queryType" >WordCloud of single document with id {{doc._id}}</p>
+              <img *ngIf="!queryType" [src]="sanitizer.bypassSecurityTrustResourceUrl(baseurl + '/documents/' + doc._id + '/wordcloud')" style="width: 100%">
         </div>
         <div class="col-6">
             <h4>PDF</h4>
-            <iframe [src]="sanitizer.bypassSecurityTrustResourceUrl(baseurl + '/documents/' + doc?._id + '/pdf')" style="width: 100%; height: 500px;"></iframe>
+            <iframe [src]="sanitizer.bypassSecurityTrustResourceUrl(baseurl + '/documents/' + doc._id + '/pdf')" style="width: 100%; height: 500px;"></iframe>
             <div class="d-flex align-content-around flex-wrap">
                 <a *ngFor="let similarDoc of similarDocs" [routerLink]="['..', similarDoc._id]" class="btn btn-outline-secondary">
                     {{ (similarDoc.path.split("/").pop())?.split(".")?.shift()  }}

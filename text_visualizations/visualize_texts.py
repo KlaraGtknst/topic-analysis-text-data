@@ -20,7 +20,7 @@ def term_frequency(tokens: list, file_name: str, return_img: bool = False, outpa
     :param tokens: list of tokens
     :param file_name: name of the file
     :param outpath: path to save the term frequency
-    :return: None; if return_png is true, the term frequency will be returned as png
+    :return: None; if return_png is true, the term frequency will be returned as PIL image
 
     This function plots the term frequency of the tokens.
     '''
@@ -32,26 +32,19 @@ def term_frequency(tokens: list, file_name: str, return_img: bool = False, outpa
     title = 'Term frequency in ' + file_name
     ax.set_title(title)
     if return_img:
-        canvas.draw()  # Draw the canvas, cache the renderer
-        #image_flat = np.frombuffer(pylab.,canvas.p, dtype='uint8')  # (H * W * 3,)
-        # NOTE: reversed converts (W, H) from get_width_height to (H, W)
-        #image = image_flat.reshape(*reversed(canvas.get_width_height()), 3)  # (H, W, 3)
-        # bytes_io = io.BytesIO()
-        # canvas.print_figure(bytes_io)
-        # image = bytes_io.getvalue()
-        return Image.frombytes('RGB', canvas.get_width_height(), canvas.tostring_rgb())
+        canvas.draw()
+        return Image.frombytes('RGB', canvas.get_width_height(), canvas.tostring_rgb()) # PIL image
     if outpath:
         plt.savefig(outpath + '/' + title, format="pdf", bbox_inches="tight")
     return fig
-    plt.show()
 
 
-def word_cloud(tokens: list, file_name: str, outpath: str = None, return_img:bool=False) -> None:
+def word_cloud(tokens: list, file_name: str, outpath: str = None, return_img:bool=False) -> Image:
     '''
     :param tokens: list of tokens
     :param file_name: name of the file
     :param outpath: path to save the wordcloud
-    :return: None; if return_png is true, the wordcloud will be returned as png
+    :return: None; if return_png is true, the wordcloud will be returned as PIL image
 
     This function plots a word cloud of the tokens.
     cf. https://towardsdatascience.com/end-to-end-topic-modeling-in-python-latent-dirichlet-allocation-lda-35ce4ed6b3e0

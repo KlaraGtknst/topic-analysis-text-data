@@ -105,18 +105,12 @@ class WordCloud(Resource):
 @api.doc(params=id_doc)
 @api.route('/documents/<id>/term_frequency', endpoint='term_frequency')
 class TermFrequency(Resource):
-    # return term frequency of one document as PNG
+    # return term frequency of one document
     def get(self, id):
-        # TODO: matplotlib nicht umgehbar, geht vielleicht nicht
         # http://127.0.0.1:8000/documents/SAC1-6/term_frequency
-
         elastic_search_client = Elasticsearch(CLIENT_ADDR)
         texts = [query_database.get_doc_meta_data(elastic_search_client, id)['text']]
 
-        if not os.path.exists('visualizations'):
-            os.mkdir('visualizations')
-        
-        #path = f'/Users/klara/Downloads/{id}.pdf'
         img = visualize_texts.get_one_visualization_from_text(option='term_frequency', texts=texts)
         
         bytes = visualize_texts.image_to_byte_array(img)
