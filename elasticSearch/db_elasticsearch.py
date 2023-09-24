@@ -204,7 +204,7 @@ def insert_document(src_path, pca_df, image_path, models, client_addr=CLIENT_ADD
                         "image": b64_image.decode('ASCII')#str(b64_image) # TODO: statt str... b64_image.decode('ASCII'),
                     })
                 except ApiError as err:
-                    print('er1')
+                    print('err1')
                     return
         except ConflictError as err:
             print('er2')
@@ -304,7 +304,7 @@ def init_db_aux(src_paths, image_src_path, client_addr=CLIENT_ADDR, n_pools=1):
     everything that happens in the main function to fill the database.
     '''
     NUM_DIMENSIONS = 55
-    NUM_COMPONENTS = 2
+    NUM_COMPONENTS = 13
 
     print('-' * 80)
 
@@ -315,14 +315,14 @@ def init_db_aux(src_paths, image_src_path, client_addr=CLIENT_ADDR, n_pools=1):
     client = Elasticsearch(client_addr)
     print('finished creating client')
 
-    # delete old index and create new one, TODO: commented to save memory
+    # delete old index and create new one
     client.options(ignore_status=[400,404]).indices.delete(index='bahamas')
     init_db(client, num_dimensions=NUM_DIMENSIONS, sim_docs_vocab_size=sim_docs_vocab_size, n_components=NUM_COMPONENTS)
     print('finished deleting old and creating new index')
 
-    # PCA + KMeans clustering, FIXME: a lot of memory due to list actions
-    pca_cluster_df = get_cluster_PCA_df(src_path= image_src_path, n_cluster= 4, n_components= NUM_COMPONENTS, preprocess_image_size=600)
-    print('finished getting pca cluster df')
+    # Eigendocs (PCA) + OPTICS clustering
+    pca_cluster_df = get_eigendocs_OPTICS_df(image_src_path, n_components=NUM_COMPONENTS)
+    print('finished getting pca-OPTICS cluster df')
 
     # insert documents into database
     print(f'start inserting {len(src_paths)} documents')
