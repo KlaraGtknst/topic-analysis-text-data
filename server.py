@@ -123,4 +123,4 @@ class TermFrequency(Resource):
 
 with app.test_request_context():
     #print(url_for('index'))
-    print('hi')
+    print('started server')

@@ -1,8 +1,19 @@
 <div class="container">
-    <div class="mb-3">
-        <label class="form-label" for="name">Text Search</label>
-        <input class="form-control" type="search" id="name" [(ngModel)]="searchText" placeholder="Search for text..." (keyup.enter)="search()">
-      </div>
+    <div class="row justify-content-center align-items-center">        
+        <div class="col-11">
+            <div class="mb-3">
+                <label class="form-label" for="name">Text Search</label>
+                <input class="form-control" type="search" id="name" [(ngModel)]="searchText" placeholder="Search for text..." (keyup.enter)="search()">
+            </div>
+        </div>
+        <div class="col-1">
+            <div class="row justify-content-center align-items-right">
+                <div class="col-1">
+                <img src="assets/hessen_logo.png" alt="Hessen Logo" routerLink="/" style="width:70px;height:90px;">
+                </div>
+            </div>
+        </div>
+    </div>
     <div>
         <h2>Documents</h2>
     </div>
@@ -16,12 +27,5 @@
     </div>    
 </div>
 
-<div class="row justify-content-center align-items-center">
 
-    <div class="col-1">
-    <img src="assets/hessen_logo.png" alt="Hessen Logo" routerLink="/" style="width:70px;height:90px;">
-    </div>
-
-    
-</div>
 
