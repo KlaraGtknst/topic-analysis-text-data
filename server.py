@@ -122,5 +122,4 @@ class TermFrequency(Resource):
         return send_from_directory(filepath, f'{id}.pdf')
 
 with app.test_request_context():
-    #print(url_for('index'))
     print('started server')
