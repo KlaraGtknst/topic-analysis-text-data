@@ -17,7 +17,7 @@
                     <option *ngFor="let queryType of queryTypes" [value]="queryType">{{ queryType }}</option>
                 </select>
               </div>
-              <a class="btn btn-primary" routerLink="termfrequency">Term Frequency</a>
+              <a class="btn btn-primary" [href]="baseurl + '/documents/' + doc?._id + '/term_frequency'" target="_blank">Term Frequency</a>
               <p *ngIf="!queryType" >WordCloud of single document with id {{doc?._id}}</p>
               <img *ngIf="!queryType" [src]="sanitizer.bypassSecurityTrustResourceUrl(baseurl + '/documents/' + doc?._id + '/wordcloud')" style="width: 100%">
         </div>

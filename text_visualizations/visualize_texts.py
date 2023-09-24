@@ -1,5 +1,9 @@
 import io
+from PIL import Image
 from matplotlib import image
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_agg import FigureCanvasAgg
+import numpy as np
 from text_embeddings.preprocessing.read_pdf import *
 from user_interface.cli import *
 from wordcloud import WordCloud
@@ -11,7 +15,7 @@ run this code by typing and altering the path:
     python3 visualize_texts.py -d '/Users/klara/Downloads/*.pdf'
 '''
 
-def term_frequency(tokens: list, file_name: str, outpath: str = None) -> None:
+def term_frequency(tokens: list, file_name: str, return_img: bool = False, outpath: str = None) -> Image:
     '''
     :param tokens: list of tokens
     :param file_name: name of the file
@@ -20,11 +24,22 @@ def term_frequency(tokens: list, file_name: str, outpath: str = None) -> None:
 
     This function plots the term frequency of the tokens.
     '''
-    fig = plt.figure(figsize=(15, 10))
-    plt.hist(tokens, bins=100, orientation='vertical', color='green')
-    plt.xticks(rotation=90, fontsize=5)
+    fig = Figure(figsize=(15, 10))
+    ax = fig.add_subplot(111)
+    canvas = FigureCanvasAgg(fig)
+    ax.hist(tokens, bins=100, orientation='vertical', color='green')
+    ax.tick_params(axis='x', labelrotation=90, labelsize=5)
     title = 'Term frequency in ' + file_name
-    plt.title(title)
+    ax.set_title(title)
+    if return_img:
+        canvas.draw()  # Draw the canvas, cache the renderer
+        #image_flat = np.frombuffer(pylab.,canvas.p, dtype='uint8')  # (H * W * 3,)
+        # NOTE: reversed converts (W, H) from get_width_height to (H, W)
+        #image = image_flat.reshape(*reversed(canvas.get_width_height()), 3)  # (H, W, 3)
+        # bytes_io = io.BytesIO()
+        # canvas.print_figure(bytes_io)
+        # image = bytes_io.getvalue()
+        return Image.frombytes('RGB', canvas.get_width_height(), canvas.tostring_rgb())
     if outpath:
         plt.savefig(outpath + '/' + title, format="pdf", bbox_inches="tight")
     return fig
@@ -44,9 +59,7 @@ def word_cloud(tokens: list, file_name: str, outpath: str = None, return_img:boo
     try:
         # possible to add stopwords to initiation of worldcloud
         wordcloud = WordCloud(width=800, height=500, random_state=21, contour_width=3, max_font_size=110, background_color='white', max_words=5000).generate(','.join(tokens))
-        print('test')
         if return_img:
-            #wordcloud.to_file(outpath + '/' + file_name)
             return wordcloud.to_image()
         plt.figure(figsize=(15, 10))
         plt.imshow(wordcloud, interpolation="bilinear") # displays image, interpolation: smoother image
@@ -88,6 +101,11 @@ def get_one_visualization_from_text(option:str, texts:list) -> image:
     if option == 'wordcloud':
         img = word_cloud(tokens, file_name='file', outpath=None, return_img=True)
         return img
+    elif option == 'term_frequency':
+        img = term_frequency(tokens, file_name='file', outpath=None, return_img=True)
+        return img
+    else:
+        print('Error: No valid option chosen.')
 
 
 def get_one_visualization(option:str, paths:list, outpath:str=None) -> None:
@@ -105,8 +123,6 @@ def get_one_visualization(option:str, paths:list, outpath:str=None) -> None:
         tokens.extend(preprocess_doc(path))
     if option == 'wordcloud':
         img = word_cloud(tokens, file_name= first_doc if (len(paths) == 1) else f'multiple docs similar to {first_doc}', outpath=outpath, return_img=True)
-        print('HALLLLOOO')
-        print(img)
         return image_to_byte_array(img)
     elif option == 'term_frequency':
         term_frequency(tokens, file_name=first_doc if (len(paths) == 1) else f'multiple docs similar to {first_doc}', outpath=outpath)

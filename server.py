@@ -97,7 +97,7 @@ class WordCloud(Resource):
             # get text from document
             texts = [query_database.get_doc_meta_data(elastic_search_client, id)['text']]
         img = visualize_texts.get_one_visualization_from_text(option='wordcloud', texts=texts)
-        bytes = visualize_texts.image_to_byte_array(img)
+        bytes = visualize_texts.image_to_byte_array(img)    # TODO: bytes have no attribute save
         response = make_response(bytes)
         response.headers.set('Content-Type', 'image/png')
         return response
@@ -108,18 +108,21 @@ class TermFrequency(Resource):
     # return term frequency of one document as PNG
     def get(self, id):
         # TODO: matplotlib nicht umgehbar, geht vielleicht nicht
-        print(id) # http://127.0.0.1:8000/documents/SAC1-6/term_frequency
-        
+        # http://127.0.0.1:8000/documents/SAC1-6/term_frequency
+
+        elastic_search_client = Elasticsearch(CLIENT_ADDR)
+        texts = [query_database.get_doc_meta_data(elastic_search_client, id)['text']]
+
         if not os.path.exists('visualizations'):
             os.mkdir('visualizations')
         
-        path = f'/Users/klara/Downloads/{id}.pdf'
-        visualize_texts.get_one_visualization(option='term_frequency', paths=[path])#, outpath='visualizations')
+        #path = f'/Users/klara/Downloads/{id}.pdf'
+        img = visualize_texts.get_one_visualization_from_text(option='term_frequency', texts=texts)
         
-        return id  # FIXME
-        workingdir = os.path.abspath(os.getcwd())
-        filepath = workingdir + '/visualizations/'
-        return send_from_directory(filepath, f'{id}.pdf')
+        bytes = visualize_texts.image_to_byte_array(img)
+        response = make_response(bytes)
+        response.headers.set('Content-Type', 'image/png')
+        return response
 
 with app.test_request_context():
     print('started server')
