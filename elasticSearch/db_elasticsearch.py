@@ -93,7 +93,7 @@ def init_db(client: Elasticsearch, num_dimensions: int, sim_docs_vocab_size: int
         },
     })
 
-def insert_documents(src_paths: list, pca_df: pd.DataFrame, client: Elasticsearch, image_path: str = None, n_pools: int = 1, client_addr: str = CLIENT_ADDR):
+def insert_documents(src_paths: list, pca_df: pd.DataFrame, client: Elasticsearch, image_path: str = None, n_pools: int = 1, client_addr: str = CLIENT_ADDR, model_names: list = ['doc2vec', 'universal', 'hugging', 'infer', 'ae', 'tfidf']):
     '''
     :param src_paths: path to the documents to be inserted into the database
     :param doc2vec_model: Doc2Vec model
@@ -123,16 +123,16 @@ def insert_documents(src_paths: list, pca_df: pd.DataFrame, client: Elasticsearc
     '''
     image_path = image_path if image_path else (src_paths.split('data/0/')[0] + 'images/images/')
     print('start multiprocessing'if n_pools > 1 else 'start single processing')
-    models = get_models(src_paths) if n_pools == 1 else None
+    #models = get_models(src_paths) if n_pools == 1 else None
+    models = None
     if n_pools == 1:    # single processing
         for src_path in src_paths:
-            insert_document(src_path, pca_df, image_path, client_addr=client_addr, models=models, client=client)
+            insert_document(src_path, pca_df, image_path, client_addr=client_addr, models=models, client=client, model_names=model_names)
     else: # multiprocessing, TODO: does not work yet, bc of models is not pickable
         with Pool(n_pools) as p: 
             p.starmap(insert_document, list(map(lambda src_path:[src_path, pca_df, image_path, client_addr, models], src_paths)))
 
-def get_models(src_paths: list):
-    model_names = ['doc2vec', 'universal', 'hugging', 'infer', 'ae', 'tfidf']
+def get_models(src_paths: list, model_names: list = ['doc2vec', 'universal', 'hugging', 'infer', 'ae', 'tfidf']):
     models = {}
     for model_name in model_names:
         try: # model exists
@@ -144,10 +144,10 @@ def get_models(src_paths: list):
             save_models.save_model(model, model_name)
     return models
 
-def insert_document(src_path, pca_df, image_path, models, client_addr=CLIENT_ADDR, client: Elasticsearch=None):
+def insert_document(src_path, pca_df, image_path, models, client_addr=CLIENT_ADDR, client: Elasticsearch=None, model_names: list = ['doc2vec', 'universal', 'hugging', 'infer', 'ae', 'tfidf']):
         client = client if client else Elasticsearch(client_addr)
         path = src_path
-        models = models if models else get_models(src_path)
+        models = models if models else get_models(src_path, model_names if model_names else None)
         try:
             try:
                 text = pdf_to_str(path)
@@ -170,10 +170,11 @@ def insert_document(src_path, pca_df, image_path, models, client_addr=CLIENT_ADD
                 get_doc_meta_data(client, doc_id=id)    # document already in database
                 return
             except NotFoundError:   # insert new document
-                # TFIDF embedding
-                tfidf_emb = models['tfidf'].transform([text]).todense()
-                flag = np.array(1 if np.array([entry  == 0 for entry in tfidf_emb]).all() else 0).reshape(len(tfidf_emb),1)
-                flag_matrix = np.append(tfidf_emb, flag, axis=1)
+                if 'tfidf' in model_names:
+                    # TFIDF embedding
+                    tfidf_emb = models['tfidf'].transform([text]).todense()
+                    flag = np.array(1 if np.array([entry  == 0 for entry in tfidf_emb]).all() else 0).reshape(len(tfidf_emb),1)
+                    flag_matrix = np.append(tfidf_emb, flag, axis=1)
 
                 image = image_path + path.split('/')[-1].split('.')[0]  + '.png'
                 try:
@@ -186,23 +187,42 @@ def insert_document(src_path, pca_df, image_path, models, client_addr=CLIENT_ADD
 
                 pca_df_row = pca_df.loc[pca_df.index == image] if image in list(pca_df.index) else None
 
-                # InferSent embedding
-                inferSent_embedding = models['infer'].encode([text, text], tokenize=True)
-                compressed_infersent_embedding = models['ae'].predict(x=inferSent_embedding)[0]
+                if 'infer' in model_names:
+                    # InferSent embedding
+                    inferSent_embedding = models['infer'].encode([text, text], tokenize=True)
+                    compressed_infersent_embedding = models['ae'].predict(x=inferSent_embedding)[0]
 
                 try:    # TODO: alle models auf einmal im Speicher Problem?
-                    client.create(index='bahamas', id=id, document={ 
-                        "doc2vec": models['doc2vec'].infer_vector(simple_preprocess(pdf_to_str(path))),
-                        "sim_docs_tfidf": np.ravel(np.array(flag_matrix)),
-                        "google_univ_sent_encoding": embed([text], models['universal']).numpy().tolist()[0],
-                        "huggingface_sent_transformer": models['hugging'].encode(text),
-                        "inferSent_AE": compressed_infersent_embedding,
-                        "pca_image": pca_df_row['pca_weights'].item() if pca_df_row is not None else None,
-                        "pca_kmeans_cluster": pca_df_row['cluster'] if pca_df_row is not None else None,
-                        "text": text,
-                        "path": path,
-                        "image": b64_image.decode('ASCII')#str(b64_image) # TODO: statt str... b64_image.decode('ASCII'),
-                    })
+                    if len(models.keys()) >= 6: # all embeddings
+                        client.create(index='bahamas', id=id, document={ 
+                            "doc2vec": models['doc2vec'].infer_vector(simple_preprocess(pdf_to_str(path))),
+                            "sim_docs_tfidf": np.ravel(np.array(flag_matrix)),
+                            "google_univ_sent_encoding": embed([text], models['universal']).numpy().tolist()[0],
+                            "huggingface_sent_transformer": models['hugging'].encode(text),
+                            "inferSent_AE": compressed_infersent_embedding,
+                            "pca_image": pca_df_row['pca_weights'].item() if pca_df_row is not None else None,
+                            "pca_kmeans_cluster": pca_df_row['cluster'] if pca_df_row is not None else None,
+                            "text": text,
+                            "path": path,
+                            "image": b64_image.decode('ASCII')#str(b64_image) # TODO: statt str... b64_image.decode('ASCII'),
+                        })
+                    else:   # not all embeddings
+                        name_to_field = {
+                                        'doc2vec': {"doc2vec": models['doc2vec'].infer_vector(simple_preprocess(pdf_to_str(path))) if 'doc2vec' in model_names else None}, 
+                                        'universal': {"google_univ_sent_encoding": embed([text], models['universal']).numpy().tolist()[0] if 'universal' in model_names else None},
+                                        'hugging': {"huggingface_sent_transformer": models['hugging'].encode(text) if 'hugging' in model_names else None}, 
+                                        'infer': {"inferSent_AE": compressed_infersent_embedding if 'infer' in model_names else None},
+                                        'tfidf': {"sim_docs_tfidf": np.ravel(np.array(flag_matrix)) if 'tfidf' in model_names else None},
+                                        }
+                        client.create(index='bahamas', id=id, document={ 
+                            "pca_image": pca_df_row['pca_weights'].item() if pca_df_row is not None else None,
+                            "pca_kmeans_cluster": pca_df_row['cluster'] if pca_df_row is not None else None,
+                            "text": text,
+                            "path": path,
+                            "image": b64_image.decode('ASCII')#str(b64_image) # TODO: statt str... b64_image.decode('ASCII'),
+                        })
+                        for model_name in model_names:
+                            client.update(index='bahamas', id=id, refresh=True, body={"doc": name_to_field[model_name]})
                 except ApiError as err:
                     print('err1')
                     return
@@ -299,7 +319,7 @@ def show_best_search_results(scores, src_paths, image_src_path=None):
     create_image_matrix(input_files=image_paths, dim=3, output_path=None)
 
 
-def init_db_aux(src_paths, image_src_path, client_addr=CLIENT_ADDR, n_pools=1):
+def init_db_aux(src_paths, image_src_path, client_addr=CLIENT_ADDR, n_pools=1, model_names: list = ['doc2vec', 'universal', 'hugging', 'infer', 'ae', 'tfidf']):
     '''
     everything that happens in the main function to fill the database.
     '''
@@ -326,7 +346,7 @@ def init_db_aux(src_paths, image_src_path, client_addr=CLIENT_ADDR, n_pools=1):
 
     # insert documents into database
     print(f'start inserting {len(src_paths)} documents')
-    insert_documents(src_paths, client=client, image_path=image_src_path, n_pools=n_pools, pca_df=pca_cluster_df)
+    insert_documents(src_paths, client=client, image_path=image_src_path, n_pools=n_pools, pca_df=pca_cluster_df, model_names=model_names)
     print('finished inserting documents')
 
     # alternatively, use AsyncElasticsearch or time.sleep(1)
@@ -340,8 +360,8 @@ def init_db_aux(src_paths, image_src_path, client_addr=CLIENT_ADDR, n_pools=1):
     resp = client.count(index='bahamas')
     print('number of documents in database: ', resp['count'])
 
-def main(src_paths, image_src_path, client_addr=CLIENT_ADDR, n_pools=1):
-    init_db_aux(src_paths, image_src_path, client_addr=client_addr, n_pools=n_pools)
+def main(src_paths, image_src_path, client_addr=CLIENT_ADDR, n_pools=1, model_names: list = ['doc2vec', 'universal', 'hugging', 'infer', 'ae', 'tfidf']):
+    init_db_aux(src_paths, image_src_path, client_addr=client_addr, n_pools=n_pools, model_names=model_names)
     
 
 if __name__ == '__main__':
@@ -350,5 +370,6 @@ if __name__ == '__main__':
     file_paths = get_input_filepath(args)
     out_file = get_filepath(args, option='output')
     image_src_path = get_filepath(args, option='image')
+    model_names = get_model_names(args)
 
-    init_db_aux(src_paths=file_paths, image_src_path=image_src_path, client_addr=CLIENT_ADDR)
+    init_db_aux(src_paths=file_paths, image_src_path=image_src_path, client_addr=CLIENT_ADDR, model_names=model_names)

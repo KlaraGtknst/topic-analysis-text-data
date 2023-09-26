@@ -49,7 +49,9 @@ def arguments():
                                 help="address of elasticsearch client on server.")
     common_options.add_argument("-p", "--pools", dest="n_pools", required=False, type=int,
                                 help="Number of Pools, i.e. how many CPUs present to parallize.")
-
+    common_options.add_argument("-m", "--model_names", dest="model_names", required=False, nargs='+',
+                    help="name of models to use. If not given, all are used", metavar="NAME", #action='append',
+                    type=lambda x: is_valid_model_name(parser, x))
 
     return parser.parse_args()
 
@@ -58,6 +60,17 @@ def is_valid_py_file(parser, arg):
         parser.error("The file %s is not a python file!" % arg)
     else:
         return arg
+    
+def is_valid_model_name(parser, arg):
+    if not arg in ['universal', 'doc2vec', 'hugging', 'infer', 'ae', 'tfidf']:
+            parser.error("The model name %s is not valid!" % arg)
+    return arg
+
+def get_model_names(args):
+    if args.model_names:
+        return args.model_names
+    else:
+        return ['universal', 'doc2vec', 'hugging', 'infer', 'ae', 'tfidf']
 
 def is_valid_file(parser, arg):
     if '*' in arg:  # wildcard

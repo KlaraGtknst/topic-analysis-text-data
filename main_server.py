@@ -16,6 +16,7 @@ if __name__ == '__main__':
     file_to_run = args.file_to_run
     client_addr = args.client_addr if args.client_addr else CLIENT_ADDR
     n_pools = args.n_pools
+    model_names = get_model_names(args)
 
     if file_to_run[0] == 'convert_pdf2image.py':
         # python3 main_server.py 'convert_pdf2image.py' -i '/Users/klara/Documents/uni/bachelorarbeit/data/0/SAC29-14.pdf' -o '/Users/klara/Downloads/'
@@ -26,9 +27,9 @@ if __name__ == '__main__':
         convert_pdf2image.main(file_paths, out_file)
 
     elif file_to_run[0] == 'db_elasticsearch.py':
-        # python3 main_server.py 'db_elasticsearch.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 4
         # python3 main_server.py 'db_elasticsearch.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
-        db_elasticsearch.main(file_paths, image_src_path, client_addr, n_pools)
+        # python3 main_server.py 'db_elasticsearch.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1 -m 'universal'
+        db_elasticsearch.main(file_paths, image_src_path, client_addr, n_pools, model_names=model_names)
 
     elif file_to_run[0] == 'PCA_image_clustering.py':
         # python3 main_server.py 'PCA_image_clustering.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/'
