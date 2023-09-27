@@ -2,7 +2,8 @@
 #SBATCH --partition=main        # Partition main
 #SBATCH --job-name=init-db  # Job-Name
 #SBATCH --nodes=1       # 1 Node wird benötigt
-#SBATCH --cpus-per-task=45  #32
+#SBATCH --cpus-per-task=45 
+#SBATCH --nodelist=cpu-epyc-1
 #SBATCH --mem=264g       # 264 GB Hauptspeicher
 #SBATCH --time=32:00:00  # max. Laufzeit 32h
 #SBATCH --output=/mnt/stud/home/kgutekunst/logs/%j.out        # Datei für stdout (logs/ prints != results, e.g., .pdf files) 
