@@ -15,7 +15,7 @@ export class DocumentDetailComponent {
   public queryType?: string;
   public similarDocs: Document[] = [];
 
-  readonly queryTypes = ["doc2vec", "sim_docs_tfidf", "google_univ_sent_encoding", "huggingface_sent_transformer", "inferSent_AE", "pca_kmeans_cluster"];
+  readonly queryTypes = ["doc2vec", "sim_docs_tfidf", "google_univ_sent_encoding", "huggingface_sent_transformer", "inferSent_AE", "pca_optics_cluster"];
   readonly baseurl = environment.baseurl;
   
   constructor(
