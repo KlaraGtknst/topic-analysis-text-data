@@ -7,7 +7,6 @@ from elasticsearch import ApiError, ConflictError, Elasticsearch, NotFoundError
 import base64
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 from gensim.utils import simple_preprocess
-from timeit import default_timer as timer
 # own modules
 from text_embeddings.preprocessing.read_pdf import *
 from user_interface.cli import *
@@ -368,18 +367,7 @@ def init_db_aux(src_paths, image_src_path, client_addr=CLIENT_ADDR, n_pools=1, m
     print('number of documents in database: ', resp['count'])
 
 def main(src_paths, image_src_path, client_addr=CLIENT_ADDR, n_pools=1, model_names: list = MODEL_NAMES):
-    times = pd.read_json('times_per_emb.json') if os.path.exists('times_per_emb.json') else pd.DataFrame(columns=['model', 'time'])
-    
-    start = timer()
-
     init_db_aux(src_paths, image_src_path, client_addr=client_addr, n_pools=n_pools, model_names=model_names)
-    
-    end = timer()
-    duration = end - start
-    print('time ellapsed: ', duration)
-
-    times = pd.concat([times, pd.DataFrame({'model': model_names, 'time': duration})], ignore_index=True)
-    times.to_json('times_per_emb.json')
     
 
 if __name__ == '__main__':
