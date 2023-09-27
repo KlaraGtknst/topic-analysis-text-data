@@ -113,7 +113,7 @@ def train_model(model_name, src_paths, client:Elasticsearch=None):
             inferSent_model = train_model('infersent_model', src_paths)
 
         infer_embeddings = inferSent_model.encode(docs, tokenize=True)
-        encoded_infersent_embedding, ae_infer_encoder = autoencoder_emb_model(input_shape=infer_embeddings.shape[1], latent_dim=2048, data=infer_embeddings)
+        encoded_infersent_embedding, ae_infer_encoder, ae_infer_decoder = autoencoder_emb_model(input_shape=infer_embeddings.shape[1], latent_dim=2048, data=infer_embeddings)
         return ae_infer_encoder
         
     elif 'tfidf' in model_name:
