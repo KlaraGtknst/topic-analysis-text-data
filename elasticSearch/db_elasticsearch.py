@@ -135,6 +135,8 @@ def insert_documents(src_paths: list, pca_df: pd.DataFrame, client: Elasticsearc
 
 def get_models(src_paths: list, model_names: list = MODEL_NAMES):
     models = {}
+    if 'infer' in model_names and (not 'ae' in model_names):    # needs AE for embedding
+        model_names = model_names + ['ae']
     for model_name in model_names:
         try: # model exists
             model = save_models.load_model(model_name)
@@ -224,7 +226,10 @@ def insert_document(src_path, pca_df, image_path, models, client_addr=CLIENT_ADD
                             "image": b64_image.decode('ASCII')#str(b64_image) # TODO: statt str... b64_image.decode('ASCII'),
                         })
                         for model_name in model_names:
-                            client.update(index='bahamas', id=id, refresh=True, body={"doc": name_to_field[model_name]})
+                            if model_name in name_to_field.keys():
+                                client.update(index='bahamas', id=id, refresh=True, body={"doc": name_to_field[model_name]})
+                            else:   # ae has no solo embedding
+                                continue
                 except ApiError as err:
                     print('err1')
                     return
