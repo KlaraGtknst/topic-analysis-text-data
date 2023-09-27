@@ -7,6 +7,7 @@ from elasticsearch import ApiError, ConflictError, Elasticsearch, NotFoundError
 import base64
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 from gensim.utils import simple_preprocess
+from timeit import default_timer as timer
 # own modules
 from text_embeddings.preprocessing.read_pdf import *
 from user_interface.cli import *
@@ -93,7 +94,7 @@ def init_db(client: Elasticsearch, num_dimensions: int, sim_docs_vocab_size: int
         },
     })
 
-def insert_documents(src_paths: list, pca_df: pd.DataFrame, client: Elasticsearch, image_path: str = None, n_pools: int = 1, client_addr: str = CLIENT_ADDR, model_names: list = ['doc2vec', 'universal', 'hugging', 'infer', 'ae', 'tfidf']):
+def insert_documents(src_paths: list, pca_df: pd.DataFrame, client: Elasticsearch, image_path: str = None, n_pools: int = 1, client_addr: str = CLIENT_ADDR, model_names: list = MODEL_NAMES):
     '''
     :param src_paths: path to the documents to be inserted into the database
     :param doc2vec_model: Doc2Vec model
@@ -129,10 +130,10 @@ def insert_documents(src_paths: list, pca_df: pd.DataFrame, client: Elasticsearc
         for src_path in src_paths:
             insert_document(src_path, pca_df, image_path, client_addr=client_addr, models=models, client=client, model_names=model_names)
     else: # multiprocessing, TODO: does not work yet, bc of models is not pickable
-        with Pool(n_pools) as p: 
+        with Pool(n_pools) as p: # number of cpus n_pools
             p.starmap(insert_document, list(map(lambda src_path:[src_path, pca_df, image_path, client_addr, models], src_paths)))
 
-def get_models(src_paths: list, model_names: list = ['doc2vec', 'universal', 'hugging', 'infer', 'ae', 'tfidf']):
+def get_models(src_paths: list, model_names: list = MODEL_NAMES):
     models = {}
     for model_name in model_names:
         try: # model exists
@@ -144,7 +145,7 @@ def get_models(src_paths: list, model_names: list = ['doc2vec', 'universal', 'hu
             save_models.save_model(model, model_name)
     return models
 
-def insert_document(src_path, pca_df, image_path, models, client_addr=CLIENT_ADDR, client: Elasticsearch=None, model_names: list = ['doc2vec', 'universal', 'hugging', 'infer', 'ae', 'tfidf']):
+def insert_document(src_path, pca_df, image_path, models, client_addr=CLIENT_ADDR, client: Elasticsearch=None, model_names: list = MODEL_NAMES):
         client = client if client else Elasticsearch(client_addr)
         path = src_path
         models = models if models else get_models(src_path, model_names if model_names else None)
@@ -170,6 +171,7 @@ def insert_document(src_path, pca_df, image_path, models, client_addr=CLIENT_ADD
                 get_doc_meta_data(client, doc_id=id)    # document already in database
                 return
             except NotFoundError:   # insert new document
+                # TODO: batch aus nicht inserted documents?
                 if 'tfidf' in model_names:
                     # TFIDF embedding
                     tfidf_emb = models['tfidf'].transform([text]).todense()
@@ -215,8 +217,8 @@ def insert_document(src_path, pca_df, image_path, models, client_addr=CLIENT_ADD
                                         'tfidf': {"sim_docs_tfidf": np.ravel(np.array(flag_matrix)) if 'tfidf' in model_names else None},
                                         }
                         client.create(index='bahamas', id=id, document={ 
-                            "pca_image": pca_df_row['pca_weights'].item() if pca_df_row is not None else None,
-                            "pca_kmeans_cluster": pca_df_row['cluster'] if pca_df_row is not None else None,
+                            "pca_image": pca_df_row['pca_weights'].item() if pca_df_row is not None else None,  # TODO: rausnehmen
+                            "pca_kmeans_cluster": pca_df_row['cluster'] if pca_df_row is not None else None,    # TODO: rausnehmen
                             "text": text,
                             "path": path,
                             "image": b64_image.decode('ASCII')#str(b64_image) # TODO: statt str... b64_image.decode('ASCII'),
@@ -319,7 +321,7 @@ def show_best_search_results(scores, src_paths, image_src_path=None):
     create_image_matrix(input_files=image_paths, dim=3, output_path=None)
 
 
-def init_db_aux(src_paths, image_src_path, client_addr=CLIENT_ADDR, n_pools=1, model_names: list = ['doc2vec', 'universal', 'hugging', 'infer', 'ae', 'tfidf']):
+def init_db_aux(src_paths, image_src_path, client_addr=CLIENT_ADDR, n_pools=1, model_names: list = MODEL_NAMES):
     '''
     everything that happens in the main function to fill the database.
     '''
@@ -360,8 +362,19 @@ def init_db_aux(src_paths, image_src_path, client_addr=CLIENT_ADDR, n_pools=1, m
     resp = client.count(index='bahamas')
     print('number of documents in database: ', resp['count'])
 
-def main(src_paths, image_src_path, client_addr=CLIENT_ADDR, n_pools=1, model_names: list = ['doc2vec', 'universal', 'hugging', 'infer', 'ae', 'tfidf']):
+def main(src_paths, image_src_path, client_addr=CLIENT_ADDR, n_pools=1, model_names: list = MODEL_NAMES):
+    times = pd.read_json('times_per_emb.json') if os.path.exists('times_per_emb.json') else pd.DataFrame(columns=['model', 'time'])
+    
+    start = timer()
+
     init_db_aux(src_paths, image_src_path, client_addr=client_addr, n_pools=n_pools, model_names=model_names)
+    
+    end = timer()
+    duration = end - start
+    print('time ellapsed: ', duration)
+
+    times = pd.concat([times, pd.DataFrame({'model': model_names, 'time': duration})], ignore_index=True)
+    times.to_json('times_per_emb.json')
     
 
 if __name__ == '__main__':
