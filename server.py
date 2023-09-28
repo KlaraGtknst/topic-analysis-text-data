@@ -15,7 +15,7 @@ cors = CORS(app)
 
 search_doc = {'count': {'description':'Number of documents per page', 'type':'int','default':10}, 
                  'knn_type': {'description':'Type of knn search', 
-                              'enum':[ "doc2vec","sim_docs_tfidf","google_univ_sent_encoding","huggingface_sent_transformer","inferSent_AE","pca_kmeans_cluster"]}}
+                              'enum':[ "doc2vec","sim_docs_tfidf","google_univ_sent_encoding","huggingface_sent_transformer","inferSent_AE","pca_optics_cluster"]}}
 knn_source = {'knn_source': 'Document to search for'}
 page_doc = {'page': {'description':'Page number', 'type':'int','default':0}}
 text_doc = {'text': {'description':'Text to search for', 'type':'string'}}

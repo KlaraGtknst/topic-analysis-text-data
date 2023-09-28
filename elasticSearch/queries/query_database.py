@@ -206,13 +206,13 @@ def get_docs_from_same_cluster(elastic_search_client: Elasticsearch, path_to_doc
     # get cluster
     doc_id = path_to_doc.split('/')[-1].split('.')[0]
     elastic_search_client.indices.refresh(index='bahamas')
-    resp = elastic_search_client.get(index='bahamas', id=doc_id,  source_includes=['pca_kmeans_cluster'])
-    cluster = resp['_source']['pca_kmeans_cluster'][0]
+    resp = elastic_search_client.get(index='bahamas', id=doc_id,  source_includes=['pca_optics_cluster'])
+    cluster = resp['_source']['pca_optics_cluster'][0]
 
     # query
     query = {   
         "query_string": {
-            "fields" : ["pca_kmeans_cluster"],
+            "fields" : ["pca_optics_cluster"],
             "query": str(cluster),
         }
     }
