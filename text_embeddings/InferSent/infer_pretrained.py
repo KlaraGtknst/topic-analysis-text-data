@@ -1,3 +1,4 @@
+import statistics
 from text_embeddings.preprocessing.read_pdf import *
 from user_interface.cli import *
 from elasticSearch.queries.query_documents_tfidf import get_docs_from_file_paths
@@ -58,14 +59,23 @@ def autoencoder_emb_model(input_shape : int, data : list, latent_dim : int = 204
     for more information see:
     https://blog.paperspace.com/autoencoder-image-compression-keras/
     '''
+    dim1 = 3500
+    dim2 = 3000
+    dim3 = 2500
     # Encoder
     x = tensorflow.keras.layers.Input(shape=(input_shape), name="encoder_input")
 
-    encoder_dense_layer1 = tensorflow.keras.layers.Dense(units=300, name="encoder_dense_1")(x)
+    encoder_dense_layer1 = tensorflow.keras.layers.Dense(units=dim1, name="encoder_dense_1")(x)
     encoder_activ_layer1 = tensorflow.keras.layers.LeakyReLU(name="encoder_leakyrelu_1")(encoder_dense_layer1)
 
-    encoder_dense_layer2 = tensorflow.keras.layers.Dense(units=latent_dim, name="encoder_dense_2")(encoder_activ_layer1)
-    encoder_output = tensorflow.keras.layers.LeakyReLU(name="encoder_output")(encoder_dense_layer2)
+    '''encoder_dense_layer2 = tensorflow.keras.layers.Dense(units=dim2, name="encoder_dense_2")(encoder_activ_layer1)
+    encoder_activ_layer2 = tensorflow.keras.layers.LeakyReLU(name="encoder_leakyrelu_2")(encoder_dense_layer2)
+
+    encoder_dense_layer3 = tensorflow.keras.layers.Dense(units=dim3, name="encoder_dense_3")(encoder_activ_layer2)
+    encoder_activ_layer3 = tensorflow.keras.layers.LeakyReLU(name="encoder_leakyrelu_3")(encoder_dense_layer3)'''
+
+    encoder_dense_layer4 = tensorflow.keras.layers.Dense(units=latent_dim, name="encoder_dense_4")(encoder_activ_layer1)#encoder_activ_layer3)#encoder_activ_layer2)
+    encoder_output = tensorflow.keras.layers.LeakyReLU(name="encoder_output")(encoder_dense_layer4)
 
     encoder = tensorflow.keras.models.Model(x, encoder_output, name="encoder_model")
     # encoder.summary()
@@ -73,11 +83,17 @@ def autoencoder_emb_model(input_shape : int, data : list, latent_dim : int = 204
     # Decoder
     decoder_input = tensorflow.keras.layers.Input(shape=(latent_dim), name="decoder_input")
 
-    decoder_dense_layer1 = tensorflow.keras.layers.Dense(units=300, name="decoder_dense_1")(decoder_input)
+    '''decoder_dense_layer1 = tensorflow.keras.layers.Dense(units=dim3, name="decoder_dense_1")(decoder_input)
     decoder_activ_layer1 = tensorflow.keras.layers.LeakyReLU(name="decoder_leakyrelu_1")(decoder_dense_layer1)
 
-    decoder_dense_layer2 = tensorflow.keras.layers.Dense(units=input_shape, name="decoder_dense_2")(decoder_activ_layer1)
-    decoder_output = tensorflow.keras.layers.LeakyReLU(name="decoder_output")(decoder_dense_layer2)
+    decoder_dense_layer2 = tensorflow.keras.layers.Dense(units=dim2, name="decoder_dense_2")(decoder_activ_layer1)#decoder_input)
+    decoder_activ_layer2 = tensorflow.keras.layers.LeakyReLU(name="decoder_leakyrelu_2")(decoder_dense_layer2)'''
+
+    decoder_dense_layer3 = tensorflow.keras.layers.Dense(units=dim1, name="decoder_dense_3")(decoder_input)#decoder_activ_layer2)
+    decoder_activ_layer3 = tensorflow.keras.layers.LeakyReLU(name="decoder_leakyrelu_3")(decoder_dense_layer3)
+
+    decoder_dense_layer4 = tensorflow.keras.layers.Dense(units=input_shape, name="decoder_dense_4")(decoder_activ_layer3)
+    decoder_output = tensorflow.keras.layers.LeakyReLU(name="decoder_output")(decoder_dense_layer4)
 
     decoder = tensorflow.keras.models.Model(decoder_input, decoder_output, name="decoder_model")
     # decoder.summary()
@@ -102,7 +118,7 @@ def autoencoder_emb_model(input_shape : int, data : list, latent_dim : int = 204
 
     encoded_images = encoder.predict(x_train)
     
-    return encoded_images, encoder
+    return encoded_images, encoder, decoder
 
 
 def main(file_paths, outpath):
@@ -112,22 +128,44 @@ def main(file_paths, outpath):
     MODEL_PATH = '/Users/klara/Developer/Uni/encoder/infersent%s.pkl' % V
     W2V_PATH = '/Users/klara/Developer/Uni/GloVe/glove.840B.300d.txt'
 
+    # infersent
     infersent, docs = init_infer(model_path=MODEL_PATH, w2v_path=W2V_PATH, file_paths=file_paths, version=V)
     
     embeddings = infersent.encode(docs, tokenize=True)
-    doc = docs[0]
+    #doc = docs[0]
     # embdding does not work on singular input
-    embedding = infersent.encode([doc, doc], tokenize=True)
+    #embedding = infersent.encode([doc, doc], tokenize=True)
     # the difference is non zero!
-    print('difference of embeddings: ', sum((embedding[0] - embeddings[0])**2))
+    #print('difference of embeddings: ', sum((embedding[0] - embeddings[0])**2))
     
     # infersent.visualize('A man plays an instrument.', tokenize=True)
 
-    # use AE to reduce dimensionality
-    # TODO: split into train and test
-    # TODO: normalize data?
-    encoded_embedding, ae_encoder = autoencoder_emb_model(input_shape=embeddings.shape[1], latent_dim=2048, data=embeddings)
+    # AE
+    encoded_embedding, ae_encoder, ae_decoder = autoencoder_emb_model(input_shape=embeddings.shape[1], latent_dim=2048, data=embeddings)
     # Encoder does not work on singular input
-    test = np.array([embeddings[0], embeddings[0]])
-    embedding = ae_encoder.predict(x= test)[0]
-    print('difference of embeddings: ', sum((embedding - encoded_embedding[0])**2))
+    #test = np.array([embeddings[0], embeddings[0]])
+    #embedding = ae_encoder.predict(x= test)[0]
+    #print('difference of embeddings: ', sum((embedding - encoded_embedding[0])**2))
+
+    # reconstruction error
+    inverse_embedding = ae_decoder.predict(x= encoded_embedding)
+
+    # RMSE
+    print('RMSE: ', np.linalg.norm(inverse_embedding - embeddings) / np.sqrt(embeddings.shape[0]))
+    print('cosine similarity: ', statistics.mean([np.dot(inverse_emb,embedding)/(np.linalg.norm(inverse_emb)*np.linalg.norm(embedding)) for inverse_emb, embedding in zip(inverse_embedding, embeddings)]))
+
+    # 3 layer AE encoder:
+    ## RMSE:  2.868975917366111
+    ## cosine similarity:  0.933545
+
+    # 4 layer AE encoder:
+    ## RMSE:  2.9680918717720783
+    ## cosine similarity:  0.93694484
+
+    # 2 layer AE encoder:
+    ## RMSE:  2.2143263589341524
+    ## cosine similarity:  0.9518003
+
+    # 1 layer AE encoder:
+    # RMSE:  2.2585467474363243
+    # cosine similarity:  0.94621396
