@@ -12,4 +12,5 @@
 date;hostname;pwd    # Ausgabe des Datums, des Hostnamens und des Arbeitsverzeichnisses
 source /mnt/stud/work/kgutekunst/bsc-py/bin/activate    # virtuelle Umgebung aktivieren
 cd /mnt/stud/work/kgutekunst/topic-analysis-text-data/ies-server
+srun podman-compose down
 srun podman-compose up

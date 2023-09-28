@@ -10,6 +10,12 @@
 #SBATCH --error=/mnt/stud/home/kgutekunst/error_logs/%j.err     # Datei für stderr
 # (%N: Nodename, %j: Job-Nr.)
 
+
+# gibt FEHLER: srun: error: ioctl(TIOCGWINSZ): Inappropriate ioctl for device
+# srun: error: Not using a pseudo-terminal, disregarding --pty option
+# WARNING: 'UsePAM no' is not supported in RHEL and may cause several problems.
+# main: sshd: ssh-rsa algorithm is disabled
+
 date;hostname;pwd    # Ausgabe des Datums, des Hostnamens und des Arbeitsverzeichnisses
 source /mnt/stud/work/kgutekunst/bsc-py/bin/activate    # virtuelle Umgebung aktivieren
 srun --pty /usr/sbin/sshd -D -f ~/sshd/sshd_config
