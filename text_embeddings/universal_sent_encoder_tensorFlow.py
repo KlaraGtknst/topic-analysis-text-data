@@ -20,11 +20,11 @@ run this code by typing and altering the path:
 '''
 
 
-def embed(input: list, model) -> np.ndarray:
+def embed(input: list, model):
     '''
     :param input: list of strings to be embedded
     :param model: trained model
-    :return: numpy array of embeddings
+    :return: EagerTensor of embeddings
     '''
     return model(input)
 

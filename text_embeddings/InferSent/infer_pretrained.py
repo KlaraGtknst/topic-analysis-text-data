@@ -33,7 +33,7 @@ def init_infer(model_path: str, w2v_path: str, file_paths: list, version: int = 
     infersent.load_state_dict(torch.load(model_path))
     infersent.set_w2v_path(w2v_path)
     docs = get_docs_from_file_paths(file_paths)
-    infersent.build_vocab(docs, tokenize=True)
+    infersent.build_vocab(docs, tokenize=True)  # TODO: doppelt?
 
     return infersent, docs
 
@@ -132,9 +132,10 @@ def main(file_paths, outpath):
     infersent, docs = init_infer(model_path=MODEL_PATH, w2v_path=W2V_PATH, file_paths=file_paths, version=V)
     
     embeddings = infersent.encode(docs, tokenize=True)
-    #doc = docs[0]
+    doc = docs[0]
     # embdding does not work on singular input
-    #embedding = infersent.encode([doc, doc], tokenize=True)
+    embedding = infersent.encode([doc], tokenize=True)
+    print(embedding)
     # the difference is non zero!
     #print('difference of embeddings: ', sum((embedding[0] - embeddings[0])**2))
     

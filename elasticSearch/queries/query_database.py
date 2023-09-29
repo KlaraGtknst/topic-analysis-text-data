@@ -1,4 +1,4 @@
-from elasticsearch import ConflictError, Elasticsearch
+from elasticsearch import ConflictError, Elasticsearch, NotFoundError
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 from gensim.utils import simple_preprocess
 from pyspark.mllib.linalg import Vectors
@@ -175,9 +175,12 @@ def get_doc_meta_data(elastic_search_client: Elasticsearch, doc_id: str):
     :param doc_id: document id to be searched for; acts as the index in the database
     :return: path and text of the document
     '''
-    elastic_search_client.indices.refresh(index='bahamas')
-    resp = elastic_search_client.get(index='bahamas', id=doc_id,  source_includes=SRC_INCLUDES).body
-    return {'_id': resp['_id'], **resp['_source']}
+    try:
+        elastic_search_client.indices.refresh(index='bahamas')
+        resp = elastic_search_client.get(index='bahamas', id=doc_id,  source_includes=SRC_INCLUDES).body
+        return {'_id': resp['_id'], **resp['_source']}
+    except NotFoundError:
+        return None
 
 def get_docs_in_db(elastic_search_client: Elasticsearch, start:int=0, n_docs:int=10) -> dict:
     '''
