@@ -60,7 +60,7 @@ def word_cloud(tokens: list, file_name: str, outpath: str = None, return_img:boo
         title = 'Word cloud in ' + file_name
         plt.title(title)
         if outpath:
-            plt.savefig(outpath + '/' + title, format="pdf", bbox_inches="tight")
+            plt.savefig((outpath + '/' + title.replace(' ', '_') + '.pdf'), format="pdf")
         plt.show()
     except ValueError:
         print('Error: No words to plot.')
