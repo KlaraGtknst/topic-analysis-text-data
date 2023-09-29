@@ -14,7 +14,6 @@ def download_if_non_existent(res_path, res_name):
         try:
             nltk.data.find(res_path)
         except LookupError:
-            # print(f'resource {res_path} not found. Downloading now...')
             nltk.download(res_name)
 
 class TfidfPreprocessingSteps():
@@ -50,7 +49,7 @@ class TfidfPreprocessingSteps():
         return self
 
     def change_number_encoding(self):
-        self.X = [re.sub('FLOAT', '/', re.sub('SMALLNUMBER', '-', (re.sub('BIGNUMBER', '+', text)))) for text in self.X]
+        self.X = [re.sub('FLOAT', '<FLOAT>', re.sub('SMALLNUMBER', '<SMALLNUMBER>', (re.sub('BIGNUMBER', '<BIGNUMBER>', text)))) for text in self.X]
         return self
     
     def remove_stopwords(self):  
