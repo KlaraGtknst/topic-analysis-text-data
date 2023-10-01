@@ -128,6 +128,7 @@ def insert_documents(src_paths: list, pca_dict: dict, client: Elasticsearch, ima
         with Pool(n_pools) as p: # number of cpus n_pools
             p.starmap(insert_document, list(map(lambda src_path:[src_path, pca_dict, image_path, client_addr, models], src_paths)))
 
+
 def get_models(src_paths: list, model_names: list = MODEL_NAMES):
     '''
     src_paths: paths to the documents to be inserted into the database
