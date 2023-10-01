@@ -19,8 +19,8 @@ search_doc = {'count': {'description':'Number of documents per page', 'type':'in
 knn_source = {'knn_source': 'Document to search for'}
 page_doc = {'page': {'description':'Page number', 'type':'int','default':0}}
 text_doc = {'text': {'description':'Text to search for', 'type':'string'}}
-@api.doc(params=page_doc | text_doc | knn_source | search_doc)
-                 
+
+@api.doc(params=page_doc | text_doc | knn_source | search_doc)                 
 @api.route('/documents', endpoint='documents')
 class Documents(Resource):
     # return all documents
