@@ -14,7 +14,8 @@ def get_times(src_paths, image_src_path, client_addr=CLIENT_ADDR, n_pools=1, mod
         end = timer()
         duration = end - start
         print('time ellapsed: ', duration)
-        times = pd.concat([times, pd.DataFrame({'model': model_names, 'time': duration})], ignore_index=True)
+        times = pd.concat([times, pd.DataFrame({'model': model_name, 'time': [duration]})])
+    times.reset_index(inplace=True)
     times.to_json('times_per_emb.json')
 
 def display_times():
@@ -25,8 +26,9 @@ def display_times():
     for bars in ax.containers:
         ax.bar_label(bars)
     plt.title('Time per embedding')
+    plt.savefig('results/time_per_emb.pdf', format="pdf")
     plt.show()
 
 def main(src_paths, image_src_path, client_addr=CLIENT_ADDR, n_pools=1, model_names: list = MODEL_NAMES):
-    #get_times(src_paths, image_src_path, client_addr, n_pools, model_names)
+    get_times(src_paths, image_src_path, client_addr, n_pools, model_names)
     display_times()
