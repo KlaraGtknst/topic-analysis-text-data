@@ -9,7 +9,7 @@ from text_embeddings.InferSent.infer_pretrained import autoencoder_emb_model, in
 from text_embeddings.universal_sent_encoder_tensorFlow import *
 from text_embeddings.hugging_face_sentence_transformer import *
 from elasticSearch.queries.query_documents_tfidf import *
-from gensim.models.doc2vec import Doc2Vec
+from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 from PIL import Image
 from tensorflow.python.keras.models import model_from_json
 from gensim.test.utils import get_tmpfile
@@ -17,7 +17,6 @@ from constants import CLIENT_ADDR
 
 SRC_PATH = '/Users/klara/Documents/uni/bachelorarbeit/data/0/*.pdf'
 DOC_PATH = '/Users/klara/Downloads/*.pdf'
-NUM_DIMENSIONS = 55
 NUM_COMPONENTS = 2
 NUM_RESULTS = 4
 
@@ -108,7 +107,7 @@ def train_model(model_name, src_paths, client:Elasticsearch=None):
     '''
     if 'doc2vec' in model_name:
         train_corpus = list(get_tagged_input_documents(src_paths=glob.glob(src_paths)))
-        d2v_model = Doc2Vec(train_corpus, vector_size=NUM_DIMENSIONS, window=2, min_count=2, workers=4, epochs=40)
+        d2v_model = Doc2Vec(train_corpus)
         return d2v_model
     
     elif 'universal' in model_name:
@@ -161,27 +160,27 @@ def get_model(model_name, src_paths):
     return model
 
 def main(path=None):
-    path = glob.glob('/Users/klara/Downloads/*.pdf')[0]
-    src_path='/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf'
-    src_paths = glob.glob(src_path)
-    text = pdf_to_str(path)
+    # path = glob.glob('/Users/klara/Downloads/*.pdf')[0]
+    # src_path='/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf'
+    # src_paths = glob.glob(src_path)
+    # text = pdf_to_str(path)
 
     # Universal 
-    model = google_univ_sent_encoding_aux()
-    print(model)
-    embedding = embed([text], model)[0].numpy()
-    print(embedding)
+    # model = google_univ_sent_encoding_aux()
+    # print(model)
+    # embedding = embed([text], model)[0].numpy()
+    # print(embedding)
 
     # Doc2Vec
-    '''# save and load
-    train_corpus = list(db_elasticsearch.get_tagged_input_documents(src_paths=glob.glob(SRC_PATH)))
-    d2v_model = Doc2Vec(train_corpus, vector_size=NUM_DIMENSIONS, window=2, min_count=2, workers=4, epochs=40)
+    # save and load
+    train_corpus = list(get_tagged_input_documents(src_paths=glob.glob(SRC_PATH)))
+    d2v_model = Doc2Vec(train_corpus)
     model_name = 'doc2vec_model'
     
     save_model(d2v_model, model_name)
 
-    d2v_model = Doc2Vec.load(f'models/{model_name}.pkl')
-    print(d2v_model.infer_vector(simple_preprocess(pdf_to_str(path))))'''
+    # d2v_model = Doc2Vec.load(f'models/{model_name}.pkl')
+    # print(d2v_model.infer_vector(simple_preprocess(pdf_to_str(path))))
     '''# train
     d2v_model = train_model('doc2vec_model', src_paths)
     print('Doc2Vec: ',d2v_model.infer_vector(simple_preprocess(pdf_to_str(path))))'''

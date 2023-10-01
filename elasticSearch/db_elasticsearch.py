@@ -22,15 +22,14 @@ run this code by typing and altering the path:
     python3 db_elasticsearch.py -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/images/'
 '''
 
-def init_db(client: Elasticsearch, num_dimensions: int, sim_docs_vocab_size: int, n_components: int):
+def init_db(client: Elasticsearch, sim_docs_vocab_size: int, n_components: int):
     '''
     :param client: Elasticsearch client
-    :param num_dimensions: number of dimensions of the embedding
     :return: None
 
     This function initializes the database by creating an index (i.e. the structure for an entry of type 'bahamas' database).
     The index contains the following fields:
-    - doc2vec: a dense vector of num_dimensions dimensions. This is the vector numerical representation of the document. Its similarity is measured by cosine similarity.
+    - doc2vec: a dense vector of 100 (default) dimensions. This is the vector numerical representation of the document. Its similarity is measured by cosine similarity.
     - text: the text of the document. The text is not tokenized, stemmed etc.
     - path: the path to the document on the local maschine.
     - image: the image of the document (i.e. information about the document layout). The image is encoded in base64 and has 500 dpi.
@@ -42,7 +41,7 @@ def init_db(client: Elasticsearch, num_dimensions: int, sim_docs_vocab_size: int
         "properties": {
             "doc2vec": {
                 "type": "dense_vector",
-                "dims": num_dimensions,
+                "dims": 100,
                 "index": True,
                 "similarity": "cosine",
             },
@@ -255,7 +254,7 @@ def init_db_aux(src_paths, image_src_path, client_addr=CLIENT_ADDR, n_pools=1, m
     '''
     everything that happens in the main function to fill the database.
     '''
-    NUM_DIMENSIONS = 55
+
     NUM_COMPONENTS = 13
 
     print('-' * 80)
@@ -268,7 +267,7 @@ def init_db_aux(src_paths, image_src_path, client_addr=CLIENT_ADDR, n_pools=1, m
 
     # delete old index and create new one
     client.options(ignore_status=[400,404]).indices.delete(index='bahamas')
-    init_db(client, num_dimensions=NUM_DIMENSIONS, sim_docs_vocab_size=sim_docs_vocab_size, n_components=NUM_COMPONENTS)
+    init_db(client, sim_docs_vocab_size=sim_docs_vocab_size, n_components=NUM_COMPONENTS)
     print('finished deleting old and creating new index')
 
     # Eigendocs (PCA) + OPTICS clustering
