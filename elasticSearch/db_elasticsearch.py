@@ -123,7 +123,7 @@ def insert_documents(src_paths: list, pca_dict: dict, client: Elasticsearch, ima
     if n_pools == 1:    # single processing
         for src_path in src_paths:
             insert_document(src_path, pca_dict, image_path, client_addr=client_addr, models=models, client=client, model_names=model_names)
-    else: # multiprocessing, TODO: does not work yet, bc of models is not pickable
+    else: # multiprocessing, TODO: models are not pickable -> too much memory spent reloading
         with Pool(n_pools) as p: # number of cpus n_pools
             p.starmap(insert_document, list(map(lambda src_path:[src_path, pca_dict, image_path, client_addr, models], src_paths)))
 
