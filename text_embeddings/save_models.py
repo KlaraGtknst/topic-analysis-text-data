@@ -117,9 +117,10 @@ def train_model(model_name, src_paths, client:Elasticsearch=None):
         return init_hf_sentTrans_model()
     
     elif 'infer' in model_name:
-        MODEL_PATH = '/Users/klara/Developer/Uni/encoder/infersent1.pkl'
+        #MODEL_PATH = '/Users/klara/Developer/Uni/encoder/infersent1.pkl'
         W2V_PATH = '/Users/klara/Developer/Uni/GloVe/glove.840B.300d.txt'
-        inferSent_model, docs = init_infer(model_path=MODEL_PATH, w2v_path=W2V_PATH, file_paths=src_paths, version=1)
+        CUSTOM_W2V_PATH = '/Users/klara/Developer/Uni/bahamas_word2vec/bahamas_w2v.txt'
+        inferSent_model, docs = init_infer(model_path=CUSTOM_W2V_PATH, w2v_path=W2V_PATH, file_paths=src_paths, version=1)
         return inferSent_model
         
     elif 'ae' in model_name:
@@ -161,8 +162,8 @@ def get_model(model_name, src_paths):
 
 def main(path=None):
     # path = glob.glob('/Users/klara/Downloads/*.pdf')[0]
-    # src_path='/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf'
-    # src_paths = glob.glob(src_path)
+    src_path='/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf'
+    src_paths = glob.glob(src_path)
     # text = pdf_to_str(path)
 
     # Universal 
@@ -173,11 +174,11 @@ def main(path=None):
 
     # Doc2Vec
     # save and load
-    train_corpus = list(get_tagged_input_documents(src_paths=glob.glob(SRC_PATH)))
-    d2v_model = Doc2Vec(train_corpus)
-    model_name = 'doc2vec_model'
+    # train_corpus = list(get_tagged_input_documents(src_paths=glob.glob(SRC_PATH)))
+    # d2v_model = Doc2Vec(train_corpus)
+    # model_name = 'doc2vec_model'
     
-    save_model(d2v_model, model_name)
+    # save_model(d2v_model, model_name)
 
     # d2v_model = Doc2Vec.load(f'models/{model_name}.pkl')
     # print(d2v_model.infer_vector(simple_preprocess(pdf_to_str(path))))
@@ -211,17 +212,18 @@ def main(path=None):
     
     # # InferSent + AE
     # # save and load
-    # infer_model_name = 'infersent_model'
-    # ae_model_name = 'ae'
-    # # InferSent
-    # if (not os.path.exists(f"models/{infer_model_name}.pkl")):
-    #     MODEL_PATH = '/Users/klara/Developer/Uni/encoder/infersent1.pkl'
-    #     W2V_PATH = '/Users/klara/Developer/Uni/GloVe/glove.840B.300d.txt'
-    #     inferSent_model, docs = init_infer(model_path=MODEL_PATH, w2v_path=W2V_PATH, file_paths=src_paths, version=1)
-    #     save_model(inferSent_model, infer_model_name)
-    # else:
-    #     inferSent_model = load_model(infer_model_name)
-    #     #docs = get_docs_from_file_paths(src_paths)
+    infer_model_name = 'infersent_model'
+    ae_model_name = 'ae'
+    # InferSent
+    if (not os.path.exists(f"models/{infer_model_name}.pkl")):
+        MODEL_PATH = '/Users/klara/Developer/Uni/encoder/infersent1.pkl'
+        #W2V_PATH = '/Users/klara/Developer/Uni/GloVe/glove.840B.300d.txt'
+        CUSTOM_W2V_PATH = '/Users/klara/Developer/Uni/bahamas_word2vec/bahamas_w2v.txt'
+        inferSent_model, docs = init_infer(model_path=MODEL_PATH, w2v_path=CUSTOM_W2V_PATH, file_paths=src_paths, version=1)
+        save_model(inferSent_model, infer_model_name)
+    else:
+        inferSent_model = load_model(infer_model_name)
+        #docs = get_docs_from_file_paths(src_paths)
 
     # # AE
     # if (not os.path.exists(f"models/{ae_model_name}.pkl")):

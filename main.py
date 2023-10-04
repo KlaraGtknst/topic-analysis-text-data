@@ -1,7 +1,7 @@
 from user_interface.cli import *
 from text_visualizations import visualize_texts
 from text_embeddings.preprocessing import read_pdf
-from text_embeddings.InferSent import infer_pretrained
+from text_embeddings.InferSent import infer_pretrained, own_word2vec
 from text_embeddings import universal_sent_encoder_tensorFlow, save_models, hugging_face_sentence_transformer, doc2vec_tests
 from elasticSearch import db_elasticsearch
 from elasticSearch.queries import query_documents_tfidf, query_database
@@ -99,6 +99,10 @@ if __name__ == '__main__':
     elif file_to_run[0] == 'doc2vec_tests.py':
         # python3 main.py 'doc2vec_tests.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf'
         doc2vec_tests.main(file_paths)
+
+    elif file_to_run[0] == 'own_word2vec.py':
+        # python3 main.py 'own_word2vec.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf'
+        own_word2vec.main(file_paths)
 
     else:
         print('Error: No file to run.')

@@ -30,10 +30,10 @@ def init_infer(model_path: str, w2v_path: str, file_paths: list, version: int = 
     params_model = {'bsize': 64, 'word_emb_dim': 300, 'enc_lstm_dim': 2048, # value bigger than maximum database vector size, change non-trivial since pre-trained model  has to be trained again
                     'pool_type': 'max', 'dpout_model': 0.0, 'version': version}
     infersent = InferSent(params_model)
-    infersent.load_state_dict(torch.load(model_path))
+    infersent.load_state_dict(torch.load(model_path))   # params of model in state dict
     infersent.set_w2v_path(w2v_path)
     docs = get_docs_from_file_paths(file_paths)
-    infersent.build_vocab(docs, tokenize=True)  # TODO: doppelt?
+    infersent.build_vocab(docs, tokenize=True)  # keep only those word vectors in vocab needed
 
     return infersent, docs
 
@@ -126,7 +126,8 @@ def main(file_paths, outpath):
     nltk.download('punkt')
     V = 1   # trained with GloVe
     MODEL_PATH = '/Users/klara/Developer/Uni/encoder/infersent%s.pkl' % V
-    W2V_PATH = '/Users/klara/Developer/Uni/GloVe/glove.840B.300d.txt'
+    W2V_PATH = '/Users/klara/Developer/Uni/bahamas_word2vec/bahamas_w2v.txt'
+    #'/Users/klara/Developer/Uni/GloVe/glove.840B.300d.txt'
 
     # infersent
     infersent, docs = init_infer(model_path=MODEL_PATH, w2v_path=W2V_PATH, file_paths=file_paths, version=V)
