@@ -1,4 +1,6 @@
 import statistics
+
+import pandas as pd
 from text_embeddings.preprocessing.read_pdf import *
 from user_interface.cli import *
 from elasticSearch.queries.query_documents_tfidf import get_docs_from_file_paths
@@ -65,16 +67,16 @@ def autoencoder_emb_model(input_shape : int, data : list, latent_dim : int = 204
     # Encoder
     x = tensorflow.keras.layers.Input(shape=(input_shape), name="encoder_input")
 
-    encoder_dense_layer1 = tensorflow.keras.layers.Dense(units=dim1, name="encoder_dense_1")(x)
-    encoder_activ_layer1 = tensorflow.keras.layers.LeakyReLU(name="encoder_leakyrelu_1")(encoder_dense_layer1)
+    # encoder_dense_layer1 = tensorflow.keras.layers.Dense(units=dim1, name="encoder_dense_1")(x)
+    # encoder_activ_layer1 = tensorflow.keras.layers.LeakyReLU(name="encoder_leakyrelu_1")(encoder_dense_layer1)
 
-    '''encoder_dense_layer2 = tensorflow.keras.layers.Dense(units=dim2, name="encoder_dense_2")(encoder_activ_layer1)
+    encoder_dense_layer2 = tensorflow.keras.layers.Dense(units=dim2, name="encoder_dense_2")(x)
     encoder_activ_layer2 = tensorflow.keras.layers.LeakyReLU(name="encoder_leakyrelu_2")(encoder_dense_layer2)
 
     encoder_dense_layer3 = tensorflow.keras.layers.Dense(units=dim3, name="encoder_dense_3")(encoder_activ_layer2)
-    encoder_activ_layer3 = tensorflow.keras.layers.LeakyReLU(name="encoder_leakyrelu_3")(encoder_dense_layer3)'''
+    encoder_activ_layer3 = tensorflow.keras.layers.LeakyReLU(name="encoder_leakyrelu_3")(encoder_dense_layer3)
 
-    encoder_dense_layer4 = tensorflow.keras.layers.Dense(units=latent_dim, name="encoder_dense_4")(encoder_activ_layer1)#encoder_activ_layer3)#encoder_activ_layer2)
+    encoder_dense_layer4 = tensorflow.keras.layers.Dense(units=latent_dim, name="encoder_dense_4")(encoder_activ_layer3)
     encoder_output = tensorflow.keras.layers.LeakyReLU(name="encoder_output")(encoder_dense_layer4)
 
     encoder = tensorflow.keras.models.Model(x, encoder_output, name="encoder_model")
@@ -83,13 +85,13 @@ def autoencoder_emb_model(input_shape : int, data : list, latent_dim : int = 204
     # Decoder
     decoder_input = tensorflow.keras.layers.Input(shape=(latent_dim), name="decoder_input")
 
-    '''decoder_dense_layer1 = tensorflow.keras.layers.Dense(units=dim3, name="decoder_dense_1")(decoder_input)
-    decoder_activ_layer1 = tensorflow.keras.layers.LeakyReLU(name="decoder_leakyrelu_1")(decoder_dense_layer1)
+    # decoder_dense_layer1 = tensorflow.keras.layers.Dense(units=dim3, name="decoder_dense_1")(decoder_input)
+    # decoder_activ_layer1 = tensorflow.keras.layers.LeakyReLU(name="decoder_leakyrelu_1")(decoder_dense_layer1)
 
-    decoder_dense_layer2 = tensorflow.keras.layers.Dense(units=dim2, name="decoder_dense_2")(decoder_activ_layer1)#decoder_input)
-    decoder_activ_layer2 = tensorflow.keras.layers.LeakyReLU(name="decoder_leakyrelu_2")(decoder_dense_layer2)'''
+    decoder_dense_layer2 = tensorflow.keras.layers.Dense(units=dim2, name="decoder_dense_2")(decoder_input)
+    decoder_activ_layer2 = tensorflow.keras.layers.LeakyReLU(name="decoder_leakyrelu_2")(decoder_dense_layer2)
 
-    decoder_dense_layer3 = tensorflow.keras.layers.Dense(units=dim1, name="decoder_dense_3")(decoder_input)#decoder_activ_layer2)
+    decoder_dense_layer3 = tensorflow.keras.layers.Dense(units=dim1, name="decoder_dense_3")(decoder_activ_layer2)
     decoder_activ_layer3 = tensorflow.keras.layers.LeakyReLU(name="decoder_leakyrelu_3")(decoder_dense_layer3)
 
     decoder_dense_layer4 = tensorflow.keras.layers.Dense(units=input_shape, name="decoder_dense_4")(decoder_activ_layer3)
@@ -119,6 +121,32 @@ def autoencoder_emb_model(input_shape : int, data : list, latent_dim : int = 204
     encoded_images = encoder.predict(x_train)
     
     return encoded_images, encoder, decoder
+
+def create_ae_score_plot():
+    scores = pd.read_json('results/score_per_ae_config.json')
+    scores = pd.DataFrame(scores)
+    
+    x = np.arange(len(scores.index))  # the label locations
+    width = 0.25  # the width of the bars
+    multiplier = 0
+
+    fig, ax = plt.subplots(layout='constrained')
+
+    for cat in ['rsme', 'cosine_similarity']:
+        offset = width * multiplier
+        rects = ax.bar(x + offset, scores[cat], width, label=cat)
+        ax.bar_label(rects, padding=3)
+        multiplier += 1
+
+    # Add some text for labels, title and custom x-axis tick labels, etc.
+    labels = [str(sorted(score)) for score in scores['layers']]
+    ax.set_ylabel('Similarity')
+    ax.set_title('Network architecture (dimensions)')
+    ax.set_xticks(x + width, labels)
+    ax.legend(loc='upper left', ncols=3)
+    ax.set_ylim(0, 2.5)
+    plt.savefig('results/ae_score_plot.pdf', format='pdf')
+    plt.show()
 
 
 def main(file_paths, outpath):
@@ -153,21 +181,44 @@ def main(file_paths, outpath):
     inverse_embedding = ae_decoder.predict(x= encoded_embedding)
 
     # RMSE
-    print('RMSE: ', np.linalg.norm(inverse_embedding - embeddings) / np.sqrt(embeddings.shape[0]))
-    print('cosine similarity: ', statistics.mean([np.dot(inverse_emb,embedding)/(np.linalg.norm(inverse_emb)*np.linalg.norm(embedding)) for inverse_emb, embedding in zip(inverse_embedding, embeddings)]))
+    rsme = np.linalg.norm(inverse_embedding - embeddings) / np.sqrt(embeddings.shape[0])
+    print('RMSE: ', rsme)
+    # cosine similarity
+    cos_sim = statistics.mean([np.dot(inverse_emb,embedding)/(np.linalg.norm(inverse_emb)*np.linalg.norm(embedding)) for inverse_emb, embedding in zip(inverse_embedding, embeddings)])
+    print('cosine similarity: ', cos_sim)
 
-    # 3 layer AE encoder:
-    ## RMSE:  2.868975917366111
-    ## cosine similarity:  0.933545
+    # save results
+    dim1 = 3500
+    dim2 = 3000
+    dim3 = 2500
+    dims_used = [embeddings.shape[1], dim2, dim3, 2048]
+    scores = pd.read_json('results/score_per_ae_config.json') if os.path.exists('results/score_per_ae_config.json') else pd.DataFrame(columns=['layers', 'rsme', 'cosine_similarity'])
+    scores = pd.concat([scores, pd.DataFrame({'layers': [dims_used], 'rsme': [rsme], 'cosine_similarity': [cos_sim]})])
+    scores.reset_index(inplace=True)
+    scores.to_json('results/score_per_ae_config.json')
 
-    # 4 layer AE encoder:
-    ## RMSE:  2.9680918717720783
-    ## cosine similarity:  0.93694484
+    # create_ae_score_plot()
 
-    # 2 layer AE encoder:
-    ## RMSE:  2.2143263589341524
-    ## cosine similarity:  0.9518003
+    # layer 1/dim1, 2/dim2, 3/dim3 & 4/latent dim AE encoder:
+    ## RMSE:  2.4383033437850337
+    ## cosine similarity:  0.9231057
 
-    # 1 layer AE encoder:
-    # RMSE:  2.2585467474363243
-    # cosine similarity:  0.94621396
+    # layer 1/dim1, 2/dim2 & 4/latent dim AE encoder:
+    ## RMSE:  1.9848899488217058
+    ## cosine similarity:  0.93076587
+
+    # layer 1/dim1 & 4/latent dim AE encoder:   * best cosine similarity *
+    # RMSE:  1.9654447244549933
+    # cosine similarity:  0.9327269
+
+    # layer 2/dim2 & 4/latent dim AE encoder: 
+    # RMSE:  1.8729751456614294                 * best RMSE *
+    # cosine similarity: 0.9323499
+
+    # layer 3/dim3 & 4/latent dim AE encoder:   
+    # RMSE:  1.9394561118826126
+    # cosine similarity: 0.9317809
+
+    # 4/latent dim AE encoder:                  
+    ## RMSE:  1.9499668372448338
+    ## cosine similarity:  0.9272389
