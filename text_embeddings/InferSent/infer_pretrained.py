@@ -67,10 +67,10 @@ def autoencoder_emb_model(input_shape : int, data : list, latent_dim : int = 204
     # Encoder
     x = tensorflow.keras.layers.Input(shape=(input_shape), name="encoder_input")
 
-    # encoder_dense_layer1 = tensorflow.keras.layers.Dense(units=dim1, name="encoder_dense_1")(x)
-    # encoder_activ_layer1 = tensorflow.keras.layers.LeakyReLU(name="encoder_leakyrelu_1")(encoder_dense_layer1)
+    encoder_dense_layer1 = tensorflow.keras.layers.Dense(units=dim1, name="encoder_dense_1")(x)
+    encoder_activ_layer1 = tensorflow.keras.layers.LeakyReLU(name="encoder_leakyrelu_1")(encoder_dense_layer1)
 
-    encoder_dense_layer2 = tensorflow.keras.layers.Dense(units=dim2, name="encoder_dense_2")(x)
+    encoder_dense_layer2 = tensorflow.keras.layers.Dense(units=dim2, name="encoder_dense_2")(encoder_activ_layer1)
     encoder_activ_layer2 = tensorflow.keras.layers.LeakyReLU(name="encoder_leakyrelu_2")(encoder_dense_layer2)
 
     encoder_dense_layer3 = tensorflow.keras.layers.Dense(units=dim3, name="encoder_dense_3")(encoder_activ_layer2)
@@ -85,10 +85,10 @@ def autoencoder_emb_model(input_shape : int, data : list, latent_dim : int = 204
     # Decoder
     decoder_input = tensorflow.keras.layers.Input(shape=(latent_dim), name="decoder_input")
 
-    # decoder_dense_layer1 = tensorflow.keras.layers.Dense(units=dim3, name="decoder_dense_1")(decoder_input)
-    # decoder_activ_layer1 = tensorflow.keras.layers.LeakyReLU(name="decoder_leakyrelu_1")(decoder_dense_layer1)
+    decoder_dense_layer1 = tensorflow.keras.layers.Dense(units=dim3, name="decoder_dense_1")(decoder_input)
+    decoder_activ_layer1 = tensorflow.keras.layers.LeakyReLU(name="decoder_leakyrelu_1")(decoder_dense_layer1)
 
-    decoder_dense_layer2 = tensorflow.keras.layers.Dense(units=dim2, name="decoder_dense_2")(decoder_input)
+    decoder_dense_layer2 = tensorflow.keras.layers.Dense(units=dim2, name="decoder_dense_2")(decoder_activ_layer1)
     decoder_activ_layer2 = tensorflow.keras.layers.LeakyReLU(name="decoder_leakyrelu_2")(decoder_dense_layer2)
 
     decoder_dense_layer3 = tensorflow.keras.layers.Dense(units=dim1, name="decoder_dense_3")(decoder_activ_layer2)
@@ -134,70 +134,73 @@ def create_ae_score_plot():
 
     for cat in ['rsme', 'cosine_similarity']:
         offset = width * multiplier
-        rects = ax.bar(x + offset, scores[cat], width, label=cat)
+        colours = ['green' if i == (np.argmin(scores[cat]) if cat == 'rsme' else np.argmax(scores[cat])) else ('blue' if cat == 'rsme' else 'orange') for i in scores.index ]
+        rects = ax.bar(x + offset, scores[cat], width, label=cat, color=colours)
         ax.bar_label(rects, padding=3)
         multiplier += 1
 
+
     # Add some text for labels, title and custom x-axis tick labels, etc.
     labels = [str(sorted(score)) for score in scores['layers']]
-    ax.set_ylabel('Similarity')
-    ax.set_title('Network architecture (dimensions)')
-    ax.set_xticks(x + width, labels)
+    ax.set_ylabel('Quality of reconstruction')
+    ax.set_xlabel('Network architecture (dimensions)')
+    ax.set_title('Architecture comparison of autoencoders')
+    ax.set_xticks(x + width, labels, rotation=45)
     ax.legend(loc='upper left', ncols=3)
-    ax.set_ylim(0, 2.5)
+    ax.set_ylim(0, max(max(scores['rsme']), max(scores['cosine_similarity'])) + 0.7)
     plt.savefig('results/ae_score_plot.pdf', format='pdf')
     plt.show()
 
 
 def main(file_paths, outpath):
 
-    nltk.download('punkt')
-    V = 1   # trained with GloVe
-    MODEL_PATH = '/Users/klara/Developer/Uni/encoder/infersent%s.pkl' % V
-    W2V_PATH = '/Users/klara/Developer/Uni/bahamas_word2vec/bahamas_w2v.txt'
-    #'/Users/klara/Developer/Uni/GloVe/glove.840B.300d.txt'
+    # nltk.download('punkt')
+    # V = 1   # trained with GloVe
+    # MODEL_PATH = '/Users/klara/Developer/Uni/encoder/infersent%s.pkl' % V
+    # W2V_PATH = '/Users/klara/Developer/Uni/bahamas_word2vec/bahamas_w2v.txt'
+    # #'/Users/klara/Developer/Uni/GloVe/glove.840B.300d.txt'
 
-    # infersent
-    infersent, docs = init_infer(model_path=MODEL_PATH, w2v_path=W2V_PATH, file_paths=file_paths, version=V)
+    # # infersent
+    # infersent, docs = init_infer(model_path=MODEL_PATH, w2v_path=W2V_PATH, file_paths=file_paths, version=V)
     
-    embeddings = infersent.encode(docs, tokenize=True)
-    doc = docs[0]
-    # embdding does not work on singular input
-    embedding = infersent.encode([doc], tokenize=True)
-    print(embedding)
-    # the difference is non zero!
-    #print('difference of embeddings: ', sum((embedding[0] - embeddings[0])**2))
+    # embeddings = infersent.encode(docs, tokenize=True)
+    # doc = docs[0]
+    # # embdding does not work on singular input
+    # embedding = infersent.encode([doc], tokenize=True)
+    # print(embedding)
+    # # the difference is non zero!
+    # #print('difference of embeddings: ', sum((embedding[0] - embeddings[0])**2))
     
-    # infersent.visualize('A man plays an instrument.', tokenize=True)
+    # # infersent.visualize('A man plays an instrument.', tokenize=True)
 
-    # AE
-    encoded_embedding, ae_encoder, ae_decoder = autoencoder_emb_model(input_shape=embeddings.shape[1], latent_dim=2048, data=embeddings)
-    # Encoder does not work on singular input
-    #test = np.array([embeddings[0], embeddings[0]])
-    #embedding = ae_encoder.predict(x= test)[0]
-    #print('difference of embeddings: ', sum((embedding - encoded_embedding[0])**2))
+    # # AE
+    # encoded_embedding, ae_encoder, ae_decoder = autoencoder_emb_model(input_shape=embeddings.shape[1], latent_dim=2048, data=embeddings)
+    # # Encoder does not work on singular input
+    # #test = np.array([embeddings[0], embeddings[0]])
+    # #embedding = ae_encoder.predict(x= test)[0]
+    # #print('difference of embeddings: ', sum((embedding - encoded_embedding[0])**2))
 
-    # reconstruction error
-    inverse_embedding = ae_decoder.predict(x= encoded_embedding)
+    # # reconstruction error
+    # inverse_embedding = ae_decoder.predict(x= encoded_embedding)
 
-    # RMSE
-    rsme = np.linalg.norm(inverse_embedding - embeddings) / np.sqrt(embeddings.shape[0])
-    print('RMSE: ', rsme)
-    # cosine similarity
-    cos_sim = statistics.mean([np.dot(inverse_emb,embedding)/(np.linalg.norm(inverse_emb)*np.linalg.norm(embedding)) for inverse_emb, embedding in zip(inverse_embedding, embeddings)])
-    print('cosine similarity: ', cos_sim)
+    # # RMSE
+    # rsme = np.linalg.norm(inverse_embedding - embeddings) / np.sqrt(embeddings.shape[0])
+    # print('RMSE: ', rsme)
+    # # cosine similarity
+    # cos_sim = statistics.mean([np.dot(inverse_emb,embedding)/(np.linalg.norm(inverse_emb)*np.linalg.norm(embedding)) for inverse_emb, embedding in zip(inverse_embedding, embeddings)])
+    # print('cosine similarity: ', cos_sim)
 
-    # save results
-    dim1 = 3500
-    dim2 = 3000
-    dim3 = 2500
-    dims_used = [embeddings.shape[1], dim2, dim3, 2048]
-    scores = pd.read_json('results/score_per_ae_config.json') if os.path.exists('results/score_per_ae_config.json') else pd.DataFrame(columns=['layers', 'rsme', 'cosine_similarity'])
-    scores = pd.concat([scores, pd.DataFrame({'layers': [dims_used], 'rsme': [rsme], 'cosine_similarity': [cos_sim]})])
-    scores.reset_index(inplace=True)
-    scores.to_json('results/score_per_ae_config.json')
+    # # save results
+    # dim1 = 3500
+    # dim2 = 3000
+    # dim3 = 2500
+    # dims_used = [embeddings.shape[1], dim1, dim2, dim3, 2048]
+    # scores = pd.read_json('results/score_per_ae_config.json') if os.path.exists('results/score_per_ae_config.json') else pd.DataFrame(columns=['layers', 'rsme', 'cosine_similarity'])
+    # scores = pd.concat([scores, pd.DataFrame({'layers': [dims_used], 'rsme': [rsme], 'cosine_similarity': [cos_sim]})])
+    # scores.reset_index(inplace=True)
+    # scores.to_json('results/score_per_ae_config.json')
 
-    # create_ae_score_plot()
+    create_ae_score_plot()
 
     # layer 1/dim1, 2/dim2, 3/dim3 & 4/latent dim AE encoder:
     ## RMSE:  2.4383033437850337
