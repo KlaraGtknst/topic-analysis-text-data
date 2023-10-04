@@ -189,7 +189,7 @@ def insert_document(src_path, pca_dict: dict, image_path, models, client_addr=CL
                     embedding = get_embedding(models=models, model_name=model_name, text=text)
                     doc[MODELS2EMB[model_name]] = embedding
 
-            client.create(index='bahamas', id=id, document=doc)
+            client.create(index='bahamas', id=id, document=doc, timeout='50s')
          
         except (ConflictError, ApiError,EOFError) as err:
             print('error')
