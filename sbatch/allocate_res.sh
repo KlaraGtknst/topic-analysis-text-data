@@ -3,7 +3,7 @@
 #SBATCH --job-name=allocate-res  # Job-Name
 #SBATCH --nodes=1       # 1 Node wird benötigt
 #SBATCH --cpus-per-task=32
-# --nodelist=cpu-epyc-5
+#SBATCH --nodelist=cpu-epyc-5
 #SBATCH --mem=64g       # 64 GB Hauptspeicher
 #SBATCH --time=16:00:00  # max. Laufzeit 16h
 #SBATCH --output=/mnt/stud/home/kgutekunst/logs/%j.out        # Datei für stdout (logs/ prints != results, e.g., .pdf files) 
