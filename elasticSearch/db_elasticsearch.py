@@ -252,12 +252,8 @@ def get_embedding(models, model_name: str, text: str):
         flag_matrix = np.append(tfidf_emb, flag, axis=1)
         return np.ravel(np.array(flag_matrix))
 
-def init_db_aux(src_paths, image_src_path, client_addr=CLIENT_ADDR, n_pools=1, model_names: list = MODEL_NAMES):
-    '''
-    everything that happens in the main function to fill the database.
-    '''
 
-    NUM_COMPONENTS = 13
+def initialize_db(src_paths, num_components: int=13, client_addr=CLIENT_ADDR):
 
     print('-' * 80)
 
@@ -269,8 +265,18 @@ def init_db_aux(src_paths, image_src_path, client_addr=CLIENT_ADDR, n_pools=1, m
 
     # delete old index and create new one
     client.options(ignore_status=[400,404]).indices.delete(index='bahamas')
-    init_db(client, sim_docs_vocab_size=sim_docs_vocab_size, n_components=NUM_COMPONENTS)
+    init_db(client, sim_docs_vocab_size=sim_docs_vocab_size, n_components=num_components)
     print('finished deleting old and creating new index')
+
+    return client 
+
+def init_db_aux(src_paths, image_src_path, client_addr=CLIENT_ADDR, n_pools=1, model_names: list = MODEL_NAMES):
+    '''
+    everything that happens in the main function to fill the database.
+    '''
+    NUM_COMPONENTS = 13
+
+    client = initialize_db(src_paths, client_addr=client_addr, num_components=NUM_COMPONENTS)
 
     # Eigendocs (PCA) + OPTICS clustering
     pca_optics_dict = get_eigendocs_OPTICS_df(image_src_path, n_components=NUM_COMPONENTS).to_dict()
@@ -293,7 +299,8 @@ def init_db_aux(src_paths, image_src_path, client_addr=CLIENT_ADDR, n_pools=1, m
     print('number of documents in database: ', resp['count'])
 
 def main(src_paths, image_src_path, client_addr=CLIENT_ADDR, n_pools=1, model_names: list = MODEL_NAMES):
-    init_db_aux(src_paths, image_src_path, client_addr=client_addr, n_pools=n_pools, model_names=model_names)
+    #init_db_aux(src_paths, image_src_path, client_addr=client_addr, n_pools=n_pools, model_names=model_names)
+    initialize_db(src_paths, client_addr=client_addr)
     
 
 if __name__ == '__main__':
