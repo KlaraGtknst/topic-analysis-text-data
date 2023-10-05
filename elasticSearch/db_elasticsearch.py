@@ -120,7 +120,6 @@ def insert_documents(src_paths: list, pca_dict: dict, client: Elasticsearch, ima
     image_path = image_path if image_path else (src_paths.split('data/0/')[0] + 'images/images/')
     print('start multiprocessing'if n_pools > 1 else 'start single processing')
     models = get_models(src_paths, model_names=model_names) if n_pools == 1 else None
-    #models = None
     if n_pools == 1:    # single processing
         for src_path in src_paths:
             insert_document(src_path, pca_dict, image_path, client_addr=client_addr, models=models, client=client, model_names=model_names)
@@ -262,7 +261,7 @@ def insert_embedding(src_paths: list, models: dict=None, client_addr=CLIENT_ADDR
 
         inserts specific embedding of all documents into the database 'bahamas'.
         '''
-        if model_name not in MODEL_NAMES:
+        if (model_name not in MODEL_NAMES) or (model_name == 'ae'):
             return
         
         client = client if client else Elasticsearch(client_addr)
@@ -389,15 +388,15 @@ def main(src_paths, image_src_path, client_addr=CLIENT_ADDR, n_pools=1, model_na
     # stepwise
     # initialize_db(src_paths, client_addr=client_addr) # WORKS
     # documents_into_db(src_paths, image_src_path, client=None, client_addr=client_addr, n_pools= n_pools, model_names= model_names)  # OUT OF MEMORY
-    print('start creating documents using bulk')
-    create_documents(src_paths = src_paths, client_addr=client_addr) # WORKS
-    print('finished creating documents using bulk')
-    # print('start inserting documents embeddings using bulk')
-    # for model_name in model_names:
-    #     print('started with model: ', model_name)
-    #     insert_embedding(src_paths = src_paths, client_addr=client_addr, model_name = model_name)
-    #     print('finished model: ', model_name)
-    # print('finished inserting documents embeddings using bulk')
+    # print('start creating documents using bulk')
+    # create_documents(src_paths = src_paths, client_addr=client_addr) # WORKS
+    # print('finished creating documents using bulk')
+    print('start inserting documents embeddings using bulk')
+    for model_name in model_names:
+        print('started with model: ', model_name)
+        insert_embedding(src_paths = src_paths, client_addr=client_addr, model_name = model_name)
+        print('finished model: ', model_name)
+    print('finished inserting documents embeddings using bulk')
     
 
 if __name__ == '__main__':
