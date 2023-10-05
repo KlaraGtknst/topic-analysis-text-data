@@ -118,8 +118,8 @@ def insert_documents(src_paths: list, pca_dict: dict, client: Elasticsearch, ima
     '''
     image_path = image_path if image_path else (src_paths.split('data/0/')[0] + 'images/images/')
     print('start multiprocessing'if n_pools > 1 else 'start single processing')
-    #models = get_models(src_paths) if n_pools == 1 else None
-    models = None
+    models = get_models(src_paths, model_names=model_names) if n_pools == 1 else None
+    #models = None
     if n_pools == 1:    # single processing
         for src_path in src_paths:
             insert_document(src_path, pca_dict, image_path, client_addr=client_addr, models=models, client=client, model_names=model_names)
@@ -270,16 +270,11 @@ def initialize_db(src_paths, num_components: int=13, client_addr=CLIENT_ADDR):
 
     return client 
 
-def init_db_aux(src_paths, image_src_path, client_addr=CLIENT_ADDR, n_pools=1, model_names: list = MODEL_NAMES):
-    '''
-    everything that happens in the main function to fill the database.
-    '''
-    NUM_COMPONENTS = 13
-
-    client = initialize_db(src_paths, client_addr=client_addr, num_components=NUM_COMPONENTS)
+def documents_into_db(src_paths, image_src_path, client, num_components: int=13, client_addr=CLIENT_ADDR, n_pools: int = 1, model_names: list = MODEL_NAMES):
+    client = client if client else Elasticsearch(client_addr)
 
     # Eigendocs (PCA) + OPTICS clustering
-    pca_optics_dict = get_eigendocs_OPTICS_df(image_src_path, n_components=NUM_COMPONENTS).to_dict()
+    pca_optics_dict = get_eigendocs_OPTICS_df(image_src_path, n_components=num_components).to_dict()
     print('finished getting pca-OPTICS cluster df')
 
     # insert documents into database
@@ -298,9 +293,25 @@ def init_db_aux(src_paths, image_src_path, client_addr=CLIENT_ADDR, n_pools=1, m
     resp = client.count(index='bahamas')
     print('number of documents in database: ', resp['count'])
 
+def init_db_aux(src_paths, image_src_path, client_addr=CLIENT_ADDR, n_pools=1, model_names: list = MODEL_NAMES):
+    '''
+    everything that happens in the main function to fill the database.
+    '''
+    NUM_COMPONENTS = 13
+
+    client = initialize_db(src_paths, client_addr=client_addr, num_components=NUM_COMPONENTS)
+
+    documents_into_db(src_paths, image_src_path, client, num_components= NUM_COMPONENTS, client_addr=client_addr, n_pools= n_pools, model_names= model_names)
+
+
+
 def main(src_paths, image_src_path, client_addr=CLIENT_ADDR, n_pools=1, model_names: list = MODEL_NAMES):
+    # everything in one function
     #init_db_aux(src_paths, image_src_path, client_addr=client_addr, n_pools=n_pools, model_names=model_names)
-    initialize_db(src_paths, client_addr=client_addr)
+
+    # stepwise
+    #initialize_db(src_paths, client_addr=client_addr)
+    documents_into_db(src_paths, image_src_path, client=None, client_addr=client_addr, n_pools= n_pools, model_names= model_names)
     
 
 if __name__ == '__main__':
