@@ -59,7 +59,7 @@ def init_db(client: Elasticsearch, sim_docs_vocab_size: int, n_components: int):
             },
             "sim_docs_tfidf": {
                 "type": "dense_vector",
-                "dims": sim_docs_vocab_size + 1, # last cell indicates all-zero-vector-representation
+                "dims": min(sim_docs_vocab_size + 1, 2048), # last cell indicates all-zero-vector-representation
                 "index": True,
                 "similarity": "cosine",
             },
