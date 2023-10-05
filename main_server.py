@@ -1,7 +1,7 @@
 from constants import CLIENT_ADDR
 from user_interface.cli import *
 from doc_images import convert_pdf2image
-from elasticSearch import db_elasticsearch
+from elasticSearch import db_elasticsearch, create_documents, create_database, insert_embeddings
 from doc_images.PCA import PCA_image_clustering
 from text_embeddings.InferSent import own_word2vec
 from constants import MODEL_NAMES
@@ -45,4 +45,16 @@ if __name__ == '__main__':
     elif file_to_run[0] == 'own_word2vec.py':
         # python3 main_server.py 'own_word2vec.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
         own_word2vec.main(file_paths)
+
+    elif file_to_run[0] == 'create_database.py':
+        # python3 main_server.py 'create_database.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
+        create_database.main(file_paths, client_addr=client_addr)
+
+    elif file_to_run[0] == 'create_documents.py':
+        # python3 main_server.py 'create_documents.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
+        create_documents.main(file_paths, client_addr=client_addr)
+
+    elif file_to_run[0] == 'insert_embeddings.py':
+        # python3 main_server.py 'insert_embeddings.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
+        insert_embeddings.main(file_paths, client_addr=client_addr, model_names=model_names)
         
