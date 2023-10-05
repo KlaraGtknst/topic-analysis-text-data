@@ -121,7 +121,7 @@ def train_model(model_name, src_paths, client:Elasticsearch=None):
         #W2V_PATH = '/Users/klara/Developer/Uni/GloVe/glove.840B.300d.txt'
         local_path = '/Users/klara/Developer/Uni/bahamas_word2vec/bahamas_w2v.txt'
         server_path = '/mnt/stud/work/kgutekunst/bahamas_word2vec/'
-        custom_w2v_path = local_path if os.exists(local_path) else server_path
+        custom_w2v_path = local_path if os.path.exists(local_path) else server_path
         inferSent_model, docs = init_infer(model_path=MODEL_PATH, w2v_path=custom_w2v_path, file_paths=src_paths, version=1)
         return inferSent_model
         

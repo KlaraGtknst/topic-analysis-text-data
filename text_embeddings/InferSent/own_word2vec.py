@@ -21,7 +21,7 @@ def post_process_file(w2v_path):
 def main(file_paths):
     local_path = '/Users/klara/Developer/Uni/bahamas_word2vec/'
     server_path = '/mnt/stud/work/kgutekunst/bahamas_word2vec/'
-    model_path = local_path if os.exists(local_path) else server_path
+    model_path = local_path if os.path.exists(local_path) else server_path
     docs = get_docs_from_file_paths(file_paths)
     model = Word2Vec(docs, vector_size=300)
     model.wv.save_word2vec_format(model_path + 'bahamas_w2v.txt', binary=False)
