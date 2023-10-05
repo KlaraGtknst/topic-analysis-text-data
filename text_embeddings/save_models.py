@@ -117,10 +117,12 @@ def train_model(model_name, src_paths, client:Elasticsearch=None):
         return init_hf_sentTrans_model()
     
     elif 'infer' in model_name:
-        #MODEL_PATH = '/Users/klara/Developer/Uni/encoder/infersent1.pkl'
-        W2V_PATH = '/Users/klara/Developer/Uni/GloVe/glove.840B.300d.txt'
-        CUSTOM_W2V_PATH = '/Users/klara/Developer/Uni/bahamas_word2vec/bahamas_w2v.txt'
-        inferSent_model, docs = init_infer(model_path=CUSTOM_W2V_PATH, w2v_path=W2V_PATH, file_paths=src_paths, version=1)
+        MODEL_PATH = '/Users/klara/Developer/Uni/encoder/infersent1.pkl'
+        #W2V_PATH = '/Users/klara/Developer/Uni/GloVe/glove.840B.300d.txt'
+        local_path = '/Users/klara/Developer/Uni/bahamas_word2vec/bahamas_w2v.txt'
+        server_path = '/mnt/stud/work/kgutekunst/bahamas_word2vec/'
+        custom_w2v_path = local_path if os.exists(local_path) else server_path
+        inferSent_model, docs = init_infer(model_path=MODEL_PATH, w2v_path=custom_w2v_path, file_paths=src_paths, version=1)
         return inferSent_model
         
     elif 'ae' in model_name:

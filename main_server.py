@@ -3,6 +3,7 @@ from user_interface.cli import *
 from doc_images import convert_pdf2image
 from elasticSearch import db_elasticsearch
 from doc_images.PCA import PCA_image_clustering
+from text_embeddings.InferSent import own_word2vec
 from constants import MODEL_NAMES
 import db_all_embs as db_all_embs
 
@@ -40,3 +41,8 @@ if __name__ == '__main__':
     elif file_to_run[0] == 'db_all_embs.py':
         # python3 main_server.py 'db_all_embs.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
         db_all_embs.main(file_paths, image_src_path, client_addr, n_pools, model_names=model_names)
+
+    elif file_to_run[0] == 'own_word2vec.py':
+        # python3 main_server.py 'own_word2vec.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
+        own_word2vec.main(file_paths)
+        
