@@ -387,17 +387,17 @@ def main(src_paths, image_src_path, client_addr=CLIENT_ADDR, n_pools=1, model_na
     #init_db_aux(src_paths, image_src_path, client_addr=client_addr, n_pools=n_pools, model_names=model_names)
 
     # stepwise
-    #initialize_db(src_paths, client_addr=client_addr) # WORKS
-    #documents_into_db(src_paths, image_src_path, client=None, client_addr=client_addr, n_pools= n_pools, model_names= model_names)  # OUT OF MEMORY
-    #print('start creating documents using bulk')
-    #create_documents(src_paths = src_paths, client_addr=client_addr) # WORKS
-    #print('finished creating documents using bulk')
-    print('start inserting documents embeddings using bulk')
-    for model_name in model_names:
-        print('started with model: ', model_name)
-        insert_embedding(src_paths = src_paths, client_addr=client_addr, model_name = model_name)
-        print('finished model: ', model_name)
-    print('finished inserting documents embeddings using bulk')
+    # initialize_db(src_paths, client_addr=client_addr) # WORKS
+    # documents_into_db(src_paths, image_src_path, client=None, client_addr=client_addr, n_pools= n_pools, model_names= model_names)  # OUT OF MEMORY
+    print('start creating documents using bulk')
+    create_documents(src_paths = src_paths, client_addr=client_addr) # WORKS
+    print('finished creating documents using bulk')
+    # print('start inserting documents embeddings using bulk')
+    # for model_name in model_names:
+    #     print('started with model: ', model_name)
+    #     insert_embedding(src_paths = src_paths, client_addr=client_addr, model_name = model_name)
+    #     print('finished model: ', model_name)
+    # print('finished inserting documents embeddings using bulk')
     
 
 if __name__ == '__main__':
