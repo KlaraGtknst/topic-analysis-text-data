@@ -117,12 +117,17 @@ def train_model(model_name, src_paths, client:Elasticsearch=None):
         return init_hf_sentTrans_model()
     
     elif 'infer' in model_name:
-        MODEL_PATH = '/Users/klara/Developer/Uni/encoder/infersent1.pkl'
-        #W2V_PATH = '/Users/klara/Developer/Uni/GloVe/glove.840B.300d.txt'
-        local_path = '/Users/klara/Developer/Uni/bahamas_word2vec/bahamas_w2v.txt'
-        server_path = '/mnt/stud/work/kgutekunst/bahamas_word2vec/'
-        custom_w2v_path = local_path if os.path.exists(local_path) else server_path
-        inferSent_model, docs = init_infer(model_path=MODEL_PATH, w2v_path=custom_w2v_path, file_paths=src_paths, version=1)
+        # model
+        local_model_path = '/Users/klara/Developer/Uni/encoder/infersent1.pkl'
+        server_model_path = '/mnt/stud/work/kgutekunst/encoder/infersent1.pkl'
+        model_path = local_model_path if os.path.exists(local_model_path) else server_model_path
+
+        # word2vec embeddings
+        # w2v_local_path = '/Users/klara/Developer/Uni/GloVe/glove.840B.300d.txt'
+        w2v_local_path = '/Users/klara/Developer/Uni/bahamas_word2vec/bahamas_w2v.txt'
+        w2v_server_path = '/mnt/stud/work/kgutekunst/bahamas_word2vec/'
+        custom_w2v_path = w2v_local_path if os.path.exists(w2v_local_path) else w2v_server_path
+        inferSent_model, docs = init_infer(model_path=model_path, w2v_path=custom_w2v_path, file_paths=src_paths, version=1)
         return inferSent_model
         
     elif 'ae' in model_name:
