@@ -11,6 +11,7 @@ from elasticSearch.queries.query_documents_tfidf import *
 from text_embeddings.universal_sent_encoder_tensorFlow import *
 from text_embeddings.hugging_face_sentence_transformer import *
 from elasticSearch.queries.query_database import *
+from elasticsearch.helpers import bulk
 from doc_images.PCA.PCA_image_clustering import *
 from text_embeddings.TFIDF.preprocessing.TfidfTextPreprocessor import *
 from text_embeddings.InferSent.infer_pretrained import *
@@ -197,6 +198,82 @@ def insert_document(src_path, pca_dict: dict, image_path, models, client_addr=CL
             print('error')
             return
 
+def create_document_aux(src_paths: list, client: Elasticsearch):  
+    for path in src_paths:
+        try:           
+            id = get_hash_file(path)
+
+            if get_doc_meta_data(client, doc_id=id) is not None:    # document already in database
+                return
+            
+            text = pdf_to_str(path)
+            
+            yield { 
+                    '_op_type': 'create',
+                    '_index': 'bahamas',
+                    '_id': id,
+                    "text": text,
+                    "path": path,
+                }
+          
+        except (EOFError) as err:
+            print('EOF error')
+            return
+
+def create_documents(src_paths: list, client_addr=CLIENT_ADDR, client: Elasticsearch=None):
+        '''
+        :param src_path: path to the document to be inserted into the database
+        :param client: Elasticsearch client
+        :param client_addr: address of the Elasticsearch client
+
+        creates all document in the database 'bahamas'.
+        '''
+        client = client if client else Elasticsearch(client_addr)
+        try:
+            bulk(client, create_document_aux(src_paths, client), stats_only= True)
+         
+        except (ConflictError, ApiError,EOFError) as err:
+            print(err)
+            return
+
+
+def generate_models_embedding(src_paths: list, models : dict, model_name: str = 'no_model'):  
+    for path in src_paths:
+        text = pdf_to_str(path)
+        id = get_hash_file(path)
+
+        if (model_name in models.keys()) and (model_name != 'ae'):
+            embedding = get_embedding(models=models, model_name=model_name, text=text)
+            if len(embedding) > 2048:   # tfidf
+                return
+            yield {
+                '_op_type': 'update',
+                '_index': 'bahamas',
+                '_id': id,
+                'doc': {MODELS2EMB[model_name]: embedding}
+            }
+
+def insert_embedding(src_paths: list, models: dict=None, client_addr=CLIENT_ADDR, client: Elasticsearch=None, model_name: str = 'no_model'):
+        '''
+        :param src_path: list of paths to the documents to be inserted into the database
+        :param client: Elasticsearch client
+        :param models: dictionary with model names as keys and the models as values
+        :param model_names: names of the models to be used for embedding
+
+        inserts specific embedding of all documents into the database 'bahamas'.
+        '''
+        if model_name not in MODEL_NAMES:
+            return
+        
+        client = client if client else Elasticsearch(client_addr)
+        models = models if models else get_models(src_paths, [model_name] if model_name else None)
+
+        try:
+            bulk(client, generate_models_embedding(src_paths, models, model_name), stats_only= True)
+        except (ConflictError, ApiError,EOFError) as err:
+            print('error')
+            return
+
 def get_b64_image(image: str):
     '''
     :param image: path to the image
@@ -310,8 +387,17 @@ def main(src_paths, image_src_path, client_addr=CLIENT_ADDR, n_pools=1, model_na
     #init_db_aux(src_paths, image_src_path, client_addr=client_addr, n_pools=n_pools, model_names=model_names)
 
     # stepwise
-    #initialize_db(src_paths, client_addr=client_addr)
-    documents_into_db(src_paths, image_src_path, client=None, client_addr=client_addr, n_pools= n_pools, model_names= model_names)
+    #initialize_db(src_paths, client_addr=client_addr) # WORKS
+    #documents_into_db(src_paths, image_src_path, client=None, client_addr=client_addr, n_pools= n_pools, model_names= model_names)  # OUT OF MEMORY
+    #print('start creating documents using bulk')
+    #create_documents(src_paths = src_paths, client_addr=client_addr) # WORKS
+    #print('finished creating documents using bulk')
+    print('start inserting documents embeddings using bulk')
+    for model_name in model_names:
+        print('started with model: ', model_name)
+        insert_embedding(src_paths = src_paths, client_addr=client_addr, model_name = model_name)
+        print('finished model: ', model_name)
+    print('finished inserting documents embeddings using bulk')
     
 
 if __name__ == '__main__':
