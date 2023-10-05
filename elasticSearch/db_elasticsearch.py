@@ -187,6 +187,8 @@ def insert_document(src_path, pca_dict: dict, image_path, models, client_addr=CL
             for model_name in model_names:
                 if (model_name in models.keys()) and (model_name != 'ae'):
                     embedding = get_embedding(models=models, model_name=model_name, text=text)
+                    if len(embedding) > 2048:   # tfidf
+                        continue
                     doc[MODELS2EMB[model_name]] = embedding
 
             client.create(index='bahamas', id=id, document=doc, timeout='50s')
