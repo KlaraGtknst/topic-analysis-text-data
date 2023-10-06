@@ -7,8 +7,8 @@ from timeit import default_timer as timer
 from elasticSearch import insert_embeddings, create_documents, create_database
 
 
-def get_specific_times(src_paths: list, image_src_path: str, client_addr: str=CLIENT_ADDR, model_names: list = MODEL_NAMES):
-    times = pd.read_json('times_per_emb.json') if os.path.exists('times_per_emb.json') else pd.DataFrame(columns=['model', 'time'])
+def get_specific_times(src_paths: list, image_src_path: str, client_addr: str=CLIENT_ADDR, model_names: list = MODEL_NAMES, dir_to_save:str = 'results/'):
+    times = pd.read_json(dir_to_save + 'times_per_emb.json') if os.path.exists(dir_to_save + 'times_per_emb.json') else pd.DataFrame(columns=['model', 'time'])
     start = timer()
     create_database.initialize_db(src_paths, client_addr=client_addr) # WORKS
     end = timer()
@@ -43,9 +43,9 @@ def get_specific_times(src_paths: list, image_src_path: str, client_addr: str=CL
     
     print('finished inserting documents embeddings using bulk')
     times.reset_index(inplace=True)
-    times.to_json('times_per_emb.json')
+    times.to_json(dir_to_save + 'times_per_emb.json')
 
-def display_times():
+def display_times(dir_to_save:str = 'results/'):
     times = pd.read_json('times_per_emb.json')
     fig, ax = plt.subplots(figsize=(12, 9))
     bars = ax.barh(times['model'], times['time'])
@@ -53,9 +53,10 @@ def display_times():
     for bars in ax.containers:
         ax.bar_label(bars)
     plt.title('Time per embedding')
-    plt.savefig('results/time_per_emb.pdf', format="pdf")
+    plt.savefig(dir_to_save + 'time_per_emb.pdf', format="pdf")
     plt.show()
 
 def main(src_paths, image_src_path, client_addr=CLIENT_ADDR, n_pools=1, model_names: list = MODEL_NAMES):
-    get_specific_times(src_paths, client_addr=client_addr, model_names=model_names, image_src_path=image_src_path)
-    display_times()
+    dir_to_save = 'results/' if os.path.exists('/Users/klara/Developer/Uni/') else '/mnt/stud/home/kgutekunst/visualizations/' # server vs local
+    get_specific_times(src_paths, client_addr=client_addr, model_names=model_names, image_src_path=image_src_path, dir_to_save=dir_to_save)
+    display_times(dir_to_save=dir_to_save)
