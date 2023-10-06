@@ -1,37 +1,23 @@
 import os
 from matplotlib import pyplot as plt
 import pandas as pd
-from elasticSearch import db_elasticsearch
-from constants import CLIENT_ADDR, MODEL_NAMES
+from doc_images.PCA import PCA_image_clustering 
+from constants import CLIENT_ADDR, MODEL_NAMES, NUM_PCA_COMPONENTS
 from timeit import default_timer as timer
+from elasticSearch import insert_embeddings, create_documents, create_database
 
-def get_times(src_paths, image_src_path, client_addr=CLIENT_ADDR, n_pools=1, model_names: list = MODEL_NAMES):
-    '''
-    deprecated
-    '''
-    times = pd.read_json('times_per_emb.json') if os.path.exists('times_per_emb.json') else pd.DataFrame(columns=['model', 'time'])
-    for model_name in model_names:
-        print(f'Running {model_name}...')
-        start = timer()
-        db_elasticsearch.main(src_paths, image_src_path, client_addr, n_pools, model_names=[model_name])
-        end = timer()
-        duration = end - start
-        print('time ellapsed: ', duration)
-        times = pd.concat([times, pd.DataFrame({'model': model_name, 'time': [duration]})])
-    times.reset_index(inplace=True)
-    times.to_json('times_per_emb.json')
 
-def get_specific_times(src_paths, client_addr=CLIENT_ADDR, model_names: list = MODEL_NAMES):
+def get_specific_times(src_paths: list, image_src_path: str, client_addr: str=CLIENT_ADDR, model_names: list = MODEL_NAMES):
     times = pd.read_json('times_per_emb.json') if os.path.exists('times_per_emb.json') else pd.DataFrame(columns=['model', 'time'])
     start = timer()
-    db_elasticsearch.initialize_db(src_paths, client_addr=client_addr) # WORKS
+    create_database.initialize_db(src_paths, client_addr=client_addr) # WORKS
     end = timer()
     duration = end - start
     times = pd.concat([times, pd.DataFrame({'model': 'init new db', 'time': [duration]})])
 
     print('start creating documents using bulk')
     start = timer()
-    db_elasticsearch.create_documents(src_paths = src_paths, client_addr=client_addr) # WORKS
+    create_documents.create_documents(src_paths = src_paths, client_addr=client_addr) # WORKS
     end = timer()
     duration = end - start
     times = pd.concat([times, pd.DataFrame({'model': 'create docs', 'time': [duration]})])
@@ -41,11 +27,20 @@ def get_specific_times(src_paths, client_addr=CLIENT_ADDR, model_names: list = M
     for model_name in model_names:
         print('started with model: ', model_name)
         start = timer()
-        db_elasticsearch.insert_embedding(src_paths = src_paths, client_addr=client_addr, model_name = model_name)
+        insert_embeddings.insert_embedding(src_paths = src_paths, client_addr=client_addr, model_name = model_name)
         end = timer()
         duration = end - start
         times = pd.concat([times, pd.DataFrame({'model': model_name, 'time': [duration]})])
         print('finished model: ', model_name)
+
+    start = timer()
+    pca_optics_dict = PCA_image_clustering.get_eigendocs_OPTICS_df(image_src_path, n_components=NUM_PCA_COMPONENTS).to_dict()
+    insert_embeddings.insert_pca_optics(src_paths=src_paths, pca_dict=pca_optics_dict, client_addr=client_addr, img_path=image_src_path)
+    end = timer()
+    duration = end - start
+    times = pd.concat([times, pd.DataFrame({'model': 'pca_optics', 'time': [duration]})])
+    print('finished inserting pca-OPTICS cluster df')
+    
     print('finished inserting documents embeddings using bulk')
     times.reset_index(inplace=True)
     times.to_json('times_per_emb.json')
@@ -62,6 +57,5 @@ def display_times():
     plt.show()
 
 def main(src_paths, image_src_path, client_addr=CLIENT_ADDR, n_pools=1, model_names: list = MODEL_NAMES):
-    #get_times(src_paths, image_src_path, client_addr, n_pools, model_names) # deprecated
-    get_specific_times(src_paths, client_addr=client_addr, model_names=model_names)
+    get_specific_times(src_paths, client_addr=client_addr, model_names=model_names, image_src_path=image_src_path)
     display_times()

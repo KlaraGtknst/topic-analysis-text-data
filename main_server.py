@@ -56,5 +56,5 @@ if __name__ == '__main__':
 
     elif file_to_run[0] == 'insert_embeddings.py':
         # python3 main_server.py 'insert_embeddings.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
-        insert_embeddings.main(file_paths, client_addr=client_addr, model_names=model_names)
+        insert_embeddings.main(file_paths, client_addr=client_addr, model_names=model_names, image_src_path=image_src_path)
         

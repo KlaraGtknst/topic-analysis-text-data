@@ -3,3 +3,4 @@ MODELS2EMB = {"doc2vec": "doc2vec", "tfidf": "sim_docs_tfidf", "universal": "goo
 DB_FIELDS = EMBEDDINGS + ["pca_optics_cluster", "path", "text", "image"]
 CLIENT_ADDR = "http://localhost:9200"
 MODEL_NAMES = ['doc2vec', 'universal', 'hugging', 'infer', 'ae', 'tfidf']
+NUM_PCA_COMPONENTS = 13

@@ -85,13 +85,53 @@ def get_embedding(models, model_name: str, text: str):
         return np.ravel(np.array(flag_matrix))
 
 
-def main(src_paths, client_addr=CLIENT_ADDR, model_names: list = MODEL_NAMES):
+# PCA & OPTICS
+
+def pca_optics_aux(src_paths: list, pca_dict: dict, img_path:str):  
+    for path in src_paths:
+        id = get_hash_file(path)
+        if img_path.endswith('/'):
+            img_path = img_path + '*.png'
+        img_id = '/'.join(img_path.split('/')[:-1]) + '/' + path.split('/')[-1].split('.')[0] + '.png'
+
+        yield {
+            '_op_type': 'update',
+            '_index': 'bahamas',
+            '_id': id,
+            'doc': {
+                "pca_image": pca_dict['pca_weights'][img_id] if img_id in pca_dict['pca_weights'].keys() else None,
+                "pca_optics_cluster": pca_dict['cluster'][img_id] if img_id in pca_dict['pca_weights'].keys() else None
+                }
+        }
+
+def insert_pca_optics(src_paths: list, pca_dict: dict, img_path:str, client_addr=CLIENT_ADDR, client: Elasticsearch=None):
+        '''
+        :param src_path: list of paths to the documents to be inserted into the database
+        :param client: Elasticsearch client
+        :param pca_dict: dictionary with weights and clusters
+
+        inserts pca weights and OPTICS cluster of all documents into the database 'bahamas'.
+        '''
+        client = client if client else Elasticsearch(client_addr)
+      
+        try:
+            bulk(client, pca_optics_aux(src_paths, pca_dict, img_path=img_path), stats_only= True)
+        except (ConflictError, ApiError,EOFError) as err:
+            print('error')
+            return
+
+def main(src_paths: list, image_src_path: str, num_components=13, client_addr=CLIENT_ADDR, model_names: list = MODEL_NAMES):
   
     print('start inserting documents embeddings using bulk')
     for model_name in model_names:
         print('started with model: ', model_name)
         insert_embedding(src_paths = src_paths, client_addr=client_addr, model_name = model_name)
         print('finished model: ', model_name)
+    pca_optics_dict = get_eigendocs_OPTICS_df(image_src_path, n_components=NUM_PCA_COMPONENTS).to_dict()
+    print('finished getting pca-OPTICS cluster df')
+    insert_pca_optics(src_paths=src_paths, pca_dict=pca_optics_dict, client_addr=client_addr, img_path=image_src_path)
+    print('finished inserting pca-OPTICS cluster df')
+
     print('finished inserting documents embeddings using bulk')
     
 

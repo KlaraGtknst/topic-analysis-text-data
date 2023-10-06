@@ -103,7 +103,7 @@ def visualize_class_distr(pca_df: pd.DataFrame) -> None:
         plt.text(i,cluster_counts[i], cluster_counts[i])
     plt.show()
 
-def get_cluster_PCA_df(src_path: str, n_cluster: int, n_components: int = 2, preprocess_image_size: int = 600) -> pd.DataFrame:
+def get_cluster_PCA_df(img_src_path: str, n_cluster: int, n_components: int = 2, preprocess_image_size: int = 600) -> pd.DataFrame:
     '''
     :param src_path: path to the directory of the images
     :param n_cluster: number of clusters
@@ -111,9 +111,9 @@ def get_cluster_PCA_df(src_path: str, n_cluster: int, n_components: int = 2, pre
     :return: dataframe, which contains pca weights, cluster index and the corresponding image paths as index
     '''
     # preprocessing
-    if src_path.endswith('/'):
-        src_path = src_path + '*.png'
-    image_src_paths = glob.glob(src_path)
+    if img_src_path.endswith('/'):
+        img_src_path = img_src_path + '*.png'
+    image_src_paths = glob.glob(img_src_path)
     preprocessed_images = preprocess_images(image_src_paths, preprocess_image_size)
     # PCA
     pca = decomposition.PCA(n_components=n_components, whiten=True)
