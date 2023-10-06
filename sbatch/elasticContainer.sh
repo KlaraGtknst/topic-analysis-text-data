@@ -3,7 +3,7 @@
 #SBATCH --job-name=elastic-db  # Job-Name
 #SBATCH --nodes=1       # 1 Node wird benötigt
 #SBATCH --cpus-per-task=8
-#SBATCH --nodelist=cpu-epyc-8
+#SBATCH --nodelist=cpu-epyc-9
 #SBATCH --mem=64g       # 64 GB Hauptspeicher
 #SBATCH --output=/mnt/stud/home/kgutekunst/logs/%j.out        # Datei für stdout (logs/ prints != results, e.g., .pdf files) 
 #SBATCH --error=/mnt/stud/home/kgutekunst/error_logs/%j.err     # Datei für stderr
