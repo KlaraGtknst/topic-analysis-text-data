@@ -1,6 +1,6 @@
 #!/bin/bash      
 #SBATCH --partition=main        # Partition main
-#SBATCH --job-name=init-db  # Job-Name
+#SBATCH --job-name=insert-emb  # Job-Name
 #SBATCH --nodes=1       # 1 Node wird benötigt
 #SBATCH --cpus-per-task=45 
 #SBATCH --nodelist=cpu-epyc-1
@@ -16,9 +16,6 @@ source /mnt/stud/work/kgutekunst/bsc-py/bin/activate    # virtuelle Umgebung akt
 # gpu-v100-1
 # gpu-v100-3
 # gpu-a100-1
-
-srun python /mnt/stud/work/kgutekunst/topic-analysis-text-data/main_server.py 'create_database.py' -p 1 -a 'http://cpu-epyc-5.ies.uni-kassel.de:9200' -d '/mnt/datasets/Bahamas/SAC/0/*.pdf' -D '/mnt/stud/home/kgutekunst/visualizations/images/'
-srun python /mnt/stud/work/kgutekunst/topic-analysis-text-data/main_server.py 'create_documents.py' -p 1 -a 'http://cpu-epyc-5.ies.uni-kassel.de:9200' -d '/mnt/datasets/Bahamas/SAC/0/*.pdf' -D '/mnt/stud/home/kgutekunst/visualizations/images/'
 
 srun python /mnt/stud/work/kgutekunst/topic-analysis-text-data/main_server.py 'insert_embeddings.py' -m 'infer' -p 1 -a 'http://cpu-epyc-5.ies.uni-kassel.de:9200' -d '/mnt/datasets/Bahamas/SAC/0/*.pdf' -D '/mnt/stud/home/kgutekunst/visualizations/images/'
 srun python /mnt/stud/work/kgutekunst/topic-analysis-text-data/main_server.py 'insert_embeddings.py' -m 'doc2vec' -p 1 -a 'http://cpu-epyc-5.ies.uni-kassel.de:9200' -d '/mnt/datasets/Bahamas/SAC/0/*.pdf' -D '/mnt/stud/home/kgutekunst/visualizations/images/'
