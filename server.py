@@ -1,7 +1,8 @@
 import os
 from elasticsearch import Elasticsearch
 from flask import Flask, make_response, request, send_file, send_from_directory
-from flask_restx import Api, Resource # https://stackoverflow.com/questions/60156202/flask-app-wont-launch-importerror-cannot-import-name-cached-property-from-w
+from flask_restx import Api, Resource
+from constants import DB_FIELDS
 from text_visualizations import visualize_texts
 from elasticSearch.queries import query_database
 from flask_cors import CORS
@@ -15,7 +16,7 @@ cors = CORS(app)
 
 search_doc = {'count': {'description':'Number of documents per page', 'type':'int','default':10}, 
                  'knn_type': {'description':'Type of knn search', 
-                              'enum':[ "doc2vec","sim_docs_tfidf","google_univ_sent_encoding","huggingface_sent_transformer","inferSent_AE","pca_optics_cluster"]}}
+                              'enum':DB_FIELDS}}
 knn_source = {'knn_source': 'Document to search for'}
 page_doc = {'page': {'description':'Page number', 'type':'int','default':0}}
 text_doc = {'text': {'description':'Text to search for', 'type':'string'}}
@@ -31,7 +32,7 @@ class Documents(Resource):
         page = args.get('page', default=0, type=int)
         count = args.get('count', default=10, type=int)
         text = args.get('text', default=None, type=str)
-        knn_source = args.get('knn_source', default=None, type=str) # TODO maybe change type to int depending on final _id
+        knn_source = args.get('knn_source', default=None, type=str)
         knn_type = args.get('knn_type', default=None, type=str)
 
         # client

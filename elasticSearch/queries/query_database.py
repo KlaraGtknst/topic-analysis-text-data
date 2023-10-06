@@ -148,7 +148,7 @@ def get_knn_res(doc_to_search_for:str, query_type:str, elastic_search_client:Ela
     '''
     # get embediding/ search query data
     elastic_search_client.indices.refresh(index='bahamas')
-    if query_type != 'pca_optics_cluster':
+    if query_type not in ['pca_optics_cluster', 'argmax_pca_cluster']:
         try:
             resp = elastic_search_client.get(index='bahamas', id=doc_to_search_for,  source_includes=[query_type])
             embedding = resp['_source'][query_type]
@@ -166,7 +166,7 @@ def get_knn_res(doc_to_search_for:str, query_type:str, elastic_search_client:Ela
 
         return convert_hits(results['hits']['hits'])
     else:
-        return get_docs_from_same_cluster(elastic_search_client, doc_to_search_for, n_results)
+        return get_docs_from_same_cluster(elastic_search_client, doc_to_search_for, n_results, query_type)
 
 
 def get_doc_meta_data(elastic_search_client: Elasticsearch, doc_id: str):
@@ -199,23 +199,24 @@ def get_docs_in_db(elastic_search_client: Elasticsearch, start:int=0, n_docs:int
         source_includes=SRC_INCLUDES)['hits']['hits']
     return convert_hits(results)
 
-def get_docs_from_same_cluster(elastic_search_client: Elasticsearch, path_to_doc: str, n_results: int = 5) -> list:
+def get_docs_from_same_cluster(query_type:str, elastic_search_client: Elasticsearch, path_to_doc: str, n_results: int = 5) -> list:
     '''
     :param elastic_search_client: Elasticsearch client
     :param path_to_doc: path to the document to be searched for; acts as the index in the database
     :param n_results: number of results to be returned
+    :param query_type: type of the query to be searched for; must be one of: pca_optics_cluster, argmax_pca_cluster
     :return: list of paths to documents in the same cluster as the document to be searched for
     '''
     # get cluster
     doc_id = path_to_doc.split('/')[-1].split('.')[0]
     elastic_search_client.indices.refresh(index='bahamas')
-    resp = elastic_search_client.get(index='bahamas', id=doc_id,  source_includes=['pca_optics_cluster'])
-    cluster = resp['_source']['pca_optics_cluster'][0]
+    resp = elastic_search_client.get(index='bahamas', id=doc_id,  source_includes=[query_type])
+    cluster = resp['_source'][query_type][0]
 
     # query
     query = {   
         "query_string": {
-            "fields" : ["pca_optics_cluster"],
+            "fields" : [query_type],
             "query": str(cluster),
         }
     }
