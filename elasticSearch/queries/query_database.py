@@ -166,7 +166,7 @@ def get_knn_res(doc_to_search_for:str, query_type:str, elastic_search_client:Ela
 
         return convert_hits(results['hits']['hits'])
     else:
-        return get_docs_from_same_cluster(elastic_search_client, doc_to_search_for, n_results, query_type)
+        return get_docs_from_same_cluster(elastic_search_client=elastic_search_client, doc_id=doc_to_search_for, n_results=n_results, query_type=query_type)
 
 
 def get_doc_meta_data(elastic_search_client: Elasticsearch, doc_id: str):
@@ -199,7 +199,7 @@ def get_docs_in_db(elastic_search_client: Elasticsearch, start:int=0, n_docs:int
         source_includes=SRC_INCLUDES)['hits']['hits']
     return convert_hits(results)
 
-def get_docs_from_same_cluster(query_type:str, elastic_search_client: Elasticsearch, path_to_doc: str, n_results: int = 5) -> list:
+def get_docs_from_same_cluster(query_type:str, elastic_search_client: Elasticsearch, doc_id: str, n_results: int = 5) -> list:
     '''
     :param elastic_search_client: Elasticsearch client
     :param path_to_doc: path to the document to be searched for; acts as the index in the database
@@ -208,10 +208,9 @@ def get_docs_from_same_cluster(query_type:str, elastic_search_client: Elasticsea
     :return: list of paths to documents in the same cluster as the document to be searched for
     '''
     # get cluster
-    doc_id = path_to_doc.split('/')[-1].split('.')[0]
     elastic_search_client.indices.refresh(index='bahamas')
     resp = elastic_search_client.get(index='bahamas', id=doc_id,  source_includes=[query_type])
-    cluster = resp['_source'][query_type][0]
+    cluster = resp['_source'][query_type]
 
     # query
     query = {   
@@ -317,15 +316,6 @@ def main(src_paths, image_src_path):
 
     # create json object to save results to disk and use them later for topic modelling
     results = {}
-
-    # Cluster query
-    doc_to_search_for = src_paths[0]
-    print('-' * 40, f'Query for same cluster as {doc_to_search_for} in database', '-' * 40)
-    NUM_RESULTS = 5
-    cluster_results = get_docs_from_same_cluster(elastic_search_client = client, path_to_doc = doc_to_search_for, n_results=NUM_RESULTS)
-    print('Cluster results: ',  [hit['_source']['path'] for hit in cluster_results['hits']['hits']])
-    results['cluster'] = {doc_to_search_for: [hit['_source']['path'] for hit in cluster_results['hits']['hits']]}
-
 
     # query database for a document using tfidf
     docs = get_docs_from_file_paths(src_paths)
