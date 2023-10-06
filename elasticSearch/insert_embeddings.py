@@ -100,7 +100,8 @@ def pca_optics_aux(src_paths: list, pca_dict: dict, img_path:str):
             '_id': id,
             'doc': {
                 "pca_image": pca_dict['pca_weights'][img_id] if img_id in pca_dict['pca_weights'].keys() else None,
-                "pca_optics_cluster": pca_dict['cluster'][img_id] if img_id in pca_dict['pca_weights'].keys() else None
+                "pca_optics_cluster": pca_dict['cluster'][img_id] if img_id in pca_dict['pca_weights'].keys() else None,
+                "argmax_pca_cluster": np.argmax(pca_dict['pca_weights'][img_id]) if img_id in pca_dict['pca_weights'].keys() else None
                 }
         }
 

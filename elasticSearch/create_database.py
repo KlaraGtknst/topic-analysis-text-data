@@ -78,6 +78,9 @@ def init_db(client: Elasticsearch, sim_docs_vocab_size: int, n_components: int):
             "pca_optics_cluster": {
                 "type": "byte",
             },
+            "argmax_pca_cluster": {
+                "type": "byte",
+            },
             "text": {
                 "type": "text",
             },

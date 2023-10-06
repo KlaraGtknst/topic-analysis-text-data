@@ -27,7 +27,7 @@ def main(src_paths, image_src_path, client_addr=CLIENT_ADDR, n_pools=1, model_na
     document_creation.create_documents(src_paths = src_paths, client_addr=client_addr) 
     print('finished creating documents using bulk')
     print('start inserting documents embeddings using bulk')
-    insert_embeddings.main(src_paths = src_paths, client_addr=client_addr, model_names=model_names)
+    insert_embeddings.main(src_paths = src_paths, image_src_path=image_src_path, client_addr=client_addr, model_names=model_names)
     
 
 if __name__ == '__main__':
