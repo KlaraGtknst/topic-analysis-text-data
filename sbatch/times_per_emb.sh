@@ -16,5 +16,5 @@ source /mnt/stud/work/kgutekunst/bsc-py/bin/activate    # virtuelle Umgebung akt
 # gpu-v100-1
 # gpu-v100-3
 # gpu-a100-1
-create_database
+
 srun python /mnt/stud/work/kgutekunst/topic-analysis-text-data/main_server.py 'db_all_embs.py' -p 1 -a 'http://cpu-epyc-5.ies.uni-kassel.de:9200' -d '/mnt/datasets/Bahamas/SAC/0/*.pdf' -D '/mnt/stud/home/kgutekunst/visualizations/images/'
