@@ -5,6 +5,7 @@ import pickle
 
 from elasticsearch import Elasticsearch
 from elasticSearch.db_elasticsearch import *
+from elasticSearch import models_aux
 from text_embeddings.InferSent.infer_pretrained import autoencoder_emb_model, init_infer
 from text_embeddings.universal_sent_encoder_tensorFlow import *
 from text_embeddings.hugging_face_sentence_transformer import *
@@ -149,6 +150,16 @@ def train_model(model_name, src_paths, client:Elasticsearch=None):
         sim_docs_tfidf = TfidfVectorizer(input='content', preprocessor=TfidfTextPreprocessor().transform, min_df=3, max_df=int(len(docs)*0.07))
         sim_docs_tfidf.fit(docs)
         return sim_docs_tfidf
+    
+    elif 'tfidf_ae' in model_name:
+        try:    # existing model
+            tfidf_model = load_model('tfidf')
+        except: # new model
+            tfidf_model = train_model('tfidf', src_paths)
+        docs = get_docs_from_file_paths(src_paths)
+        tfidf_embeddings = models_aux.get_tfidf_emb(tfidf_model, docs)
+        encoded_tfidf_embedding, ae_tfidf_encoder, ae_tfidf_decoder = autoencoder_emb_model(input_shape=tfidf_embeddings.shape[1], latent_dim=2048, data=tfidf_embeddings)
+        return ae_tfidf_encoder
     
     else:
         print(f'{model_name} not found')

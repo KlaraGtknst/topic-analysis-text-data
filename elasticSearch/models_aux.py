@@ -1,5 +1,6 @@
 from constants import MODEL_NAMES
 from text_embeddings import save_models
+import numpy as np
 
 
 def get_models(src_paths: list, model_names: list = MODEL_NAMES):
@@ -11,6 +12,8 @@ def get_models(src_paths: list, model_names: list = MODEL_NAMES):
     models = {}
     if 'infer' in model_names and (not 'ae' in model_names):    # needs AE for embedding
         model_names = model_names + ['ae']
+    if 'tfidf' in model_names and (not 'tfidf_ae' in model_names):  # needs AE for embedding on large corpus
+        model_names = model_names + ['tfidf_ae']
     for model_name in model_names:
         try: # model exists
             model = save_models.load_model(model_name)
@@ -20,3 +23,10 @@ def get_models(src_paths: list, model_names: list = MODEL_NAMES):
             models[model_name] = model
             save_models.save_model(model, model_name)
     return models
+
+def get_tfidf_emb(tfidf_model, text:list):
+    tfidf_emb = tfidf_model.transform(text).todense()
+    flag = np.array(1 if np.array([entry  == 0 for entry in tfidf_emb]).all() else 0).reshape(len(tfidf_emb),1)
+    flag_matrix = np.append(tfidf_emb, flag, axis=1)
+    embedding = np.ravel(np.array(flag_matrix))
+    return embedding

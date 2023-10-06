@@ -28,8 +28,7 @@ def generate_models_embedding(src_paths: list, models : dict, model_name: str = 
 
         if (model_name in models.keys()) and (model_name != 'ae'):
             embedding = get_embedding(models=models, model_name=model_name, text=text)
-            if len(embedding) > 2048:   # tfidf
-                return
+
             yield {
                 '_op_type': 'update',
                 '_index': 'bahamas',
@@ -58,7 +57,7 @@ def insert_embedding(src_paths: list, models: dict=None, client_addr=CLIENT_ADDR
             print('error')
             return
 
-def get_embedding(models, model_name: str, text: str):
+def get_embedding(models: dict, model_name: str, text: str):
     '''
     :param models: dictionary with model names as keys and the models as values
     :param model_name: name of the model to be used for embedding
@@ -79,10 +78,11 @@ def get_embedding(models, model_name: str, text: str):
         return models['ae'].predict(x=inferSent_embedding)[0]
                     
     elif model_name in ['sim_docs_tfidf', 'tfidf']:
-        tfidf_emb = models['tfidf'].transform([text]).todense()
-        flag = np.array(1 if np.array([entry  == 0 for entry in tfidf_emb]).all() else 0).reshape(len(tfidf_emb),1)
-        flag_matrix = np.append(tfidf_emb, flag, axis=1)
-        return np.ravel(np.array(flag_matrix))
+        tfidf_embedding = get_tfidf_emb(models['tfidf'], [text])
+        if len(tfidf_embedding) > 2048:
+            tfidf_ae_model = models['tfidf_ae']
+            return tfidf_ae_model.predict(x=tfidf_embedding)[0]
+        return tfidf_embedding
 
 
 # PCA & OPTICS
@@ -122,7 +122,6 @@ def insert_pca_optics(src_paths: list, pca_dict: dict, img_path:str, client_addr
             return
 
 def main(src_paths: list, image_src_path: str, num_components=13, client_addr=CLIENT_ADDR, model_names: list = MODEL_NAMES):
-  
     print('start inserting documents embeddings using bulk')
     for model_name in model_names:
         print('started with model: ', model_name)
