@@ -46,7 +46,7 @@ def get_specific_times(src_paths: list, image_src_path: str, client_addr: str=CL
     times.to_json(dir_to_save + 'times_per_emb.json')
 
 def display_times(dir_to_save:str = 'results/'):
-    times = pd.read_json('times_per_emb.json')
+    times = pd.read_json(dir_to_save + 'times_per_emb.json')
     fig, ax = plt.subplots(figsize=(12, 9))
     bars = ax.barh(times['model'], times['time'])
     ax.bar_label(bars)
