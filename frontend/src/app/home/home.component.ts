@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { Document, DocumentService } from '../document.service';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-home',
@@ -10,6 +11,7 @@ import { Document, DocumentService } from '../document.service';
 export class HomeComponent {
   public documents: Document[] = [];
   searchText = '';
+  readonly baseurl = environment.baseurl;
   
   constructor(
     private documentService: DocumentService,
