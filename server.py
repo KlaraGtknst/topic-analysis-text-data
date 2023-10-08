@@ -6,6 +6,7 @@ from constants import DB_FIELDS
 from text_visualizations import visualize_texts
 from elasticSearch.queries import query_database
 from flask_cors import CORS
+from topic_modeling.topic_modeling import TopicModel
 # flask --app server run --debug --port 8000
 
 CLIENT_ADDR = "http://localhost:9200"
@@ -98,7 +99,7 @@ class WordCloud(Resource):
             # get text from document
             texts = [query_database.get_doc_meta_data(elastic_search_client, id)['text']]
         img = visualize_texts.get_one_visualization_from_text(option='wordcloud', texts=texts)
-        bytes = visualize_texts.image_to_byte_array(img)    # TODO: bytes have no attribute save
+        bytes = visualize_texts.image_to_byte_array(img)
         response = make_response(bytes)
         response.headers.set('Content-Type', 'image/png')
         return response
@@ -118,6 +119,35 @@ class TermFrequency(Resource):
         response = make_response(bytes)
         response.headers.set('Content-Type', 'image/png')
         return response
+    
+
+
+@api.doc(params={'count': {'description':'number of values to return', 'type':'int'}, 
+                 'term': {'description':'term to find most similar topics to', 'type':'str'}})
+@api.route('/topics', endpoint='topicwordcloud')
+class TopicWordCloud(Resource):
+    # return wordcloud of one document as PNG
+    def get(self):
+        # http://127.0.0.1:8000/topics?term=bahamas&count=2
+
+        elastic_search_client = Elasticsearch(CLIENT_ADDR)
+        texts = query_database.get_all_texts_in_db(elastic_search_client)
+        print(type(texts[0]))
+
+        # query parameters
+        args = request.args
+        count = args.get('count', default=3, type=int)
+        term = args.get('term', default=None, type=str)
+
+        if term:
+            topic_model = TopicModel(texts)
+            img = topic_model.get_wordcloud_of_similar_topics(word=term, num_topics=count)
+            bytes = visualize_texts.image_to_byte_array(img)  
+            response = make_response(bytes)
+            response.headers.set('Content-Type', 'image/png')
+            return response
+
+
 
 with app.test_request_context():
     print('started server')

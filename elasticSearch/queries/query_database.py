@@ -136,6 +136,22 @@ def get_all_docs_in_db(elastic_search_client: Elasticsearch) -> dict:
         source_includes=SRC_INCLUDES)['hits']['hits']
     return convert_hits(results)
 
+def get_all_texts_in_db(elastic_search_client: Elasticsearch) -> list:
+    '''
+    :param elastic_search_client: Elasticsearch client
+    :return: dictionary of paths and scores of all documents in database
+    '''
+    results = elastic_search_client.search(
+        index='bahamas', 
+        body={
+            'size': get_number_docs_in_db(elastic_search_client),
+            'query': {
+                'match_all' : {}
+                }
+            },   
+        source_includes=['text'])['hits']['hits']
+    return [result['_source']['text'] for result in results]
+
 
 def get_knn_res(doc_to_search_for:str, query_type:str, elastic_search_client:Elasticsearch, n_results:int):
     '''
