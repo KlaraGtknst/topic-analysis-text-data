@@ -132,7 +132,6 @@ class TopicWordCloud(Resource):
 
         elastic_search_client = Elasticsearch(CLIENT_ADDR)
         texts = query_database.get_all_texts_in_db(elastic_search_client)
-        print(type(texts[0]))
 
         # query parameters
         args = request.args

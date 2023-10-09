@@ -28,14 +28,16 @@ class TopicModel():
 
     def get_wordcloud_of_similar_topics(self, num_topics:int, word:str=None):
         topic_words, word_scores, topic_scores, topic_nums = self.model.search_topics(keywords=[word], num_topics=num_topics)
-        fig = Figure(figsize=(10, 15))
+        fig = Figure(figsize=(10, 10))
         canvas = FigureCanvasAgg(fig)
         for topic_num in topic_nums:
             self.model._validate_topic_num(topic_num, False)
             word_score_dict = dict(zip(self.model.topic_words[topic_num],
                                        softmax(self.model.topic_word_scores[topic_num])))
-            wordcloud = WordCloud(width=1600, height=400, background_color='white').generate_from_frequencies(word_score_dict)
-            ax = fig.add_subplot(num_topics, 1, topic_num+1)
+            wordcloud = WordCloud(width=1000, height=1000, background_color='white').generate_from_frequencies(word_score_dict)
+            ax = fig.add_subplot(1, num_topics, topic_num+1)
+            ax.axis('off')
+            ax.set_title('Topic ' + str(topic_num))
             ax.imshow(wordcloud)
         canvas.draw()
         return Image.frombytes('RGB', canvas.get_width_height(), canvas.tostring_rgb())

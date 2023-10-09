@@ -1,1 +1,37 @@
-<p>topics works!</p>
+<div class="container">
+    <div class="row justify-content-left align-items-center"> 
+        <div class="col-10">
+            <p> Top2Vec Topics </p>
+        </div>
+        <div class="col-1">
+            <img src="assets/hessen_logo.png" alt="Hessen Logo" routerLink="/" style="width:70px;height:90px;">
+        </div>
+    </div>
+    <div class="row justify-content-left align-items-left"> 
+        <div class="col-10">
+            <div class="row justify-content-left align-items-left"> 
+                <div class="col">
+                    <p>Number of Topics to display: </p>  
+                    <label class="form-label" for="name">Enter term to search similar topics to</label>
+                </div>
+                <div class="col">
+                    <input matInput type="number" placeholder="Value" [(ngModel)]="count">
+                    <input class="form-control" type="search" id="name" [(ngModel)]="term" placeholder="Search for text...">
+                </div> 
+                <div class="col-1">
+                    <button mat-raised-button color="primary" (click)="start_search = !start_search">Search</button> 
+                </div> 
+            </div>
+        </div>
+    </div>
+    <p>topics works! Number is {{count}}, {{start_search}}</p>
+    <div class="col-sm">
+        <img *ngIf="start_search && count && term" [src]="sanitizer.bypassSecurityTrustResourceUrl(baseurl + '/topics?count=' + count + '&term=' + term)" style="width: 100%">
+        <img *ngIf="start_search && count && !term" [src]="sanitizer.bypassSecurityTrustResourceUrl(baseurl + '/topics?count=' + count)" style="width: 100%">
+    </div>
+</div>
+    
+
+
+
+
