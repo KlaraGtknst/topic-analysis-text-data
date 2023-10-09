@@ -6,12 +6,13 @@ import { environment } from 'src/environments/environment';
 @Component({
   selector: 'app-topics',
   templateUrl: './topics.component.html',
-  styleUrls: ['./topics.component.scss']
+  styleUrls: ['./topics.component.scss'],
 })
 export class TopicsComponent {
   public count?: number;
   public term?: string;
   public start_search: boolean = false;
+  readonly separatorSymbol = "_".repeat(200);
   readonly baseurl = environment.baseurl;
 
   constructor(
