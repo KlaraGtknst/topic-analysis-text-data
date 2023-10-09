@@ -48,7 +48,7 @@ def insert_embedding(src_paths: list, models: dict=None, client_addr=CLIENT_ADDR
         if (model_name not in MODEL_NAMES) or (model_name == 'ae'):
             return
         
-        client = client if client else Elasticsearch(client_addr)
+        client = client if client else Elasticsearch(client_addr, timeout=1000)
         models = models if models else get_models(src_paths, [model_name] if model_name else None)
 
         try:
