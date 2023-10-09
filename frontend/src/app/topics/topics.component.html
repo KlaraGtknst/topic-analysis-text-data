@@ -6,7 +6,7 @@
                     <a routerLink="..">&lt;</a>
                 </h2>
             </div>
-            <h2>Top2Vec Topics</h2>
+            <h2>Top2Vec Topics</h2>      
         </div>
         <div class="col-1">
             <img src="assets/hessen_logo.png" alt="Hessen Logo" routerLink="/" style="width:70px;height:90px;">
@@ -17,16 +17,19 @@
     <div class="row justify-content-left align-items-left"> 
         <div class="col-10">
             <div class="row justify-content-left align-items-left"> 
+                <p>Semantic search of topics using keywords.
+                The most semantically similar topics to the keywords will be returned. 
+                The topics will be displayed in a WordCloud.</p>
                 <div class="col">
                     <p>Number of Topics to display: </p>  
                     <label class="form-label" for="name">Enter term to search similar topics to</label>
                 </div>
                 <div class="col">
-                    <input matInput type="number" placeholder="Value" [(ngModel)]="count">
-                    <input class="form-control" type="search" id="name" [(ngModel)]="term" placeholder="Search for text...">
+                    <input matInput min="1" type="number" required placeholder="Value" [(ngModel)]="count" >
+                    <input class="form-control" type="search" id="name" [(ngModel)]="term" placeholder="Search for text..." required>
                 </div> 
                 <div class="col-1">
-                    <button mat-raised-button color="primary" (click)="start_search = !start_search">Search</button> 
+                    <button mat-raised-button matTooltip="If the number is bigger than the topics similar to the word no result is provided." color="primary" (click)="start_search = !start_search" [disabled]="!term || !count">Search</button> 
                 </div> 
             </div>
         </div>

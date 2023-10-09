@@ -138,7 +138,7 @@ class TopicWordCloud(Resource):
         count = args.get('count', default=3, type=int)
         term = args.get('term', default=None, type=str)
 
-        if term:
+        if count and term:
             topic_model = TopicModel(texts)
             img = topic_model.get_wordcloud_of_similar_topics(word=term, num_topics=count)
             bytes = visualize_texts.image_to_byte_array(img)  
