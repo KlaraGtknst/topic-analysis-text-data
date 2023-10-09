@@ -3,7 +3,7 @@
 #SBATCH --job-name=own_w2v  # Job-Name
 #SBATCH --nodes=1       # 1 Node wird benötigt
 #SBATCH --cpus-per-task=45 
-# --nodelist=cpu-epyc-1
+# --nodelist=cpu-epyc-6
 #SBATCH --mem=264g       # 264 GB Hauptspeicher
 #SBATCH --time=100:00:00  # max. Laufzeit 100h
 #SBATCH --output=/mnt/stud/home/kgutekunst/logs/%j.out        # Datei für stdout (logs/ prints != results, e.g., .pdf files) 
