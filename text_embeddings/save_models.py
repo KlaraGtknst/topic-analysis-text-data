@@ -35,6 +35,10 @@ def save_model(model, model_name):
 
     if 'doc2vec' in model_name:
         model.save(f'models/{model_name}.pkl')
+
+    elif 'tfidf_ae' == model_name:
+        with open(f'models/{model_name}.pkl', 'wb') as file:  
+            pickle.dump(model, file)
     
     elif 'tfidf' in model_name:
         with open(f'models/{model_name}_vectorizer.pk', 'wb') as fin:
@@ -66,12 +70,16 @@ def load_model(model_name):
     elif 'hugging' in model_name:
         return init_hf_sentTrans_model()
     
+    elif 'tfidf_ae' == model_name:
+        with open(f'models/tfidf_ae.pkl', 'rb') as file: 
+            return pickle.load(file)
+    
     elif 'infer' in model_name:
         with open(f'models/infersent_model.pkl', 'rb') as file:  
             return pickle.load(file)    
         
-    elif 'ae' in model_name:
-        with open(f'models/ae.pkl', 'rb') as file:  # ae_model, otherwise try: downgrading to tf 2.9 https://github.com/tensorflow/models/issues/10525
+    elif ('ae' in model_name) and not ('tfidf' in model_name):
+        with open(f'models/ae.pkl', 'rb') as file: # inferSent_AE
             return pickle.load(file)
         
     elif 'tfidf' in model_name:
