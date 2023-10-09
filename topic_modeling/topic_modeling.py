@@ -11,8 +11,7 @@ from PIL import Image
 class TopicModel():
 
     def __init__(self, documents:list):# paths_to_docs):
-        #self.paths_to_docs = glob.glob(paths_to_docs) if ((type(paths_to_docs)== str) and ('*' in paths_to_docs)) else paths_to_docs
-        self.documents = documents#get_docs_from_file_paths(paths_to_docs)
+        self.documents = documents
         # pretrained models: universal-sentence-encoder, sentence-transformers
         # model trains own model: doc2vec
         self.model = Top2Vec(documents=self.documents, speed='fast-learn', workers=8)
