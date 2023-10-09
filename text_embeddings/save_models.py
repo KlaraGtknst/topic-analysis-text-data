@@ -130,6 +130,16 @@ def train_model(model_name, src_paths, client:Elasticsearch=None):
         custom_w2v_path = w2v_local_path if os.path.exists(w2v_local_path) else w2v_server_path
         inferSent_model, docs = init_infer(model_path=model_path, w2v_path=custom_w2v_path, file_paths=src_paths, version=1)
         return inferSent_model
+    
+    elif 'tfidf_ae' in model_name:
+        try:    # existing model
+            tfidf_model = load_model('tfidf')
+        except: # new model
+            tfidf_model = train_model('tfidf', src_paths)
+        docs = get_docs_from_file_paths(src_paths)
+        tfidf_embeddings = models_aux.get_tfidf_emb(tfidf_model, docs)
+        encoded_tfidf_embedding, ae_tfidf_encoder, ae_tfidf_decoder = autoencoder_emb_model(input_shape=tfidf_embeddings.shape[1], latent_dim=2048, data=tfidf_embeddings)
+        return ae_tfidf_encoder
         
     elif 'ae' in model_name:
         # get inferSent model
@@ -150,16 +160,6 @@ def train_model(model_name, src_paths, client:Elasticsearch=None):
         sim_docs_tfidf = TfidfVectorizer(input='content', preprocessor=TfidfTextPreprocessor().transform, min_df=3, max_df=int(len(docs)*0.07))
         sim_docs_tfidf.fit(docs)
         return sim_docs_tfidf
-    
-    elif 'tfidf_ae' in model_name:
-        try:    # existing model
-            tfidf_model = load_model('tfidf')
-        except: # new model
-            tfidf_model = train_model('tfidf', src_paths)
-        docs = get_docs_from_file_paths(src_paths)
-        tfidf_embeddings = models_aux.get_tfidf_emb(tfidf_model, docs)
-        encoded_tfidf_embedding, ae_tfidf_encoder, ae_tfidf_decoder = autoencoder_emb_model(input_shape=tfidf_embeddings.shape[1], latent_dim=2048, data=tfidf_embeddings)
-        return ae_tfidf_encoder
     
     else:
         print(f'{model_name} not found')
