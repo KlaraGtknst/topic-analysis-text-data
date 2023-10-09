@@ -13,7 +13,15 @@
         </div>
     </div>
     <p>{{separatorSymbol}}</p>
+    {{topics.length}} topics were found by the model.
 
+    <div class="d-flex align-content-around flex-wrap">
+        <p *ngFor="let topic of topics; index as i" class="card grey" flex>
+            Topic {{i}}: {{ topic }}
+        </p>
+    </div>
+
+    <p>{{separatorSymbol}}</p>
     <div class="row justify-content-left align-items-left"> 
         <div class="col-10">
             <div class="row justify-content-left align-items-left"> 
@@ -22,7 +30,7 @@
                 The topics will be displayed in a WordCloud.</p>
                 <div class="col">
                     <p>Number of Topics to display: </p>  
-                    <label class="form-label" for="name">Enter term to search similar topics to</label>
+                    <label class="form-label" for="name">Enter term to search similar topics to:</label>
                 </div>
                 <div class="col">
                     <input matInput min="1" type="number" required placeholder="Value" [(ngModel)]="count" >
@@ -34,10 +42,8 @@
             </div>
         </div>
     </div>
-    <p>topics works! Number is {{count}}, {{start_search}}</p>
     <div class="col-sm">
-        <img *ngIf="start_search && count && term" [src]="sanitizer.bypassSecurityTrustResourceUrl(baseurl + '/topics?count=' + count + '&term=' + term)" style="width: 100%">
-        <img *ngIf="start_search && count && !term" [src]="sanitizer.bypassSecurityTrustResourceUrl(baseurl + '/topics?count=' + count)" style="width: 100%">
+        <img *ngIf="start_search && count && term" [src]="sanitizer.bypassSecurityTrustResourceUrl(baseurl + '/topics/wordcloud?count=' + count + '&term=' + term)" style="width: 100%">
     </div>
     <p>{{separatorSymbol}}</p>
 </div>

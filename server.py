@@ -124,11 +124,11 @@ class TermFrequency(Resource):
 
 @api.doc(params={'count': {'description':'number of values to return', 'type':'int'}, 
                  'term': {'description':'term to find most similar topics to', 'type':'str'}})
-@api.route('/topics', endpoint='topicwordcloud')
+@api.route('/topics/wordcloud', endpoint='topicwordcloud')
 class TopicWordCloud(Resource):
     # return wordcloud of one document as PNG
     def get(self):
-        # http://127.0.0.1:8000/topics?term=bahamas&count=2
+        # http://127.0.0.1:8000/topics/wordcloud?term=bahamas&count=2
 
         elastic_search_client = Elasticsearch(CLIENT_ADDR)
         texts = query_database.get_all_texts_in_db(elastic_search_client)
@@ -145,6 +145,29 @@ class TopicWordCloud(Resource):
             response = make_response(bytes)
             response.headers.set('Content-Type', 'image/png')
             return response
+        
+@api.doc(params={'count': {'description':'number of values to return', 'type':'int'}, 
+                 'term': {'description':'term to find most similar topics to', 'type':'str'}})
+@api.route('/topics', endpoint='topics')
+class Topics(Resource):
+    # return wordcloud of one document as PNG
+    def get(self):
+        # http://127.0.0.1:8000/topics?term=bahamas&count=2
+
+        elastic_search_client = Elasticsearch(CLIENT_ADDR)
+        texts = query_database.get_all_texts_in_db(elastic_search_client)
+
+        # query parameters
+        args = request.args
+        count = args.get('count', default=3, type=int)
+        term = args.get('term', default=None, type=str)
+
+        topic_model = TopicModel(texts)
+
+        if count and term:
+            return self.model.query_topics(term, num_topics=count)
+        
+        return [list(words) for words in topic_model.model.topic_words]
 
 
 

@@ -28,7 +28,7 @@ class TopicModel():
 
     def get_wordcloud_of_similar_topics(self, num_topics:int, word:str=None):
         topic_words, word_scores, topic_scores, topic_nums = self.model.search_topics(keywords=[word], num_topics=num_topics)
-        fig = Figure(figsize=(10, 10))
+        fig = Figure(figsize=(10, 4))
         canvas = FigureCanvasAgg(fig)
         for topic_num in topic_nums:
             self.model._validate_topic_num(topic_num, False)
