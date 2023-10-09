@@ -81,6 +81,7 @@ def get_embedding(models: dict, model_name: str, text: str):
         tfidf_embedding = get_tfidf_emb(models['tfidf'], [text])
         if len(tfidf_embedding) > 2048:
             tfidf_ae_model = models['tfidf_ae']
+            tfidf_embedding = tfidf_embedding.reshape(1, tfidf_embedding.shape[0])
             return tfidf_ae_model.predict(x=tfidf_embedding)[0]
         return tfidf_embedding
 

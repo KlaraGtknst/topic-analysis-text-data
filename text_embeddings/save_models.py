@@ -182,7 +182,17 @@ def main(path=None):
     # path = glob.glob('/Users/klara/Downloads/*.pdf')[0]
     src_path='/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf'
     src_paths = glob.glob(src_path)
-    # text = pdf_to_str(path)
+    text = pdf_to_str(path)
+
+    # TF-IDF + AE
+    tfidf_model = train_model('tfidf ', src_paths)
+    #tfidf_ae_model = train_model('tfidf_ae', src_paths)
+    tfidf_embedding = models_aux.get_tfidf_emb(tfidf_model, [text])
+    # (1, 4096)
+    tfidf_embedding = tfidf_embedding.reshape(1, tfidf_embedding.shape[0])
+    tfidf_embedding = np.array(tfidf_embedding)
+    encoded_tfidf_embedding, tfidf_ae_model, ae_tfidf_decoder = autoencoder_emb_model(input_shape=tfidf_embedding.shape[1], latent_dim=2048, data=tfidf_embedding)
+    tfidf_ae_embedding = tfidf_ae_model.predict(x=tfidf_embedding)[0]   # TODO: Problem
 
     # Universal 
     # model = google_univ_sent_encoding_aux()
@@ -230,17 +240,17 @@ def main(path=None):
     
     # # InferSent + AE
     # # save and load
-    infer_model_name = 'infersent_model'
-    ae_model_name = 'ae'
-    # InferSent
-    if (not os.path.exists(f"models/{infer_model_name}.pkl")):
-        MODEL_PATH = '/Users/klara/Developer/Uni/encoder/infersent1.pkl'
-        #W2V_PATH = '/Users/klara/Developer/Uni/GloVe/glove.840B.300d.txt'
-        CUSTOM_W2V_PATH = '/Users/klara/Developer/Uni/bahamas_word2vec/bahamas_w2v.txt'
-        inferSent_model, docs = init_infer(model_path=MODEL_PATH, w2v_path=CUSTOM_W2V_PATH, file_paths=src_paths, version=1)
-        save_model(inferSent_model, infer_model_name)
-    else:
-        inferSent_model = load_model(infer_model_name)
+    # infer_model_name = 'infersent_model'
+    # ae_model_name = 'ae'
+    # # InferSent
+    # if (not os.path.exists(f"models/{infer_model_name}.pkl")):
+    #     MODEL_PATH = '/Users/klara/Developer/Uni/encoder/infersent1.pkl'
+    #     #W2V_PATH = '/Users/klara/Developer/Uni/GloVe/glove.840B.300d.txt'
+    #     CUSTOM_W2V_PATH = '/Users/klara/Developer/Uni/bahamas_word2vec/bahamas_w2v.txt'
+    #     inferSent_model, docs = init_infer(model_path=MODEL_PATH, w2v_path=CUSTOM_W2V_PATH, file_paths=src_paths, version=1)
+    #     save_model(inferSent_model, infer_model_name)
+    # else:
+    #     inferSent_model = load_model(infer_model_name)
         #docs = get_docs_from_file_paths(src_paths)
 
     # # AE
@@ -255,10 +265,10 @@ def main(path=None):
     # compressed_infersent_embedding = ae_infer_encoder.predict(x=inferSent_embedding)
     # print(compressed_infersent_embedding[0])
     # print(np.array([entry  == 0 for entry in compressed_infersent_embedding]).all())
-    '''# train
-    inferSent_model = train_model('infersent_model', src_paths)
-    inferSent_embedding = inferSent_model.encode([text, text], tokenize=True)
-    print('infersent: ', inferSent_embedding)
-    ae_infer_encoder = train_model('ae_model', src_paths)
-    compressed_infersent_embedding = ae_infer_encoder.predict(x=inferSent_embedding)[0]
-    print('InferSent + AE: ', compressed_infersent_embedding)'''
+    # train
+    # inferSent_model = train_model('infer', src_paths)
+    # inferSent_embedding = inferSent_model.encode([text], tokenize=True)
+    # print('infersent: ', inferSent_embedding, inferSent_embedding.shape)
+    # ae_infer_encoder = train_model('ae_model', src_paths)
+    # compressed_infersent_embedding = ae_infer_encoder.predict(x=inferSent_embedding)[0]
+    # print('InferSent + AE: ', compressed_infersent_embedding)
