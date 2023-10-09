@@ -3,8 +3,8 @@
 #SBATCH --job-name=elastic-db  
 #SBATCH --nodes=1       
 #SBATCH --cpus-per-task=8
-#SBATCH --nodelist=cpu-epyc-5
-#SBATCH --mem=1g       
+#SBATCH --nodelist=cpu-epyc-6
+#SBATCH --mem=64g       
 #SBATCH --output=/mnt/stud/home/kgutekunst/logs/%j.out    
 #SBATCH --error=/mnt/stud/home/kgutekunst/error_logs/%j.err   
 
