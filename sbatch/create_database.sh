@@ -12,10 +12,6 @@
 
 date;hostname;pwd    # Ausgabe des Datums, des Hostnamens und des Arbeitsverzeichnisses
 source /mnt/stud/work/kgutekunst/bsc-py/bin/activate    # virtuelle Umgebung aktivieren
-# cpu-epyc-1
-# gpu-v100-1
-# gpu-v100-3
-# gpu-a100-1
 
 srun python /mnt/stud/work/kgutekunst/topic-analysis-text-data/main_server.py 'create_database.py' -p 1 -a 'http://cpu-epyc-6.ies.uni-kassel.de:9200' -d '/mnt/datasets/Bahamas/SAC/0/*.pdf' -D '/mnt/stud/home/kgutekunst/visualizations/images/'
 srun python /mnt/stud/work/kgutekunst/topic-analysis-text-data/main_server.py 'create_documents.py' -p 1 -a 'http://cpu-epyc-6.ies.uni-kassel.de:9200' -d '/mnt/datasets/Bahamas/SAC/0/*.pdf' -D '/mnt/stud/home/kgutekunst/visualizations/images/'
