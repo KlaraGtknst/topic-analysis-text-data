@@ -4,7 +4,7 @@
 #SBATCH --nodes=1       # 1 Node wird benötigt
 #SBATCH --cpus-per-task=45 
 #SBATCH --nodelist=cpu-epyc-6
-#SBATCH --mem=264g       # 264 GB Hauptspeicher
+#SBATCH --mem=368g       # 368 GB Hauptspeicher
 #SBATCH --time=100:00:00  # max. Laufzeit 100h
 #SBATCH --output=/mnt/stud/home/kgutekunst/logs/%j.out        # Datei für stdout (logs/ prints != results, e.g., .pdf files) 
 #SBATCH --error=/mnt/stud/home/kgutekunst/error_logs/%j.err     # Datei für stderr
