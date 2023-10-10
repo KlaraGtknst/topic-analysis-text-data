@@ -178,6 +178,7 @@ def insert_pca_weights(src_paths: list, pca_model: decomposition.PCA, img_path:s
 
 def insert_precomputed_clusters(src_paths: list, image_src_path:str, client_addr:str=CLIENT_ADDR):
     # get PCA model
+    print('start getting pca model')
     pca_model, max_w, max_h = get_eigendocs_PCA(img_dir_src_path=image_src_path, n_components=NUM_PCA_COMPONENTS)
     print('finished getting pca model')
 
