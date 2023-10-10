@@ -195,7 +195,7 @@ def insert_precomputed_clusters(src_paths: list, image_src_path:str, client_addr
     insert_pca_optics(pca_dict=result_df, client_addr=client_addr, img_path=image_src_path)
     print('finished inserting pca-OPTICS cluster df')
 
-def main(src_paths: list, image_src_path: str, num_components=13, client_addr=CLIENT_ADDR, model_names: list = MODEL_NAMES):
+def main(src_paths: list, image_src_path: str, client_addr=CLIENT_ADDR, model_names: list = MODEL_NAMES):
     print('start inserting documents embeddings using bulk')
     for model_name in model_names:
         print('started with model: ', model_name)
