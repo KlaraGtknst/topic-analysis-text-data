@@ -42,7 +42,7 @@ def preprocess_images(image_paths: list, img_size: int)-> np.ndarray:
 
     return preprocessed_images_centered
 
-def plot_grey_images(image: list, title: str = None, save: bool = False) -> None:
+def plot_grey_images(image: list, title: str = '', save: bool = False) -> None:
     '''
     :param image: images to be plotted; list of greyvalues; if the image is a 1d array it will be reshaped to be displayable
     :param title: title of the plot
@@ -62,7 +62,7 @@ def plot_grey_images(image: list, title: str = None, save: bool = False) -> None
     plt.show()
 
 
-def create_pca_df(image_src_path: list, pca_weights: list) -> pd.DataFrame:
+def create_pca_df(image_src_path: list, pca_weights) -> pd.DataFrame:
     '''
     :param image_src_path: paths to the images (as a list); used as index
     :param pca_weights: weights/ factors of the pca components
@@ -151,7 +151,7 @@ def get_eigendocs_OPTICS_df(src_path: str, n_components: int = 13) -> pd.DataFra
 
     return pca_df
 
-def get_eigendocs_PCA(img_dir_src_path: str, n_components: int = 13) -> decomposition.PCA:
+def get_eigendocs_PCA(img_dir_src_path: str, n_components: int = 13) -> tuple:
     '''
     :param img_dir_src_path: path to the directory of the images
     :param n_components: number of components to keep

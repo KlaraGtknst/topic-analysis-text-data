@@ -89,25 +89,24 @@ def get_embedding(models: dict, model_name: str, text: str):
 
 # PCA & OPTICS
 
-def pca_optics_aux(src_paths: list, pca_dict: dict, img_path:str):  
-    for path in src_paths:
-        id = get_hash_file(path)
-        if img_path.endswith('/'):
-            img_path = img_path + '*.png'
-        img_id = '/'.join(img_path.split('/')[:-1]) + '/' + path.split('/')[-1].split('.')[0] + '.png'
+def pca_optics_aux(pca_dict: dict, img_path:str):  
+
+    for id in pca_dict.index:
+        #id = get_hash_file(path)
+        # if img_path.endswith('/'):
+        #     img_path = img_path + '*.png'
+        # img_id = '/'.join(img_path.split('/')[:-1]) + '/' + path.split('/')[-1].split('.')[0] + '.png'
 
         yield {
             '_op_type': 'update',
             '_index': 'bahamas',
             '_id': id,
             'doc': {
-                "pca_image": pca_dict['pca_weights'][img_id] if img_id in pca_dict['pca_weights'].keys() else None,
-                "pca_optics_cluster": pca_dict['cluster'][img_id] if img_id in pca_dict['pca_weights'].keys() else None,
-                "argmax_pca_cluster": np.argmax(pca_dict['pca_weights'][img_id]) if img_id in pca_dict['pca_weights'].keys() else None
+                "pca_optics_cluster": pca_dict['cluster'][id],
                 }
         }
 
-def insert_pca_optics(src_paths: list, pca_dict: dict, img_path:str, client_addr=CLIENT_ADDR, client: Elasticsearch=None):
+def insert_pca_optics(pca_dict: dict, img_path:str, client_addr=CLIENT_ADDR, client: Elasticsearch=None):
         '''
         :param src_path: list of paths to the documents to be inserted into the database
         :param client: Elasticsearch client
@@ -118,7 +117,7 @@ def insert_pca_optics(src_paths: list, pca_dict: dict, img_path:str, client_addr
         client = client if client else Elasticsearch(client_addr)
       
         try:
-            bulk(client, pca_optics_aux(src_paths, pca_dict, img_path=img_path), stats_only= True)
+            bulk(client, pca_optics_aux(pca_dict, img_path=img_path), stats_only= True)
         except (ConflictError, ApiError,EOFError) as err:
             print('error')
             return
@@ -186,11 +185,20 @@ def insert_precomputed_clusters(src_paths: list, image_src_path:str, client_addr
     insert_pca_weights(src_paths=src_paths, pca_model=pca_model, img_path=image_src_path, client_addr=client_addr, max_w=max_w, max_h=max_h)
     print('finished inserting pca-argmax cluster df')
 
-    # TODO: get OPTICS clusters
-    # pca_optics_dict = get_eigendocs_OPTICS_df(image_src_path, n_components=NUM_PCA_COMPONENTS).to_dict()
-    # print('finished getting pca-OPTICS cluster df')
-    # insert_pca_optics(src_paths=src_paths, pca_dict=pca_optics_dict, client_addr=client_addr, img_path=image_src_path)
-    # print('finished inserting pca-OPTICS cluster df')
+    # OPTICS clusters
+    # get all pca weights and id 
+    elastic_search_client = Elasticsearch(client_addr)
+    results = get_all_docs_in_db(elastic_search_client, src_includes = ['pca_image'])   # _id, pca_image
+    result_df = pd.DataFrame.from_dict(results)
+    result_df.set_index('_id', inplace=True)
+    
+    # clustering
+    clt = OPTICS(cluster_method='dbscan', min_samples=2, max_eps=10, eps=0.5)
+    result_df['cluster'] = clt.fit_predict(np.array(result_df['pca_image'].values.tolist()))
+
+    print('finished getting pca-OPTICS cluster df')
+    insert_pca_optics(pca_dict=result_df, client_addr=client_addr, img_path=image_src_path)
+    print('finished inserting pca-OPTICS cluster df')
 
 def main(src_paths: list, image_src_path: str, num_components=13, client_addr=CLIENT_ADDR, model_names: list = MODEL_NAMES):
     print('start inserting documents embeddings using bulk')
