@@ -62,7 +62,7 @@ def is_valid_py_file(parser, arg):
         return arg
     
 def is_valid_model_name(parser, arg):
-    if not arg in ['universal', 'doc2vec', 'hugging', 'infer', 'ae', 'tfidf']:
+    if not arg in ['universal', 'doc2vec', 'hugging', 'infer', 'ae', 'tfidf', 'none']:
             parser.error("The model name %s is not valid!" % arg)
     return arg
 

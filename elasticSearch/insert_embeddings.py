@@ -121,6 +121,12 @@ def insert_pca_optics(src_paths: list, pca_dict: dict, img_path:str, client_addr
         except (ConflictError, ApiError,EOFError) as err:
             print('error')
             return
+        
+def insert_precomputed_clusters(src_paths: list, image_src_path:str, client_addr:str=CLIENT_ADDR):
+    pca_optics_dict = get_eigendocs_OPTICS_df(image_src_path, n_components=NUM_PCA_COMPONENTS).to_dict()
+    print('finished getting pca-OPTICS cluster df')
+    insert_pca_optics(src_paths=src_paths, pca_dict=pca_optics_dict, client_addr=client_addr, img_path=image_src_path)
+    print('finished inserting pca-OPTICS cluster df')
 
 def main(src_paths: list, image_src_path: str, num_components=13, client_addr=CLIENT_ADDR, model_names: list = MODEL_NAMES):
     print('start inserting documents embeddings using bulk')
@@ -128,10 +134,8 @@ def main(src_paths: list, image_src_path: str, num_components=13, client_addr=CL
         print('started with model: ', model_name)
         insert_embedding(src_paths = src_paths, client_addr=client_addr, model_name = model_name)
         print('finished model: ', model_name)
-    pca_optics_dict = get_eigendocs_OPTICS_df(image_src_path, n_components=NUM_PCA_COMPONENTS).to_dict()
-    print('finished getting pca-OPTICS cluster df')
-    insert_pca_optics(src_paths=src_paths, pca_dict=pca_optics_dict, client_addr=client_addr, img_path=image_src_path)
-    print('finished inserting pca-OPTICS cluster df')
+    
+    # insert_precomputed_clusters(src_paths=src_paths, image_src_path=image_src_path, client_addr=client_addr)
 
     print('finished inserting documents embeddings using bulk')
     
