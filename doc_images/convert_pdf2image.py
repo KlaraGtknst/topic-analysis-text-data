@@ -12,7 +12,7 @@ def pdf_to_png(file_path: list, outpath: str = None, save: bool= True) -> list:
     '''
     :param file_path: list of paths (to files); type has to be a list of strings
     :param outpath: path to output folder; if not set, the output folder is the same as the input folder.
-    :return: list of images
+    :return: -
 
     This function converts a PDF file to a PNG file.
     The name of the PNG file is the same as the PDF file with .png instead of .pdf.

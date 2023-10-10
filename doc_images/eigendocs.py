@@ -7,7 +7,10 @@ from sklearn.decomposition import PCA
 
 def rgb2gray(img:np.array):
     '''returns array of greyscale values'''
-    return 0.299*img[:,:,0] + 0.587*img[:,:,1] + 0.114*img[:,:,2]
+    try:
+        return 0.299*img[:,:,0] + 0.587*img[:,:,1] + 0.114*img[:,:,2]
+    except IndexError: # already greyscale
+        return img
 
 def get_maximum_height_width(documents:list):
     '''returns maximum height and width of a list from images.'''
@@ -27,9 +30,10 @@ def proprocess_docs(raw_documents:list, max_w:int, max_h:int):
         # same size for all documents
         C = np.ones((max_w,max_h))
         # convert to grayscale
-        C[:doc.shape[0],:doc.shape[1]] = rgb2gray(doc)
+        C[:doc.shape[0],:doc.shape[1]] = rgb2gray(doc) if len(doc.shape) == 3 else doc
         # 2d to 1d array
         documents.append(C.ravel())
+
     # list to array
     return np.asarray(documents)
 

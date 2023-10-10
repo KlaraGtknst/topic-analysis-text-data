@@ -19,6 +19,7 @@ from text_embeddings import save_models
 from constants import *
 from elasticSearch.models_aux import *
 from elasticSearch.create_documents import *
+from doc_images.convert_pdf2image import *
 
 
 def generate_models_embedding(src_paths: list, models : dict, model_name: str = 'no_model'):  
@@ -122,11 +123,74 @@ def insert_pca_optics(src_paths: list, pca_dict: dict, img_path:str, client_addr
             print('error')
             return
         
+def pca_weights_aux(src_paths: list, image_root_path:str, max_w:int, max_h:int, pca_model: decomposition.PCA): 
+    '''
+    :param src_path: list of paths to the documents to be inserted into the database
+    :param image_root_path: path to the images
+    :param max_w: max width of the images
+    :param max_h: max height of the images
+    :param pca_model: fitted PCA model
+
+    inserts pca weights and argmax clusters of all documents into db
+    ''' 
+    for path in src_paths:
+        id = get_hash_file(path)
+        img_path = image_root_path + path.split('/')[-1].split('.')[0] + '.png'
+        if not os.path.exists(img_path):
+            print('not existent: ', path)
+            pdf_to_png(file_path= [path], outpath=image_root_path, save= True)
+        if not os.path.exists(img_path):    # some pdf cannot be read
+            document = np.asarray([np.zeros((max_w, max_h)).ravel()])
+        else:
+            document_raw = plt.imread(img_path)
+            new_w = np.minimum(document_raw.shape[0], max_w)
+            new_h = np.minimum(document_raw.shape[1], max_h)
+            document_raw = np.resize(document_raw, (new_w, new_h))
+            
+            document = eigendocs.proprocess_docs(raw_documents=[document_raw], max_w=max_w, max_h=max_h)
+
+        reduced_img = pca_model.transform(document)
+       
+        yield {
+            '_op_type': 'update',
+            '_index': 'bahamas',
+            '_id': id,
+            'doc': {
+                "pca_image": reduced_img[0],
+                "argmax_pca_cluster": np.argmax(reduced_img),
+                }
+        }
+        
+def insert_pca_weights(src_paths: list, pca_model: decomposition.PCA, img_path:str, max_w:int, max_h:int, client_addr=CLIENT_ADDR, client: Elasticsearch=None):
+        '''
+        :param src_path: list of paths to the documents to be inserted into the database
+        :param client: Elasticsearch client
+        :param pca_model: fitted PCA model
+
+        inserts pca weights and OPTICS cluster of all documents into the database 'bahamas'.
+        '''
+        client = client if client else Elasticsearch(client_addr)
+      
+        try:
+            bulk(client, pca_weights_aux(src_paths=src_paths, pca_model=pca_model, image_root_path=img_path, max_w=max_w, max_h=max_h), stats_only= True)
+        except (ConflictError, ApiError,EOFError) as err:
+            print('error')
+            return
+
 def insert_precomputed_clusters(src_paths: list, image_src_path:str, client_addr:str=CLIENT_ADDR):
-    pca_optics_dict = get_eigendocs_OPTICS_df(image_src_path, n_components=NUM_PCA_COMPONENTS).to_dict()
-    print('finished getting pca-OPTICS cluster df')
-    insert_pca_optics(src_paths=src_paths, pca_dict=pca_optics_dict, client_addr=client_addr, img_path=image_src_path)
-    print('finished inserting pca-OPTICS cluster df')
+    # get PCA model
+    pca_model, max_w, max_h = get_eigendocs_PCA(img_dir_src_path=image_src_path, n_components=NUM_PCA_COMPONENTS)
+    print('finished getting pca model')
+
+    # save weights and argmax cluster in db
+    insert_pca_weights(src_paths=src_paths, pca_model=pca_model, img_path=image_src_path, client_addr=client_addr, max_w=max_w, max_h=max_h)
+    print('finished inserting pca-argmax cluster df')
+
+    # TODO: get OPTICS clusters
+    # pca_optics_dict = get_eigendocs_OPTICS_df(image_src_path, n_components=NUM_PCA_COMPONENTS).to_dict()
+    # print('finished getting pca-OPTICS cluster df')
+    # insert_pca_optics(src_paths=src_paths, pca_dict=pca_optics_dict, client_addr=client_addr, img_path=image_src_path)
+    # print('finished inserting pca-OPTICS cluster df')
 
 def main(src_paths: list, image_src_path: str, num_components=13, client_addr=CLIENT_ADDR, model_names: list = MODEL_NAMES):
     print('start inserting documents embeddings using bulk')

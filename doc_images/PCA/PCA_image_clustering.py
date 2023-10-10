@@ -151,6 +151,30 @@ def get_eigendocs_OPTICS_df(src_path: str, n_components: int = 13) -> pd.DataFra
 
     return pca_df
 
+def get_eigendocs_PCA(img_dir_src_path: str, n_components: int = 13) -> decomposition.PCA:
+    '''
+    :param img_dir_src_path: path to the directory of the images
+    :param n_components: number of components to keep
+    :return: fitted PCA model, maximum width and height of the images
+    '''
+    documents_raw = []
+    for root, dirs, files in os.walk(img_dir_src_path, topdown=True):
+        documents_raw.extend([plt.imread(os.path.join(root, name)) for name in files if name.endswith(".png")])
+        if len(documents_raw) >= 200:
+            break
+
+    # preprocessing with Eigendocs
+    max_w, max_h = eigendocs.get_maximum_height_width(documents_raw)
+    documents = eigendocs.proprocess_docs(raw_documents=documents_raw, max_w=max_w, max_h=max_h)
+
+    # PCA with SVD and normalization
+    pca = decomposition.PCA(n_components=n_components, whiten=True, svd_solver="randomized")
+    pca = pca.fit(documents)
+    return pca, max_w, max_h
+
+
+   
+
 
 
 def plot_all_pca_cluster_info(image_src_path: str, img_size: int, num_classes: int, outpath: str = None):
