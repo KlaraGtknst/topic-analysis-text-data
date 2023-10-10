@@ -21,7 +21,7 @@ DOC_PATH = '/Users/klara/Downloads/*.pdf'
 NUM_COMPONENTS = 2
 NUM_RESULTS = 4
 
-def save_model(model, model_name):
+def save_model(model, model_name:str):
     '''
     :param model: The model to be saved.
     :param model_name: The name/ type of the model.
@@ -54,7 +54,7 @@ def save_model(model, model_name):
 
 
 
-def load_model(model_name):
+def load_model(model_name:str):
     '''
     :param model_name: The name/ type of the model.
     :return: The model.
@@ -108,14 +108,14 @@ def get_tagged_input_documents(src_paths: list, tokens_only: bool = False):
         else:
             yield TaggedDocument(tokens, [i])
 
-def train_model(model_name, src_paths, client:Elasticsearch=None):
+def train_model(model_name:str, src_paths:list, client:Elasticsearch=None):
     '''
     :param model_name: The name/ type of the model.
     :param src_paths: The paths to the documents to be used for training.
     :return: The trained model.
     '''
     if 'doc2vec' in model_name:
-        train_corpus = list(get_tagged_input_documents(src_paths=glob.glob(src_paths)))
+        train_corpus = list(get_tagged_input_documents(src_paths=src_paths))
         d2v_model = Doc2Vec(train_corpus)
         return d2v_model
     
@@ -173,7 +173,7 @@ def train_model(model_name, src_paths, client:Elasticsearch=None):
         print(f'{model_name} not found')
 
     
-def get_model(model_name, src_paths):
+def get_model(model_name:str, src_paths:list):
     '''
     :param model_name: The name/ type of the model.
     :param src_paths: The paths to the documents to be used for training.
