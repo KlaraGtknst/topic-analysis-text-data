@@ -27,6 +27,8 @@ def get_models(src_paths: list, model_names: list = MODEL_NAMES):
 def get_tfidf_emb(tfidf_model, text:list):
     tfidf_emb = tfidf_model.transform(text).todense()
     flag = 1 if np.array([entry  == 0 for entry in tfidf_emb]).all() else 0
+    if tfidf_emb.shape[0] > 1:
+        tfidf_emb = tfidf_emb.reshape(1, -1)
     flag_matrix = np.append(tfidf_emb, np.array(flag).reshape(1,1), axis=1)
     embedding = np.ravel(np.array(flag_matrix))
     return embedding
