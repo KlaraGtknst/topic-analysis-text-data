@@ -134,8 +134,8 @@ def main(src_paths: list, image_src_path: str, num_components=13, client_addr=CL
         print('started with model: ', model_name)
         insert_embedding(src_paths = src_paths, client_addr=client_addr, model_name = model_name)
         print('finished model: ', model_name)
-    
-    # insert_precomputed_clusters(src_paths=src_paths, image_src_path=image_src_path, client_addr=client_addr)
+    if 'none' in model_names:
+        insert_precomputed_clusters(src_paths=src_paths, image_src_path=image_src_path, client_addr=client_addr)
 
     print('finished inserting documents embeddings using bulk')
     
