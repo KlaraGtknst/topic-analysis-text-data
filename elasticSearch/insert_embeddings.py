@@ -1,5 +1,4 @@
 import hashlib
-from multiprocess import Pool
 from elasticsearch import ApiError, ConflictError, Elasticsearch
 import base64
 from gensim.utils import simple_preprocess
@@ -37,7 +36,7 @@ def generate_models_embedding(src_paths: list, models : dict, model_name: str = 
                 'doc': {MODELS2EMB[model_name]: embedding}
             }
 
-def insert_embedding(src_paths: list, models: dict=None, client_addr=CLIENT_ADDR, client: Elasticsearch=None, model_name: str = 'no_model'):
+def insert_embedding(src_paths: list, models: dict={}, client_addr=CLIENT_ADDR, client: Elasticsearch=None, model_name: str = 'no_model'):
         '''
         :param src_path: list of paths to the documents to be inserted into the database
         :param client: Elasticsearch client
@@ -89,14 +88,9 @@ def get_embedding(models: dict, model_name: str, text: str):
 
 # PCA & OPTICS
 
-def pca_optics_aux(pca_dict: dict, img_path:str):  
+def pca_optics_aux(pca_dict: dict):  
 
     for id in pca_dict.index:
-        #id = get_hash_file(path)
-        # if img_path.endswith('/'):
-        #     img_path = img_path + '*.png'
-        # img_id = '/'.join(img_path.split('/')[:-1]) + '/' + path.split('/')[-1].split('.')[0] + '.png'
-
         yield {
             '_op_type': 'update',
             '_index': 'bahamas',
@@ -117,7 +111,7 @@ def insert_pca_optics(pca_dict: dict, img_path:str, client_addr=CLIENT_ADDR, cli
         client = client if client else Elasticsearch(client_addr)
       
         try:
-            bulk(client, pca_optics_aux(pca_dict, img_path=img_path), stats_only= True)
+            bulk(client, pca_optics_aux(pca_dict), stats_only= True)
         except (ConflictError, ApiError,EOFError) as err:
             print('error')
             return
@@ -211,12 +205,3 @@ def main(src_paths: list, image_src_path: str, num_components=13, client_addr=CL
         insert_precomputed_clusters(src_paths=src_paths, image_src_path=image_src_path, client_addr=client_addr)
 
     print('finished inserting documents embeddings using bulk')
-    
-
-if __name__ == '__main__':
-    args = arguments()
-
-    file_paths = get_input_filepath(args)
-    model_names = get_model_names(args)
-
-    main(src_paths=file_paths, client_addr=CLIENT_ADDR, model_names=model_names)

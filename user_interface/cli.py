@@ -121,7 +121,7 @@ def get_filepath(args: argparse.Namespace, option: str = 'output') -> str:
             return arg + '/'
         return arg
     else:
-        return None
+        return ''
 
 def get_input_filepath(args: argparse.Namespace) -> list:
     """

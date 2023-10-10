@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib as plt
 from sklearn.decomposition import PCA
 
-def rgb2gray(img:np.array):
+def rgb2gray(img: np.ndarray):
     '''returns array of greyscale values'''
     try:
         return 0.299*img[:,:,0] + 0.587*img[:,:,1] + 0.114*img[:,:,2]
@@ -39,22 +39,22 @@ def proprocess_docs(raw_documents:list, max_w:int, max_h:int):
 
 def plot_expl_var(pca:PCA, save=False):
     '''plots (and saves) the explained variance for a trained pca model.'''
-    fig, ax = plt.subplots(figsize=(10,6))
+    fig, ax = plt.subplots(figsize=(10,6)) # type: ignore
     y = np.cumsum(pca.explained_variance_ratio_)
-    plt.plot(y, label="cumulative explained variance")
-    plt.title("Cumulative explained variance")
-    plt.xlabel("Number of components")
-    plt.ylabel("Explained variance")
-    plt.axhline(y = 0.9, color = 'r', linestyle = '-', label="90% explained variance")
+    plt.plot(y, label="cumulative explained variance") # type: ignore
+    plt.title("Cumulative explained variance") # type: ignore
+    plt.xlabel("Number of components") # type: ignore
+    plt.ylabel("Explained variance") # type: ignore
+    plt.axhline(y = 0.9, color = 'r', linestyle = '-', label="90% explained variance") # type: ignore
     interp = np.interp(0.9, y, list(range(len(y))))
-    plt.axvline(x=interp,color='grey', label="{} components".format(int(interp)))
-    plt.legend()
+    plt.axvline(x=interp,color='grey', label="{} components".format(int(interp))) # type: ignore
+    plt.legend() # type: ignore
     if save:
-        plt.savefig("results/cumulative_explained_variance.pdf", format="pdf")
-    plt.show()
+        plt.savefig("results/cumulative_explained_variance.pdf", format="pdf") # type: ignore
+    plt.show() # type: ignore
 
 
-def plot_rec_err(X_train:np.array, X_test:np.array, n_max:int=10, save:bool=False):
+def plot_rec_err(X_train:np.ndarray, X_test:np.ndarray, n_max:int=10, save:bool=False):
     '''plots the reconstruction error for different number of components (PCA)'''
     reconstr_err = []
     for i in range(1, n_max):
@@ -65,13 +65,13 @@ def plot_rec_err(X_train:np.array, X_test:np.array, n_max:int=10, save:bool=Fals
         reconstr_err.append(np.mean((X_test - X_test_pca_inverse)**2))
 
     # plot reconstruction error
-    plt.figure(figsize=(10,6))
-    plt.plot(reconstr_err, label="reconstruction error")
-    plt.title("Reconstruction error")
-    plt.xlabel("Number of components")
-    plt.ylabel("Reconstruction error")
-    plt.legend()
+    plt.figure(figsize=(10,6)) # type: ignore
+    plt.plot(reconstr_err, label="reconstruction error") # type: ignore
+    plt.title("Reconstruction error") # type: ignore
+    plt.xlabel("Number of components") # type: ignore
+    plt.ylabel("Reconstruction error") # type: ignore
+    plt.legend() # type: ignore
     if save:
-        plt.savefig("results/reconstruction error.pdf", format="pdf")
-    plt.show()
+        plt.savefig("results/reconstruction error.pdf", format="pdf") # type: ignore
+    plt.show() # type: ignore
     

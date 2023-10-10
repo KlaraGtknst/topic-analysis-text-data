@@ -42,9 +42,9 @@ def preprocess_images(image_paths: list, img_size: int)-> np.ndarray:
 
     return preprocessed_images_centered
 
-def plot_grey_images(image: list, title: str = '', save: bool = False) -> None:
+def plot_grey_images(image: np.ndarray, title: str = '', save: bool = False) -> None:
     '''
-    :param image: images to be plotted; list of greyvalues; if the image is a 1d array it will be reshaped to be displayable
+    :param image: images to be plotted; array of greyvalues; if the image is a 1d array it will be reshaped to be displayable
     :param title: title of the plot
     :return: None
 
@@ -234,12 +234,8 @@ def main(src_paths, image_src_path, outpath):
 
     #plot_all_pca_cluster_info()
 
-    # get dataframe of pca weights and cluster index
-    pca_df = get_cluster_PCA_df(src_path= image_src_path, n_cluster= NUM_CLASSES, n_components= 2, preprocess_image_size=IMG_SIZE)
-    print(len(pca_df['pca_weights']))
-
     '''path = src_paths[23]
-    image_path = None
+    image_path = ''
     image_path = image_path if image_path else (path.split('data/0/')[0] + 'images/images/')
     id = path.split('/')[-1].split('.')[0]  # document title
     image = image_path + id  + '.png'

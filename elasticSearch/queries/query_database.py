@@ -60,7 +60,7 @@ def search_sim_doc2vec_docs_in_db(client: Elasticsearch, path: str, src_paths='/
     cf. https://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html#search-api-knn for information about knn in elasticsearch.
     '''
     if doc2vec_model is None:
-        doc2vec_model = save_models.get_model('doc2vec', src_paths)
+        doc2vec_model = save_models.get_model('doc2vec', glob.glob(src_paths))
     return get_db_search_results(client, infer_doc2vec_embedding(doc2vec_model, path), 'doc2vec')
 
 
@@ -139,12 +139,10 @@ def get_all_texts_in_db(elastic_search_client: Elasticsearch) -> list:
     '''
     results = elastic_search_client.search(
         index='bahamas', 
-        body={
-            'size': get_number_docs_in_db(elastic_search_client),
-            'query': {
-                'match_all' : {}
-                }
-            },   
+        size= get_number_docs_in_db(elastic_search_client),
+        query= {
+            'match_all' : {}
+            },
         source_includes=['text'])['hits']['hits']
     return [result['_source']['text'] for result in results]
 
@@ -250,7 +248,7 @@ def get_number_docs_in_db(client: Elasticsearch) -> int:
     return resp[0]['count']
 
 
-def get_sim_docs_tfidf(doc_to_search_for, src_paths='/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf', client_addr=CLIENT_ADDR):
+def get_sim_docs_tfidf(doc_to_search_for:str, src_paths:str='/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf', client_addr=CLIENT_ADDR):
     '''
     :param doc_to_search_for: path to the document to be searched for
     :param src_paths: path to the document corpus to be searched in
@@ -258,7 +256,7 @@ def get_sim_docs_tfidf(doc_to_search_for, src_paths='/Users/klara/Documents/Uni/
     :return: list of paths to documents in the same cluster as the document to be searched for
     '''
     client = Elasticsearch(client_addr)
-    sim_docs_tfidf = save_models.get_model('tfidf', src_paths)
+    sim_docs_tfidf = save_models.get_model('tfidf', glob.glob(src_paths))
     
     return find_document_tfidf(client, sim_docs_tfidf, path=doc_to_search_for)
         
@@ -307,7 +305,7 @@ def find_sim_docs_inferSent(src_paths:list, path: str, client: Elasticsearch=Non
     return get_db_search_results(client, compressed_infersent_embedding, 'inferSent_AE')
 
 
-def get_db_search_results(client: Elasticsearch, embedding: np.array, field: str, num_res:int=10):
+def get_db_search_results(client: Elasticsearch, embedding: np.ndarray, field: str, num_res:int=10):
     results = client.search(index='bahamas', knn={
             "field": field,
             "query_vector": embedding,
