@@ -13,7 +13,7 @@ class TfidfTextPreprocessor():
     txt_preproc = TfidfPreprocessingSteps(data)
     processed_text = \
             txt_preproc.strip_accents().strip_newlines().lowercase().\
-            discretize_numbers().remove_punctuations().\
+            discretize_numbers().remove_punctuations().remove_double_spaces().\
             change_number_encoding().remove_stopwords().\
             lemmatisation().to_text()
     

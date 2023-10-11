@@ -47,6 +47,10 @@ class TfidfPreprocessingSteps():
         # '!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~' 32 punctuations in python string module
         self.X = [re.sub('[%s]' % re.escape(string.punctuation), ' ', text) for text in self.X]
         return self
+    
+    def remove_double_spaces(self):
+        self.X = [re.sub(' +', ' ', text) for text in self.X]
+        return self
 
     def change_number_encoding(self):
         self.X = [re.sub('FLOAT', '<FLOAT>', re.sub('SMALLNUMBER', '<SMALLNUMBER>', (re.sub('BIGNUMBER', '<BIGNUMBER>', text)))) for text in self.X]
