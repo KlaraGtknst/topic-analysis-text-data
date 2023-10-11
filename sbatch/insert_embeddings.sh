@@ -3,7 +3,7 @@
 #SBATCH --job-name=insert-emb  # Job-Name
 #SBATCH --nodes=1       # 1 Node wird benötigt
 #SBATCH --cpus-per-task=45 
-#SBATCH --nodelist=cpu-epyc-6
+#SBATCH --nodelist=cpu-epyc-1
 #SBATCH --mem=264g       # 264 GB Hauptspeicher
 #SBATCH --time=100:00:00  # max. Laufzeit 100h
 #SBATCH --output=/mnt/stud/home/kgutekunst/logs/%j.out        # Datei für stdout (logs/ prints != results, e.g., .pdf files) 
@@ -13,9 +13,9 @@
 date;hostname;pwd    # Ausgabe des Datums, des Hostnamens und des Arbeitsverzeichnisses
 source /mnt/stud/work/kgutekunst/bsc-py/bin/activate    # virtuelle Umgebung aktivieren
 
-srun python /mnt/stud/work/kgutekunst/topic-analysis-text-data/main_server.py 'insert_embeddings.py' -m 'infer' -p 1 -a 'http://cpu-epyc-6.ies.uni-kassel.de:9200' -d '/mnt/datasets/Bahamas/SAC/0/*.pdf' -D '/mnt/stud/home/kgutekunst/visualizations/images/'
-srun python /mnt/stud/work/kgutekunst/topic-analysis-text-data/main_server.py 'insert_embeddings.py' -m 'doc2vec' -p 1 -a 'http://cpu-epyc-6.ies.uni-kassel.de:9200' -d '/mnt/datasets/Bahamas/SAC/0/*.pdf' -D '/mnt/stud/home/kgutekunst/visualizations/images/'
-srun python /mnt/stud/work/kgutekunst/topic-analysis-text-data/main_server.py 'insert_embeddings.py' -m 'hugging' -p 1 -a 'http://cpu-epyc-6.ies.uni-kassel.de:9200' -d '/mnt/datasets/Bahamas/SAC/0/*.pdf' -D '/mnt/stud/home/kgutekunst/visualizations/images/'
-srun python /mnt/stud/work/kgutekunst/topic-analysis-text-data/main_server.py 'insert_embeddings.py' -m 'none' -p 1 -a 'http://cpu-epyc-6.ies.uni-kassel.de:9200' -d '/mnt/datasets/Bahamas/SAC/0/*.pdf' -D '/mnt/stud/home/kgutekunst/visualizations/images/'
-srun python /mnt/stud/work/kgutekunst/topic-analysis-text-data/main_server.py 'insert_embeddings.py' -m 'tfidf' -p 1 -a 'http://cpu-epyc-6.ies.uni-kassel.de:9200' -d '/mnt/datasets/Bahamas/SAC/0/*.pdf' -D '/mnt/stud/home/kgutekunst/visualizations/images/'
-srun python /mnt/stud/work/kgutekunst/topic-analysis-text-data/main_server.py 'insert_embeddings.py' -m 'universal' -p 1 -a 'http://cpu-epyc-6.ies.uni-kassel.de:9200' -d '/mnt/datasets/Bahamas/SAC/0/*.pdf' -D '/mnt/stud/home/kgutekunst/visualizations/images/'
+srun python /mnt/stud/work/kgutekunst/topic-analysis-text-data/main_server.py 'insert_embeddings.py' -m 'infer' -p 1 -a 'http://cpu-epyc-1.ies.uni-kassel.de:9200' -d '/mnt/datasets/Bahamas/SAC/0/*.pdf' -D '/mnt/stud/home/kgutekunst/visualizations/images/'
+srun python /mnt/stud/work/kgutekunst/topic-analysis-text-data/main_server.py 'insert_embeddings.py' -m 'doc2vec' -p 1 -a 'http://cpu-epyc-1.ies.uni-kassel.de:9200' -d '/mnt/datasets/Bahamas/SAC/0/*.pdf' -D '/mnt/stud/home/kgutekunst/visualizations/images/'
+srun python /mnt/stud/work/kgutekunst/topic-analysis-text-data/main_server.py 'insert_embeddings.py' -m 'hugging' -p 1 -a 'http://cpu-epyc-1.ies.uni-kassel.de:9200' -d '/mnt/datasets/Bahamas/SAC/0/*.pdf' -D '/mnt/stud/home/kgutekunst/visualizations/images/'
+srun python /mnt/stud/work/kgutekunst/topic-analysis-text-data/main_server.py 'insert_embeddings.py' -m 'none' -p 1 -a 'http://cpu-epyc-1.ies.uni-kassel.de:9200' -d '/mnt/datasets/Bahamas/SAC/0/*.pdf' -D '/mnt/stud/home/kgutekunst/visualizations/images/'
+srun python /mnt/stud/work/kgutekunst/topic-analysis-text-data/main_server.py 'insert_embeddings.py' -m 'tfidf' -p 1 -a 'http://cpu-epyc-1.ies.uni-kassel.de:9200' -d '/mnt/datasets/Bahamas/SAC/0/*.pdf' -D '/mnt/stud/home/kgutekunst/visualizations/images/'
+srun python /mnt/stud/work/kgutekunst/topic-analysis-text-data/main_server.py 'insert_embeddings.py' -m 'universal' -p 1 -a 'http://cpu-epyc-1.ies.uni-kassel.de:9200' -d '/mnt/datasets/Bahamas/SAC/0/*.pdf' -D '/mnt/stud/home/kgutekunst/visualizations/images/'
