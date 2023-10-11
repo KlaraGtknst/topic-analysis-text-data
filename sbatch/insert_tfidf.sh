@@ -3,7 +3,7 @@
 #SBATCH --job-name=tfidf-ae 
 #SBATCH --nodes=1    
 #SBATCH --cpus-per-task=45 
-#SBATCH --nodelist=cpu-epyc-6
+#SBATCH --nodelist=cpu-epyc-7
 #SBATCH --mem=264g 
 #SBATCH --time=100:00:00  
 #SBATCH --output=/mnt/stud/home/kgutekunst/logs/%j.out    
