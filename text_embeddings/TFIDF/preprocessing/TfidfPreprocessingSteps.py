@@ -45,7 +45,7 @@ class TfidfPreprocessingSteps():
     
     def remove_punctuations(self):
         # '!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~' 32 punctuations in python string module
-        self.X = [re.sub('[%s]' % re.escape(string.punctuation), '', text) for text in self.X]
+        self.X = [re.sub('[%s]' % re.escape(string.punctuation), ' ', text) for text in self.X]
         return self
 
     def change_number_encoding(self):
