@@ -7,6 +7,7 @@ import numpy as np
 from text_embeddings.preprocessing.read_pdf import *
 from user_interface.cli import *
 from wordcloud import WordCloud
+from nltk.stem import WordNetLemmatizer
 
 '''------Code for visualization-------
 run this code by typing and altering the path:
@@ -50,7 +51,10 @@ def word_cloud(tokens: list, file_name: str, outpath: str = None, return_img:boo
     cf. https://towardsdatascience.com/end-to-end-topic-modeling-in-python-latent-dirichlet-allocation-lda-35ce4ed6b3e0
     '''
     try:
-        # possible to add stopwords to initiation of worldcloud
+        # lemmatize tokens
+        lemmatizer = WordNetLemmatizer()
+        tokens = [lemmatizer.lemmatize(token) for token in tokens]
+        # worldcloud
         wordcloud = WordCloud(width=800, height=500, random_state=21, contour_width=3, max_font_size=110, background_color='white', max_words=5000).generate(','.join(tokens))
         if return_img:
             return wordcloud.to_image()
