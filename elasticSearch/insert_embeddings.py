@@ -89,7 +89,6 @@ def get_embedding(models: dict, model_name: str, text: str):
 # PCA & OPTICS
 
 def pca_optics_aux(pca_dict: dict):  
-
     for id in pca_dict.index:
         yield {
             '_op_type': 'update',
@@ -100,9 +99,8 @@ def pca_optics_aux(pca_dict: dict):
                 }
         }
 
-def insert_pca_optics(pca_dict: dict, img_path:str, client_addr=CLIENT_ADDR, client: Elasticsearch=None):
+def insert_pca_optics(pca_dict: dict, client_addr=CLIENT_ADDR, client: Elasticsearch=None):
         '''
-        :param src_path: list of paths to the documents to be inserted into the database
         :param client: Elasticsearch client
         :param pca_dict: dictionary with weights and clusters
 
@@ -192,7 +190,7 @@ def insert_precomputed_clusters(src_paths: list, image_src_path:str, client_addr
     result_df['cluster'] = clt.fit_predict(np.array(result_df['pca_image'].values.tolist()))
 
     print('finished getting pca-OPTICS cluster df')
-    insert_pca_optics(pca_dict=result_df, client_addr=client_addr, img_path=image_src_path)
+    insert_pca_optics(pca_dict=result_df, client_addr=client_addr)
     print('finished inserting pca-OPTICS cluster df')
 
 def main(src_paths: list, image_src_path: str, client_addr=CLIENT_ADDR, model_names: list = MODEL_NAMES):

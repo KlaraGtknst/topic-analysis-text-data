@@ -34,8 +34,7 @@ def get_specific_times(src_paths: list, image_src_path: str, client_addr: str=CL
         print('finished model: ', model_name)
 
     start = timer()
-    pca_optics_dict = PCA_image_clustering.get_eigendocs_OPTICS_df(image_src_path, n_components=NUM_PCA_COMPONENTS).to_dict()
-    insert_embeddings.insert_pca_optics(src_paths=src_paths, pca_dict=pca_optics_dict, client_addr=client_addr, img_path=image_src_path)
+    insert_embeddings.insert_precomputed_clusters(src_paths=src_paths, image_src_path=image_src_path, client_addr=client_addr)
     end = timer()
     duration = end - start
     times = pd.concat([times, pd.DataFrame({'model': 'pca_optics', 'time': [duration]})])
