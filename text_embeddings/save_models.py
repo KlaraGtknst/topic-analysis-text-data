@@ -145,7 +145,7 @@ def train_model(model_name:str, src_paths:list, client:Elasticsearch=None):
         except: # new model
             tfidf_model = train_model('tfidf', src_paths)
         docs = get_docs_from_file_paths(src_paths)
-        tfidf_embeddings = models_aux.get_tfidf_emb(tfidf_model, docs)
+        tfidf_embeddings = np.array([models_aux.get_tfidf_emb(tfidf_model, doc) for doc in docs])
         encoded_tfidf_embedding, ae_tfidf_encoder, ae_tfidf_decoder = autoencoder_emb_model(input_shape=tfidf_embeddings.shape[1], latent_dim=2048, data=tfidf_embeddings)
         return ae_tfidf_encoder
         
