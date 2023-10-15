@@ -126,7 +126,7 @@ class TermFrequency(Resource):
                  'term': {'description':'term to find most similar topics to', 'type':'str'}})
 @api.route('/topics/wordcloud', endpoint='topicwordcloud')
 class TopicWordCloud(Resource):
-    # return wordcloud of one document as PNG
+    # return wordcloud of the topics most similar to search term as PNG
     def get(self):
         # http://127.0.0.1:8000/topics/wordcloud?term=bahamas&count=2
 
@@ -150,7 +150,7 @@ class TopicWordCloud(Resource):
                  'term': {'description':'term to find most similar topics to', 'type':'str'}})
 @api.route('/topics', endpoint='topics')
 class Topics(Resource):
-    # return wordcloud of one document as PNG
+    # return topics found by Top2Vec
     def get(self):
         # http://127.0.0.1:8000/topics?term=bahamas&count=2
 
