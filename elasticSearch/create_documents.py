@@ -24,7 +24,7 @@ def create_document_aux(src_paths: list, client: Elasticsearch):
             id = get_hash_file(path)
 
             if get_doc_meta_data(client, doc_id=id) is not None:    # document already in database
-                return
+                continue
             
             text = pdf_to_str(path)
             
