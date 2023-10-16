@@ -45,7 +45,7 @@ def insert_embedding(src_paths: list, models: dict={}, client_addr=CLIENT_ADDR, 
 
         inserts specific embedding of all documents into the database 'bahamas'.
         '''
-        if (model_name not in MODEL_NAMES) or (model_name == 'ae'):
+        if (model_name not in MODEL_NAMES) or (model_name == 'ae') or (model_name == 'none'):
             return
         
         client = client if client else Elasticsearch(client_addr, timeout=1000)

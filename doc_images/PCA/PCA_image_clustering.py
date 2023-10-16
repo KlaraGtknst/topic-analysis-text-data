@@ -158,7 +158,7 @@ def get_eigendocs_PCA(img_dir_src_path: str, n_components: int = 13) -> tuple:
     :return: fitted PCA model, maximum width and height of the images
     '''
     documents_raw = []
-    for root, dirs, files in os.walk(img_dir_src_path, topdown=True):
+    for root, dirs, files in os.scandir(img_dir_src_path):
         documents_raw.extend([plt.imread(os.path.join(root, name)) for name in files if name.endswith(".png")])
         if len(documents_raw) >= 80:
             break
