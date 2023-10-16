@@ -18,6 +18,7 @@ from text_embeddings.InferSent.infer_pretrained import *
 from text_embeddings import save_models 
 from constants import *
 from elasticSearch.models_aux import *
+from elasticSearch.recursive_search import *
 
 '''------initiate, fill and search in database-------
 run this code by typing and altering the path:
@@ -94,11 +95,11 @@ def init_db(client: Elasticsearch, sim_docs_vocab_size: int, n_components: int):
     })
 
 
-def initialize_db(src_paths, num_components: int=13, client_addr=CLIENT_ADDR):
+def initialize_db(src_path, num_components: int=13, client_addr=CLIENT_ADDR):
 
     print('-' * 80)
 
-    sim_docs_vocab_size = len(get_models(src_paths = src_paths, model_names = ["tfidf"])["tfidf"].vocabulary_.values())
+    sim_docs_vocab_size = len(get_models(src_path = src_path, model_names = ["tfidf"])["tfidf"].vocabulary_.values())
 
     # Create the client instance
     client = Elasticsearch(client_addr)
@@ -112,13 +113,12 @@ def initialize_db(src_paths, num_components: int=13, client_addr=CLIENT_ADDR):
     return client 
 
 
-def main(src_paths, client_addr=CLIENT_ADDR):
-    initialize_db(src_paths, client_addr=client_addr)
+def main(src_path:str, client_addr=CLIENT_ADDR):
+    initialize_db(src_path, client_addr=client_addr)
     
 
 if __name__ == '__main__':
     args = arguments()
+    file_path = args.directory
 
-    file_paths = get_input_filepath(args)
-
-    initialize_db(file_paths, client_addr=CLIENT_ADDR)
+    initialize_db(file_path, client_addr=CLIENT_ADDR)

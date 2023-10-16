@@ -16,10 +16,10 @@ from doc_images.PCA.PCA_image_clustering import *
 from text_embeddings.TFIDF.preprocessing.TfidfTextPreprocessor import *
 from text_embeddings.InferSent.infer_pretrained import *
 from constants import *
+from elasticSearch.recursive_search import *
 
-
-def create_document_aux(src_paths: list, client: Elasticsearch):  
-    for path in src_paths:
+def create_document_aux(src_path: str, client: Elasticsearch):  
+    for path in scanRecurse(src_path):
         try:           
             id = get_hash_file(path)
 
@@ -40,7 +40,7 @@ def create_document_aux(src_paths: list, client: Elasticsearch):
             print('EOF error')
             return
 
-def create_documents(src_paths: list, client_addr=CLIENT_ADDR, client: Elasticsearch=None):
+def create_documents(src_path: string, client_addr=CLIENT_ADDR, client: Elasticsearch=None):
         '''
         :param src_path: path to the document to be inserted into the database
         :param client: Elasticsearch client
@@ -50,7 +50,7 @@ def create_documents(src_paths: list, client_addr=CLIENT_ADDR, client: Elasticse
         '''
         client = client if client else Elasticsearch(client_addr)
         try:
-            bulk(client, create_document_aux(src_paths, client), stats_only= True)
+            bulk(client, create_document_aux(src_path, client), stats_only= True)
          
         except (ConflictError, ApiError,EOFError) as err:
             print(err)
@@ -85,14 +85,14 @@ def get_hash_file(path: str):
     id = file_hash.hexdigest()
     return id
 
-def main(src_paths, client_addr=CLIENT_ADDR):
+def main(src_path:str, client_addr=CLIENT_ADDR):
    
-    create_documents(src_paths = src_paths, client_addr=client_addr)
+    create_documents(src_path = src_path, client_addr=client_addr)
     
 
 if __name__ == '__main__':
     args = arguments()
 
-    file_paths = get_input_filepath(args)
+    file_path = args.directory
 
-    create_documents(src_paths=file_paths, client_addr=CLIENT_ADDR)
+    create_documents(src_path=file_path, client_addr=CLIENT_ADDR)

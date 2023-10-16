@@ -13,7 +13,9 @@ import db_all_embs as db_all_embs
 if __name__ == '__main__':
     args = arguments()
 
-    file_paths = get_input_filepath(args)
+    #file_paths = get_input_filepath(args)
+    file_path = args.directory
+    file_paths = file_path # TODO: temporary
     out_file = get_filepath(args, option='output')
     image_src_path = get_filepath(args, option='image')
     file_to_run = args.file_to_run
@@ -32,7 +34,7 @@ if __name__ == '__main__':
     elif file_to_run[0] == 'db_elasticsearch.py':
         # python3 main_server.py 'db_elasticsearch.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
         # python3 main_server.py 'db_elasticsearch.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1 -m 'universal'
-        db_elasticsearch.main(file_paths, image_src_path, client_addr, n_pools, model_names=model_names)
+        db_elasticsearch.main(file_path, image_src_path, client_addr, n_pools, model_names=model_names)
 
     elif file_to_run[0] == 'PCA_image_clustering.py':
         # python3 main_server.py 'PCA_image_clustering.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/'
@@ -40,7 +42,7 @@ if __name__ == '__main__':
 
     elif file_to_run[0] == 'db_all_embs.py':
         # python3 main_server.py 'db_all_embs.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
-        db_all_embs.main(file_paths, image_src_path, client_addr, n_pools, model_names=model_names)
+        db_all_embs.main(file_path, image_src_path, client_addr, n_pools, model_names=model_names)
 
     elif file_to_run[0] == 'own_word2vec.py':
         # python3 main_server.py 'own_word2vec.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
@@ -48,14 +50,14 @@ if __name__ == '__main__':
 
     elif file_to_run[0] == 'create_database.py':
         # python3 main_server.py 'create_database.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
-        create_database.main(file_paths, client_addr=client_addr)
+        create_database.main(file_path, client_addr=client_addr)
 
     elif file_to_run[0] == 'create_documents.py':
         # python3 main_server.py 'create_documents.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
-        create_documents.main(file_paths, client_addr=client_addr)
+        create_documents.main(file_path, client_addr=client_addr)
 
     elif file_to_run[0] == 'insert_embeddings.py':
         # python3 main_server.py 'insert_embeddings.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
-        insert_embeddings.main(file_paths, client_addr=client_addr, model_names=model_names, image_src_path=image_src_path)
+        insert_embeddings.main(file_path, client_addr=client_addr, model_names=model_names, image_src_path=image_src_path)
 
         

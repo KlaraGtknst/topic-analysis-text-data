@@ -21,21 +21,22 @@ from elasticSearch import create_documents as document_creation
 from elasticSearch import create_database as create_database
 from elasticSearch import insert_embeddings as insert_embeddings
 
-def main(src_paths, image_src_path, client_addr=CLIENT_ADDR, n_pools=1, model_names: list = MODEL_NAMES):
-    create_database.initialize_db(src_paths, client_addr=client_addr)
+def main(src_path:str, image_src_path:str, client_addr=CLIENT_ADDR, n_pools=1, model_names: list = MODEL_NAMES):
+    create_database.initialize_db(src_path, client_addr=client_addr)
     print('start creating documents using bulk')
-    document_creation.create_documents(src_paths = src_paths, client_addr=client_addr) 
+    document_creation.create_documents(src_path = src_path, client_addr=client_addr) 
     print('finished creating documents using bulk')
     print('start inserting documents embeddings using bulk')
-    insert_embeddings.main(src_paths = src_paths, image_src_path=image_src_path, client_addr=client_addr, model_names=model_names)
+    insert_embeddings.main(src_path = src_path, image_src_path=image_src_path, client_addr=client_addr, model_names=model_names)
     
 
 if __name__ == '__main__':
     args = arguments()
 
-    file_paths = get_input_filepath(args)
+    #file_paths = get_input_filepath(args)
+    file_path = args.directory
     out_file = get_filepath(args, option='output')
     image_src_path = get_filepath(args, option='image')
     model_names = get_model_names(args)
 
-    main(src_paths=file_paths, image_src_path=image_src_path, client_addr=CLIENT_ADDR, model_names=model_names)
+    main(src_path=file_path, image_src_path=image_src_path, client_addr=CLIENT_ADDR, model_names=model_names)

@@ -19,10 +19,11 @@ from constants import *
 from elasticSearch.models_aux import *
 from elasticSearch.create_documents import *
 from doc_images.convert_pdf2image import *
+from elasticSearch.recursive_search import *
 
 
-def generate_models_embedding(src_paths: list, models : dict, model_name: str = 'no_model'):  
-    for path in src_paths:
+def generate_models_embedding(src_path: str, models : dict, model_name: str = 'no_model'):  
+    for path in scanRecurse(src_path):
         text = pdf_to_str(path)
         id = get_hash_file(path)
 
@@ -36,9 +37,9 @@ def generate_models_embedding(src_paths: list, models : dict, model_name: str = 
                 'doc': {MODELS2EMB[model_name]: embedding}
             }
 
-def insert_embedding(src_paths: list, models: dict={}, client_addr=CLIENT_ADDR, client: Elasticsearch=None, model_name: str = 'no_model'):
+def insert_embedding(src_path: str, models: dict={}, client_addr=CLIENT_ADDR, client: Elasticsearch=None, model_name: str = 'no_model'):
         '''
-        :param src_path: list of paths to the documents to be inserted into the database
+        :param src_path: path to the directory of the documents to be inserted into the database
         :param client: Elasticsearch client
         :param models: dictionary with model names as keys and the models as values
         :param model_names: names of the models to be used for embedding
@@ -49,10 +50,10 @@ def insert_embedding(src_paths: list, models: dict={}, client_addr=CLIENT_ADDR, 
             return
         
         client = client if client else Elasticsearch(client_addr, timeout=1000)
-        models = models if models else get_models(src_paths, [model_name] if model_name else None)
+        models = models if models else get_models(src_path, [model_name] if model_name else None)
 
         try:
-            bulk(client, generate_models_embedding(src_paths, models, model_name), stats_only= True)
+            bulk(client, generate_models_embedding(src_path, models, model_name), stats_only= True)
         except (ConflictError, ApiError,EOFError) as err:
             print('error')
             return
@@ -114,9 +115,9 @@ def insert_pca_optics(pca_dict: dict, client_addr=CLIENT_ADDR, client: Elasticse
             print('error')
             return
         
-def pca_weights_aux(src_paths: list, image_root_path:str, max_w:int, max_h:int, pca_model: decomposition.PCA): 
+def pca_weights_aux(src_path: str, image_root_path:str, max_w:int, max_h:int, pca_model: decomposition.PCA): 
     '''
-    :param src_path: list of paths to the documents to be inserted into the database
+    :param src_path: path to the directory of the documents to be inserted into the database
     :param image_root_path: path to the images
     :param max_w: max width of the images
     :param max_h: max height of the images
@@ -124,7 +125,7 @@ def pca_weights_aux(src_paths: list, image_root_path:str, max_w:int, max_h:int, 
 
     inserts pca weights and argmax clusters of all documents into db
     ''' 
-    for path in src_paths:
+    for path in scanRecurse(src_path):
         id = get_hash_file(path)
         img_path = image_root_path + path.split('/')[-1].split('.')[0] + '.png'
         if not os.path.exists(img_path):
@@ -152,9 +153,9 @@ def pca_weights_aux(src_paths: list, image_root_path:str, max_w:int, max_h:int, 
                 }
         }
         
-def insert_pca_weights(src_paths: list, pca_model: decomposition.PCA, img_path:str, max_w:int, max_h:int, client_addr=CLIENT_ADDR, client: Elasticsearch=None):
+def insert_pca_weights(src_path: str, pca_model: decomposition.PCA, img_path:str, max_w:int, max_h:int, client_addr=CLIENT_ADDR, client: Elasticsearch=None):
         '''
-        :param src_path: list of paths to the documents to be inserted into the database
+        :param src_path: paths to the directory of the documents to be inserted into the database
         :param client: Elasticsearch client
         :param pca_model: fitted PCA model
 
@@ -163,19 +164,19 @@ def insert_pca_weights(src_paths: list, pca_model: decomposition.PCA, img_path:s
         client = client if client else Elasticsearch(client_addr, timeout=1000)
       
         try:
-            bulk(client, pca_weights_aux(src_paths=src_paths, pca_model=pca_model, image_root_path=img_path, max_w=max_w, max_h=max_h), stats_only= True)
+            bulk(client, pca_weights_aux(src_path=src_path, pca_model=pca_model, image_root_path=img_path, max_w=max_w, max_h=max_h), stats_only= True)
         except (ConflictError, ApiError,EOFError) as err:
             print('error')
             return
 
-def insert_precomputed_clusters(src_paths: list, image_src_path:str, client_addr:str=CLIENT_ADDR):
+def insert_precomputed_clusters(src_path: str, image_src_path:str, client_addr:str=CLIENT_ADDR):
     # get PCA model
     print('start getting pca model')
     pca_model, max_w, max_h = get_eigendocs_PCA(img_dir_src_path=image_src_path, n_components=NUM_PCA_COMPONENTS)
     print('finished getting pca model')
 
     # save weights and argmax cluster in db
-    insert_pca_weights(src_paths=src_paths, pca_model=pca_model, img_path=image_src_path, client_addr=client_addr, max_w=max_w, max_h=max_h)
+    insert_pca_weights(src_path=src_path, pca_model=pca_model, img_path=image_src_path, client_addr=client_addr, max_w=max_w, max_h=max_h)
     print('finished inserting pca-argmax cluster df')
 
     # OPTICS clusters
@@ -193,13 +194,13 @@ def insert_precomputed_clusters(src_paths: list, image_src_path:str, client_addr
     insert_pca_optics(pca_dict=result_df, client_addr=client_addr)
     print('finished inserting pca-OPTICS cluster df')
 
-def main(src_paths: list, image_src_path: str, client_addr=CLIENT_ADDR, model_names: list = MODEL_NAMES):
+def main(src_path: list, image_src_path: str, client_addr=CLIENT_ADDR, model_names: list = MODEL_NAMES):
     print('start inserting documents embeddings using bulk')
     for model_name in model_names:
         print('started with model: ', model_name)
-        insert_embedding(src_paths = src_paths, client_addr=client_addr, model_name = model_name)
+        insert_embedding(src_path = src_path, client_addr=client_addr, model_name = model_name)
         print('finished model: ', model_name)
     if 'none' in model_names:
-        insert_precomputed_clusters(src_paths=src_paths, image_src_path=image_src_path, client_addr=client_addr)
+        insert_precomputed_clusters(src_path=src_path, image_src_path=image_src_path, client_addr=client_addr)
 
     print('finished inserting documents embeddings using bulk')

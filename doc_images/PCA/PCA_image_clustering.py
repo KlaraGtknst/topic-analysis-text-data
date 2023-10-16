@@ -11,6 +11,7 @@ from elasticSearch.queries.query_documents_tfidf import *
 from text_embeddings.universal_sent_encoder_tensorFlow import *
 from text_embeddings.hugging_face_sentence_transformer import *
 from doc_images import eigendocs
+from elasticSearch.recursive_search import *
 
 '''------search in existing database-------
 run this code by typing and altering the path:
@@ -151,13 +152,6 @@ def get_eigendocs_OPTICS_df(src_path: str, n_components: int = 13) -> pd.DataFra
 
     return pca_df
 
-def scanRecurse(baseDir):
-    for entry in os.scandir(baseDir):
-        if entry.is_file():
-            yield os.path.join(baseDir, entry.name)
-        else:
-            yield scanRecurse(entry.path)
-
 def get_eigendocs_PCA(img_dir_src_path: str, n_components: int = 13) -> tuple:
     '''
     :param img_dir_src_path: path to the directory of the images
@@ -197,7 +191,7 @@ def plot_all_pca_cluster_info(image_src_path: str, img_size: int, num_classes: i
     The information is similar to the notebook, but more difficult to compare.
     If possible, use notebook to visualize the information instead.
     '''
-    image_src_paths = glob.glob(image_src_path)
+    image_src_paths = scanRecurse(image_src_path)
     preprocessed_images = preprocess_images(image_src_paths, img_size)
 
     # plot preprocessed images
@@ -236,7 +230,7 @@ def plot_all_pca_cluster_info(image_src_path: str, img_size: int, num_classes: i
     for i in range(len(pca_img[:2])):
         plot_grey_images(pca_img[i], title='weights of PCA components of image number' + str(i))
 
-def main(src_paths, image_src_path, outpath):
+def main(src_path:str, image_src_path, outpath):
     IMG_SIZE = 600
     NUM_CLASSES = 4
 
@@ -253,10 +247,10 @@ def main(src_paths, image_src_path, outpath):
 
     if image_src_path.endswith('/'):
         image_src_path = image_src_path + '*.png'
-    image_src_paths = glob.glob(image_src_path)
+    image_src_paths = scanRecurse(image_src_path)
     images = [img.split('/')[-1].split('.')[0] for img in image_src_paths]
 
-    docs = [doc.split('/')[-1].split('.')[0] for doc in src_paths]
+    docs = [doc.split('/')[-1].split('.')[0] for doc in scanRecurse(src_path)]
 
     print(len(docs), len(images))
     missing_img = [doc for doc in docs if doc not in images]

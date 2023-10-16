@@ -3,9 +3,9 @@ from text_embeddings import save_models
 import numpy as np
 
 
-def get_models(src_paths: list, model_names: list = MODEL_NAMES):
+def get_models(src_path: str, model_names: list = MODEL_NAMES):
     '''
-    src_paths: paths to the documents to be inserted into the database
+    src_path: path to the directory of all documents to be inserted into the database
     model_names: names of the models to be used for embedding
     return: dictionary with model names as keys and the models as values
     '''
@@ -19,7 +19,7 @@ def get_models(src_paths: list, model_names: list = MODEL_NAMES):
             model = save_models.load_model(model_name)
             models[model_name] = model
         except: # model does not exist, create and save it
-            model = save_models.train_model(model_name, src_paths)
+            model = save_models.train_model(model_name, src_path)
             models[model_name] = model
             save_models.save_model(model, model_name)
     return models

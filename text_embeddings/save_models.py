@@ -15,6 +15,7 @@ from PIL import Image
 from tensorflow.python.keras.models import model_from_json
 from gensim.test.utils import get_tmpfile
 from constants import CLIENT_ADDR
+from elasticSearch.recursive_search import *
 
 SRC_PATH = '/Users/klara/Documents/uni/bachelorarbeit/data/0/*.pdf'
 DOC_PATH = '/Users/klara/Downloads/*.pdf'
@@ -108,12 +109,14 @@ def get_tagged_input_documents(src_paths: list, tokens_only: bool = False):
         else:
             yield TaggedDocument(tokens, [i])
 
-def train_model(model_name:str, src_paths:list, client:Elasticsearch=None):
+def train_model(model_name:str, src_path:str, client:Elasticsearch=None):
     '''
     :param model_name: The name/ type of the model.
-    :param src_paths: The paths to the documents to be used for training.
+    :param src_path: The path to the directory of the documents to be used for training.
     :return: The trained model.
     '''
+    src_paths = scanRecurse(src_path)
+
     if 'doc2vec' in model_name:
         train_corpus = list(get_tagged_input_documents(src_paths=src_paths))
         d2v_model = Doc2Vec(train_corpus)
@@ -173,27 +176,27 @@ def train_model(model_name:str, src_paths:list, client:Elasticsearch=None):
         print(f'{model_name} not found')
 
     
-def get_model(model_name:str, src_paths:list):
+def get_model(model_name:str, src_path:str):
     '''
     :param model_name: The name/ type of the model.
-    :param src_paths: The paths to the documents to be used for training.
+    :param src_path: The path to the directory of the documents to be used for training.
     :return: The model.
     '''
     try: # model exists
         model = load_model(model_name)
     except: # model does not exist, create and save it
-        model = save_models.train_model(model_name, src_paths)
+        model = save_models.train_model(model_name, src_path = src_path)
         save_models.save_model(model, model_name)
     return model
 
 def main(path=None):
     # path = glob.glob('/Users/klara/Downloads/*.pdf')[0]
     src_path='/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf'
-    src_paths = glob.glob(src_path)
+    #src_paths = glob.glob(src_path)
     text = pdf_to_str(path)
 
     # TF-IDF + AE
-    tfidf_model = train_model('tfidf ', src_paths)
+    tfidf_model = train_model('tfidf ', src_path)
     #tfidf_ae_model = train_model('tfidf_ae', src_paths)
     tfidf_embedding = models_aux.get_tfidf_emb(tfidf_model, [text])
     # (1, 4096)
