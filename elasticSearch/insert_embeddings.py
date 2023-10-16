@@ -175,23 +175,23 @@ def insert_precomputed_clusters(src_paths: list, image_src_path:str, client_addr
     print('finished getting pca model')
 
     # save weights and argmax cluster in db
-    # insert_pca_weights(src_paths=src_paths, pca_model=pca_model, img_path=image_src_path, client_addr=client_addr, max_w=max_w, max_h=max_h)
-    # print('finished inserting pca-argmax cluster df')
+    insert_pca_weights(src_paths=src_paths, pca_model=pca_model, img_path=image_src_path, client_addr=client_addr, max_w=max_w, max_h=max_h)
+    print('finished inserting pca-argmax cluster df')
 
-    # # OPTICS clusters
-    # # get all pca weights and id 
-    # elastic_search_client = Elasticsearch(client_addr)
-    # results = get_all_docs_in_db(elastic_search_client, src_includes = ['pca_image'])   # _id, pca_image
-    # result_df = pd.DataFrame.from_dict(results)
-    # result_df.set_index('_id', inplace=True)
+    # OPTICS clusters
+    # get all pca weights and id 
+    elastic_search_client = Elasticsearch(client_addr)
+    results = get_all_docs_in_db(elastic_search_client, src_includes = ['pca_image'])   # _id, pca_image
+    result_df = pd.DataFrame.from_dict(results)
+    result_df.set_index('_id', inplace=True)
     
-    # # clustering
-    # clt = OPTICS(cluster_method='dbscan', min_samples=2, max_eps=10, eps=0.5)
-    # result_df['cluster'] = clt.fit_predict(np.array(result_df['pca_image'].values.tolist()))
+    # clustering
+    clt = OPTICS(cluster_method='dbscan', min_samples=2, max_eps=10, eps=0.5)
+    result_df['cluster'] = clt.fit_predict(np.array(result_df['pca_image'].values.tolist()))
 
-    # print('finished getting pca-OPTICS cluster df')
-    # insert_pca_optics(pca_dict=result_df, client_addr=client_addr)
-    # print('finished inserting pca-OPTICS cluster df')
+    print('finished getting pca-OPTICS cluster df')
+    insert_pca_optics(pca_dict=result_df, client_addr=client_addr)
+    print('finished inserting pca-OPTICS cluster df')
 
 def main(src_paths: list, image_src_path: str, client_addr=CLIENT_ADDR, model_names: list = MODEL_NAMES):
     print('start inserting documents embeddings using bulk')
