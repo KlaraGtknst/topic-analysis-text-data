@@ -30,18 +30,4 @@ export class TopicService {
     });
   }
 
-  getTopicWordClouds(term?: string, count?: number): Observable<Blob> {
-    const params: any = {};
-    if (term) {
-        params.term = term;
-    }
-    if (count) {
-        params.count = count;
-    }
-    return this.http.get<Blob>(environment.baseurl + 'topics/wordcloud', {
-        params,
-    });
-  }
-
-
 }
