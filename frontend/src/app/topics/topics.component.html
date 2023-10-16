@@ -37,13 +37,13 @@
                     <input class="form-control" type="search" id="name" [(ngModel)]="term" placeholder="Search for text..." required>
                 </div> 
                 <div class="col-1">
-                    <button mat-raised-button matTooltip="If the number is bigger than the topics similar to the word no result is provided." color="primary" (click)="start_search = !start_search" [disabled]="!term || !count">Search</button> 
+                    <button mat-raised-button matTooltip="If the number is bigger than the topics similar to the word no result is provided." color="primary" (click)="getTopicWordClouds()" [disabled]="!term || !count">Search</button> 
                 </div> 
             </div>
         </div>
     </div>
     <div class="col-sm">
-        <img *ngIf="start_search && count && term" [src]="sanitizer.bypassSecurityTrustResourceUrl(baseurl + '/topics/wordcloud?count=' + count + '&term=' + term)" style="width: 100%">
+        <img [src]="this.topic_images" style="width: 100%">
     </div>
     <p>{{separatorSymbol}}</p>
 </div>

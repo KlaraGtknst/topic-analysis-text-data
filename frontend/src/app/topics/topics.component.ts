@@ -14,6 +14,7 @@ export class TopicsComponent {
   public term?: string;
   public start_search: boolean = false;
   public topics: Topic[] = [];
+  public topic_images?: string;
   readonly separatorSymbol = "_".repeat(200);
   readonly baseurl = environment.baseurl;
 
@@ -28,6 +29,10 @@ export class TopicsComponent {
       this.topics = answer;
       console.log(this.topics);
     });
+  }
+
+  getTopicWordClouds() {
+    this.topic_images = environment.baseurl + 'topics/wordcloud?term=' + encodeURIComponent(this.term || '') + '&count=' + this.count;
   }
 
 }
