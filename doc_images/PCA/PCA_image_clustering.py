@@ -151,6 +151,13 @@ def get_eigendocs_OPTICS_df(src_path: str, n_components: int = 13) -> pd.DataFra
 
     return pca_df
 
+def scanRecurse(baseDir):
+    for entry in os.scandir.scandir(baseDir):
+        if entry.is_file():
+            yield os.path.join(baseDir, entry.name)
+        else:
+            yield scanRecurse(entry.path)
+
 def get_eigendocs_PCA(img_dir_src_path: str, n_components: int = 13) -> tuple:
     '''
     :param img_dir_src_path: path to the directory of the images
@@ -158,10 +165,11 @@ def get_eigendocs_PCA(img_dir_src_path: str, n_components: int = 13) -> tuple:
     :return: fitted PCA model, maximum width and height of the images
     '''
     documents_raw = []
-    for root, dirs, files in os.scandir(img_dir_src_path):
-        documents_raw.extend([plt.imread(os.path.join(root, name)) for name in files if name.endswith(".png")])
-        if len(documents_raw) >= 80:
-            break
+    for file_path in scanRecurse(img_dir_src_path):
+        if file_path.endswith(".png"):
+            documents_raw.extend([plt.imread(file_path)])
+            if len(documents_raw) >= 80:
+                break
 
     # preprocessing with Eigendocs
     max_w, max_h = eigendocs.get_maximum_height_width(documents_raw)
