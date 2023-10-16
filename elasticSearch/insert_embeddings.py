@@ -106,7 +106,7 @@ def insert_pca_optics(pca_dict: dict, client_addr=CLIENT_ADDR, client: Elasticse
 
         inserts pca weights and OPTICS cluster of all documents into the database 'bahamas'.
         '''
-        client = client if client else Elasticsearch(client_addr)
+        client = client if client else Elasticsearch(client_addr, timeout=1000)
       
         try:
             bulk(client, pca_optics_aux(pca_dict), stats_only= True)
@@ -160,7 +160,7 @@ def insert_pca_weights(src_paths: list, pca_model: decomposition.PCA, img_path:s
 
         inserts pca weights and OPTICS cluster of all documents into the database 'bahamas'.
         '''
-        client = client if client else Elasticsearch(client_addr)
+        client = client if client else Elasticsearch(client_addr, timeout=1000)
       
         try:
             bulk(client, pca_weights_aux(src_paths=src_paths, pca_model=pca_model, image_root_path=img_path, max_w=max_w, max_h=max_h), stats_only= True)
@@ -180,7 +180,7 @@ def insert_precomputed_clusters(src_paths: list, image_src_path:str, client_addr
 
     # OPTICS clusters
     # get all pca weights and id 
-    elastic_search_client = Elasticsearch(client_addr)
+    elastic_search_client = Elasticsearch(client_addr, timeout=1000)
     results = get_all_docs_in_db(elastic_search_client, src_includes = ['pca_image'])   # _id, pca_image
     result_df = pd.DataFrame.from_dict(results)
     result_df.set_index('_id', inplace=True)
