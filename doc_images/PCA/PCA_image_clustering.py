@@ -152,7 +152,7 @@ def get_eigendocs_OPTICS_df(src_path: str, n_components: int = 13) -> pd.DataFra
     return pca_df
 
 def scanRecurse(baseDir):
-    for entry in os.scandir.scandir(baseDir):
+    for entry in os.scandir(baseDir):
         if entry.is_file():
             yield os.path.join(baseDir, entry.name)
         else:
