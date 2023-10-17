@@ -20,8 +20,7 @@ from elasticSearch.recursive_search import *
 
 def create_document_aux(src_path: str, client: Elasticsearch):  
     for path in scanRecurse(src_path):
-        if type(path) != str:
-            path = str(path)
+       
         try:           
             id = get_hash_file(path)
 

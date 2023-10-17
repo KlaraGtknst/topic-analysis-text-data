@@ -24,8 +24,7 @@ from elasticSearch.recursive_search import *
 
 def generate_models_embedding(src_path: str, models : dict, model_name: str = 'no_model'):  
     for path in scanRecurse(src_path):
-        if type(path) != str:
-            path = str(path)
+    
         text = pdf_to_str(path)
         id = get_hash_file(path)
 
@@ -128,8 +127,7 @@ def pca_weights_aux(src_path: str, image_root_path:str, max_w:int, max_h:int, pc
     inserts pca weights and argmax clusters of all documents into db
     ''' 
     for path in scanRecurse(src_path):
-        if type(path) != str:
-            path = str(path)
+      
         id = get_hash_file(path)
         img_path = image_root_path + path.split('/')[-1].split('.')[0] + '.png'
         if not os.path.exists(img_path):
