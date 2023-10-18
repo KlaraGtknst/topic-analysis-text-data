@@ -49,7 +49,7 @@ class TfidfPreprocessingSteps():
         return self
     
     def remove_double_spaces(self):
-        self.X = [re.sub(' +', ' ', text) for text in self.X]
+        self.X = [re.sub(r'\W+', ' ', text) for text in self.X] # matches any character which is not a word character
         return self
 
     def change_number_encoding(self):
