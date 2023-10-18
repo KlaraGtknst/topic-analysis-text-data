@@ -1,9 +1,10 @@
 from constants import CLIENT_ADDR
 from user_interface.cli import *
 from doc_images import convert_pdf2image
-from elasticSearch import db_elasticsearch, create_documents, create_database, insert_embeddings
+from elasticSearch import db_elasticsearch, create_documents, create_database, insert_embeddings, insert_clusters
 from doc_images.PCA import PCA_image_clustering
 from text_embeddings.InferSent import own_word2vec
+from text_embeddings.autoencoder import opt_architecture_ae
 from constants import MODEL_NAMES
 import db_all_embs as db_all_embs
 
@@ -50,14 +51,22 @@ if __name__ == '__main__':
 
     elif file_to_run[0] == 'create_database.py':
         # python3 main_server.py 'create_database.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
-        create_database.main(file_path, client_addr=client_addr)
+        create_database.main(src_path=file_path, client_addr=client_addr)
 
     elif file_to_run[0] == 'create_documents.py':
         # python3 main_server.py 'create_documents.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
-        create_documents.main(file_path, client_addr=client_addr)
+        create_documents.main(src_path=file_path, client_addr=client_addr)
 
     elif file_to_run[0] == 'insert_embeddings.py':
         # python3 main_server.py 'insert_embeddings.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
-        insert_embeddings.main(file_path, client_addr=client_addr, model_names=model_names, image_src_path=image_src_path)
+        insert_embeddings.main(src_path=file_path, client_addr=client_addr, model_names=model_names, num_cpus=n_pools)
+
+    elif file_to_run[0] == 'insert_clusters.py':
+        # python3 main_server.py 'insert_clusters.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
+        insert_clusters.main(src_path=file_path, client_addr=client_addr, image_src_path=image_src_path)
+
+    elif file_to_run[0] == 'opt_architecture_ae.py':
+        # python3 main_server.py 'opt_architecture_ae.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
+        opt_architecture_ae.main(file_path)
 
         
