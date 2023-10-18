@@ -22,8 +22,8 @@ from doc_images.convert_pdf2image import *
 from elasticSearch.recursive_search import *
 
 
-def generate_models_embedding(src_path: str, models : dict, model_name: str = 'no_model'):  
-    for path in scanRecurse(src_path):
+def generate_models_embedding(src_paths: list, models : dict, model_name: str = 'no_model'):  
+    for path in src_paths:
     
         text = pdf_to_str(path)
         id = get_hash_file(path)
@@ -31,14 +31,14 @@ def generate_models_embedding(src_path: str, models : dict, model_name: str = 'n
         if (model_name in models.keys()) and (model_name != 'ae'):
             embedding = get_embedding(models=models, model_name=model_name, text=text)
 
-            yield {
+            yield {     # vielleicht weg?
                 '_op_type': 'update',
                 '_index': 'bahamas',
                 '_id': id,
                 'doc': {MODELS2EMB[model_name]: embedding}
             }
 
-def insert_embedding(src_path: str, models: dict={}, client_addr=CLIENT_ADDR, client: Elasticsearch=None, model_name: str = 'no_model'):
+def insert_embedding(src_paths: list, models: dict={}, client_addr=CLIENT_ADDR, client: Elasticsearch=None, model_name: str = 'no_model'):
         '''
         :param src_path: path to the directory of the documents to be inserted into the database
         :param client: Elasticsearch client
@@ -51,10 +51,10 @@ def insert_embedding(src_path: str, models: dict={}, client_addr=CLIENT_ADDR, cl
             return
         
         client = client if client else Elasticsearch(client_addr, timeout=1000)
-        models = models if models else get_models(src_path, [model_name] if model_name else None)
+        models = models if models else get_models(src_paths, [model_name] if model_name else None)
 
         try:
-            bulk(client, generate_models_embedding(src_path, models, model_name), stats_only= True)
+            bulk(client, generate_models_embedding(src_paths, models, model_name), stats_only= True)
         except (ConflictError, ApiError,EOFError) as err:
             print('error')
             return
@@ -196,13 +196,23 @@ def insert_precomputed_clusters(src_path: str, image_src_path:str, client_addr:s
     insert_pca_optics(pca_dict=result_df, client_addr=client_addr)
     print('finished inserting pca-OPTICS cluster df')
 
-def main(src_path: list, image_src_path: str, client_addr=CLIENT_ADDR, model_names: list = MODEL_NAMES):
+def chunks(lst:list, n:int):
+    """Yield successive n-sized chunks from lst."""
+    for i in range(0, len(lst), n):
+        yield lst[i:i + n]
+
+def main(src_path: str, client_addr=CLIENT_ADDR, model_names: list = MODEL_NAMES, num_cpus:int=1):
     print('start inserting documents embeddings using bulk')
-    for model_name in model_names:
-        print('started with model: ', model_name)
-        insert_embedding(src_path = src_path, client_addr=client_addr, model_name = model_name)
-        print('finished model: ', model_name)
-    if 'none' in model_names:
-        insert_precomputed_clusters(src_path=src_path, image_src_path=image_src_path, client_addr=client_addr)
+
+    # all paths
+    document_paths = list(scanRecurse(src_path))
+    sub_lists = list(chunks(document_paths, int(len(document_paths)/num_cpus)))
+
+    # process n_cpus sublists
+    with Pool(processes=num_cpus) as pool:
+        for model_name in model_names:  # function und diese parallisieren: run_process(doc_paths)
+            print('started with model: ', model_name)
+            pool.map(lambda x : insert_embedding(src_paths = x, client_addr=client_addr, model_name = model_name), sub_lists)
+            print('finished model: ', model_name)
 
     print('finished inserting documents embeddings using bulk')
