@@ -87,7 +87,7 @@ def get_hash_file(path: str):
     return id
 
 def main(src_path:str, client_addr=CLIENT_ADDR, num_cpus:int=1):
-    print('start creating documents embeddings using bulk')
+    print('start creating documents using bulk')
 
     # all paths
     document_paths = list(scanRecurse(src_path))
@@ -97,7 +97,7 @@ def main(src_path:str, client_addr=CLIENT_ADDR, num_cpus:int=1):
     with Pool(processes=num_cpus) as pool:
         pool.map(lambda x : create_documents(src_paths = x, client_addr=client_addr), sub_lists)
 
-    print('finished creating documents embeddings using bulk')
+    print('finished creating documents using bulk')
         
     
 
