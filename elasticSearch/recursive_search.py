@@ -9,3 +9,9 @@ def scanRecurse(baseDir: str):
             yield os.path.join(baseDir, entry.name)
         else:   # recurse needs from, otherwise generator object is returned
             yield from scanRecurse(entry.path + '/')
+
+
+def chunks(lst:list, n:int):
+    """Yield successive n-sized chunks from lst."""
+    for i in range(0, len(lst), n):
+        yield lst[i:i + n]

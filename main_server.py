@@ -55,7 +55,7 @@ if __name__ == '__main__':
 
     elif file_to_run[0] == 'create_documents.py':
         # python3 main_server.py 'create_documents.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
-        create_documents.main(src_path=file_path, client_addr=client_addr)
+        create_documents.main(src_path=file_path, client_addr=client_addr, num_cpus=n_pools)
 
     elif file_to_run[0] == 'insert_embeddings.py':
         # python3 main_server.py 'insert_embeddings.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1

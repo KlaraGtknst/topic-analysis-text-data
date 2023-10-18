@@ -140,3 +140,7 @@ test.ann
 
 # images
 results/
+
+# old file
+elasticSearch/insert_embeddings_copy.py
+elasticSearch/create_documents_copy.py

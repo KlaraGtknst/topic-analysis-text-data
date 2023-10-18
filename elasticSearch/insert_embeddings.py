@@ -196,11 +196,6 @@ def insert_precomputed_clusters(src_path: str, image_src_path:str, client_addr:s
     insert_pca_optics(pca_dict=result_df, client_addr=client_addr)
     print('finished inserting pca-OPTICS cluster df')
 
-def chunks(lst:list, n:int):
-    """Yield successive n-sized chunks from lst."""
-    for i in range(0, len(lst), n):
-        yield lst[i:i + n]
-
 def main(src_path: str, client_addr=CLIENT_ADDR, model_names: list = MODEL_NAMES, num_cpus:int=1):
     print('start inserting documents embeddings using bulk')
 
