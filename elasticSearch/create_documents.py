@@ -24,8 +24,8 @@ def create_document_aux(src_paths: list, client: Elasticsearch):
         try:           
             id = get_hash_file(path)
 
-            if get_doc_meta_data(client, doc_id=id) is not None:    # document already in database
-                continue
+            # if get_doc_meta_data(client, doc_id=id) is not None:    # document already in database
+            #     continue
             
             text = pdf_to_str(path)
             
@@ -49,7 +49,7 @@ def create_documents(src_paths: list, client_addr=CLIENT_ADDR, client: Elasticse
 
         creates all document in the database 'bahamas'.
         '''
-        client = client if client else Elasticsearch(client_addr)
+        client = client if client else Elasticsearch(client_addr, timeout=1000)
         try:
             bulk(client, create_document_aux(src_paths, client), stats_only= True)
          
