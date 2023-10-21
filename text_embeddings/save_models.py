@@ -115,7 +115,7 @@ def train_model(model_name:str, src_path:str, client:Elasticsearch=None):
     :param src_path: The path to the directory of the documents to be used for training.
     :return: The trained model.
     '''
-    src_paths = scanRecurse(src_path)
+    src_paths = list(scanRecurse(src_path))
 
     if 'doc2vec' in model_name:
         train_corpus = list(get_tagged_input_documents(src_paths=src_paths))
