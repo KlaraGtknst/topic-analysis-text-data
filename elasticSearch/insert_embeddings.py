@@ -22,7 +22,7 @@ from doc_images.convert_pdf2image import *
 from elasticSearch.recursive_search import *
 
 
-def generate_models_embedding(src_paths: list, models : dict, model_name: str = 'no_model'):  
+def generate_models_embedding(src_paths: list, models : dict, client: Elasticsearch, model_name: str = 'no_model'):  
     for path in src_paths:
     
         text = pdf_to_str(path)
@@ -31,12 +31,14 @@ def generate_models_embedding(src_paths: list, models : dict, model_name: str = 
         if (model_name in models.keys()) and (model_name != 'ae'):
             embedding = get_embedding(models=models, model_name=model_name, text=text)
 
-            yield {     # vielleicht weg?
-                '_op_type': 'update',
-                '_index': 'bahamas',
-                '_id': id,
-                'doc': {MODELS2EMB[model_name]: embedding}
-            }
+            client.update(index='bahamas', id=id, body={'doc': {MODELS2EMB[model_name]: embedding}})
+
+            # yield {     # vielleicht weg?
+            #     '_op_type': 'update',
+            #     '_index': 'bahamas',
+            #     '_id': id,
+            #     'doc': {MODELS2EMB[model_name]: embedding}
+            # }
 
 def insert_embedding(src_paths: list, models: dict={}, client_addr=CLIENT_ADDR, client: Elasticsearch=None, model_name: str = 'no_model'):
         '''
@@ -54,7 +56,8 @@ def insert_embedding(src_paths: list, models: dict={}, client_addr=CLIENT_ADDR, 
         models = models if models else get_models(src_paths, [model_name] if model_name else None)
 
         try:
-            bulk(client, generate_models_embedding(src_paths, models, model_name), stats_only= True)
+            #bulk(client, generate_models_embedding(src_paths, models, model_name), stats_only= True)
+            generate_models_embedding(src_paths, models, model_name, client)
         except (ConflictError, ApiError,EOFError) as err:
             print('error')
             return
