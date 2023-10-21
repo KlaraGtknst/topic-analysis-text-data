@@ -328,7 +328,7 @@ def main(src_paths, image_src_path):
     results = {}
 
     # query database for a document using tfidf
-    docs = get_docs_from_file_paths(src_paths)
+    docs = get_docs_from_file_paths(src_path)
     sim_docs_tfidf = TfidfVectorizer(input='content', preprocessor=TfidfTextPreprocessor().fit_transform, min_df=3, max_df=int(len(docs)*0.07))
     sim_docs_document_term_matrix = sim_docs_tfidf.fit(docs)
     tfidf_results = find_document_tfidf(client, sim_docs_tfidf, path=doc_to_search_for)

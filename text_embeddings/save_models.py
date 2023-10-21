@@ -89,9 +89,9 @@ def load_model(model_name:str):
     else:
         print(f'{model_name} not found')
 
-def get_tagged_input_documents(src_paths: list, tokens_only: bool = False):
+def get_tagged_input_documents(src_path: str, tokens_only: bool = False):
     '''
-    :param src_paths: list of paths to the documents to be inserted into the database
+    :param src_path: paths to directory of the documents to be inserted into the database
     :param tokens_only: if True, only the tokens of the document are returned, else tagged tokens are returned
     :return: tagged tokens or only the tokens (depending on tokens_only)
 
@@ -101,6 +101,7 @@ def get_tagged_input_documents(src_paths: list, tokens_only: bool = False):
     cf. https://radimrehurek.com/gensim/auto_examples/tutorials/run_doc2vec_lee.html#sphx-glr-auto-examples-tutorials-run-doc2vec-lee-py
     for the original code
     '''
+    src_paths = list(scanRecurse(src_path))
     for i in range(len(src_paths)):
         path = src_paths[i]
         tokens = simple_preprocess(pdf_to_str(path))
@@ -115,10 +116,9 @@ def train_model(model_name:str, src_path:str, client:Elasticsearch=None):
     :param src_path: The path to the directory of the documents to be used for training.
     :return: The trained model.
     '''
-    src_paths = list(scanRecurse(src_path))
 
     if 'doc2vec' in model_name:
-        train_corpus = list(get_tagged_input_documents(src_paths=src_paths))
+        train_corpus = list(get_tagged_input_documents(src_path=src_path))
         d2v_model = Doc2Vec(train_corpus)
         return d2v_model
     
@@ -139,15 +139,15 @@ def train_model(model_name:str, src_path:str, client:Elasticsearch=None):
         w2v_local_path = '/Users/klara/Developer/Uni/bahamas_word2vec/bahamas_w2v.txt'
         w2v_server_path = '/mnt/stud/work/kgutekunst/bahamas_word2vec/bahamas_w2v.txt'
         custom_w2v_path = w2v_local_path if os.path.exists(w2v_local_path) else w2v_server_path
-        inferSent_model, docs = init_infer(model_path=model_path, w2v_path=custom_w2v_path, file_paths=src_paths, version=1)
+        inferSent_model, docs = init_infer(model_path=model_path, w2v_path=custom_w2v_path, file_path=src_path, version=1)
         return inferSent_model
     
     elif 'tfidf_ae' in model_name:
         try:    # existing model
             tfidf_model = load_model('tfidf')
         except: # new model
-            tfidf_model = train_model('tfidf', src_paths)
-        docs = get_docs_from_file_paths(src_paths)
+            tfidf_model = train_model('tfidf', src_path)
+        docs = get_docs_from_file_paths(src_path)
         tfidf_embeddings = np.array([models_aux.get_tfidf_emb(tfidf_model, [doc]) for doc in docs])
         encoded_tfidf_embedding, ae_tfidf_encoder, ae_tfidf_decoder = autoencoder_emb_model(input_shape=tfidf_embeddings.shape[1], latent_dim=2048, data=tfidf_embeddings)
         return ae_tfidf_encoder
@@ -156,9 +156,9 @@ def train_model(model_name:str, src_path:str, client:Elasticsearch=None):
         # get inferSent model
         try:    # existing model
             inferSent_model = load_model('infersent_model')
-            docs = get_docs_from_file_paths(src_paths)
+            docs = get_docs_from_file_paths(src_path)
         except: # new model
-            inferSent_model = train_model('infersent_model', src_paths)
+            inferSent_model = train_model('infersent_model', src_path)
 
         infer_embeddings = inferSent_model.encode(docs, tokenize=True)
         encoded_infersent_embedding, ae_infer_encoder, ae_infer_decoder = autoencoder_emb_model(input_shape=infer_embeddings.shape[1], latent_dim=2048, data=infer_embeddings)
@@ -167,7 +167,7 @@ def train_model(model_name:str, src_path:str, client:Elasticsearch=None):
     elif 'tfidf' in model_name:
         if client is None:
             client = Elasticsearch(CLIENT_ADDR)
-        docs = get_docs_from_file_paths(src_paths)
+        docs = get_docs_from_file_paths(src_path)
         sim_docs_tfidf = TfidfVectorizer(input='content', preprocessor=TfidfTextPreprocessor().transform, min_df=3, max_df=int(len(docs)*0.07))
         sim_docs_tfidf.fit(docs)
         return sim_docs_tfidf

@@ -69,7 +69,7 @@ def search_inferSent_emb_in_db(client: Elasticsearch, infer_model, ae_infer_enco
     return scores
 
 
-def main(file_paths, outpath):
+def main(file_path, outpath):
      # Create the client instance
     client = Elasticsearch(CLIENT_ADDR)
 
@@ -78,7 +78,7 @@ def main(file_paths, outpath):
     MODEL_PATH = '/Users/klara/Developer/Uni/encoder/infersent%s.pkl' % V
     W2V_PATH = '/Users/klara/Developer/Uni/GloVe/glove.840B.300d.txt'
 
-    infersent, docs = init_infer(model_path=MODEL_PATH, w2v_path=W2V_PATH, file_paths=file_paths, version=V)
+    infersent, docs = init_infer(model_path=MODEL_PATH, w2v_path=W2V_PATH, file_path=file_path, version=V)
 
     embeddings = infersent.encode(docs, tokenize=True)
     

@@ -3,6 +3,7 @@ import string
 import pdb # for debugging
 
 from sklearn.pipeline import Pipeline
+from elasticSearch.recursive_search import scanRecurse
 from text_embeddings.preprocessing.read_pdf import *
 from user_interface.cli import *
 from gensim.utils import simple_preprocess
@@ -84,11 +85,12 @@ def print_info_abt_doc_term_mat_model(document_term_matrix: np.ndarray, tfidf: T
     print(tfidf.idf_)
     print(tfidf.get_feature_names_out())
 
-def get_docs_from_file_paths(file_paths: list) -> list:
+def get_docs_from_file_paths(file_path: str) -> list:
     '''
-    :param file_paths: list of file paths
+    :param file_paths: str to directory containing files
     :return: list of documents, where each document is a (not further processed) string of the pdf file's text
     '''
+    file_paths = list(scanRecurse(file_path))
     docs = []
     for path in file_paths:
         docs.append(pdf_to_str(path))
@@ -174,9 +176,9 @@ def show_preprocessing_steps(sample_text='The résultat: 123 people, 123456 CATS
     print('lemmatisation: ', preProcSteps.X)
     print('result: ', preProcSteps.to_text())
 
-def main(file_paths):
+def main(file_path):
 
-    docs = get_docs_from_file_paths(file_paths)
+    docs = get_docs_from_file_paths(file_path)
 
     # custom preprocessor
     # usage of uni-grams only, n_gram (n>1) increases vocabulary size (bad), but does not reduce number of zero tf-idf document embeddings (bad)

@@ -28,13 +28,13 @@ run this code by typing and altering the path:
     python3 infer_pretrained.py -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -o '/Users/klara/Downloads/'
 '''
 
-def init_infer(model_path: str, w2v_path: str, file_paths: list, version: int = 1) -> tuple:
+def init_infer(model_path: str, w2v_path: str, file_path: str, version: int = 1) -> tuple:
     params_model = {'bsize': 64, 'word_emb_dim': 300, 'enc_lstm_dim': 2048, # value bigger than maximum database vector size, change non-trivial since pre-trained model  has to be trained again
                     'pool_type': 'max', 'dpout_model': 0.0, 'version': version}
     infersent = InferSent(params_model)
     infersent.load_state_dict(torch.load(model_path))   # params of model in state dict
     infersent.set_w2v_path(w2v_path)
-    docs = get_docs_from_file_paths(file_paths)
+    docs = get_docs_from_file_paths(file_path)
     infersent.build_vocab(docs, tokenize=True)  # keep only those word vectors in vocab needed
 
     return infersent, docs

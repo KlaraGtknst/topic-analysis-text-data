@@ -3,10 +3,10 @@ import glob
 from text_embeddings.save_models import get_tagged_input_documents
 
 
-def main(file_paths):
+def main(file_path):
     NUM_DIMENSIONS = 55
 
-    train_corpus = list(get_tagged_input_documents(src_paths=file_paths))
+    train_corpus = list(get_tagged_input_documents(src_path=file_path))
     #d2v_model = Doc2Vec(train_corpus, vector_size=NUM_DIMENSIONS, window=2, min_count=2, workers=4, epochs=40)
 
     d2v_model2 = Doc2Vec(train_corpus)   # default dim 100! 

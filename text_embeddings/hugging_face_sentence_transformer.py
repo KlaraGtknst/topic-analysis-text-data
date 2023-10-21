@@ -50,8 +50,8 @@ def load_hf_sentTrans_model(model_path: str) -> SentenceTransformer:
     return model
 
 
-def main(file_paths, outpath):
-    docs = get_docs_from_file_paths(file_paths)
+def main(file_path, outpath):
+    docs = get_docs_from_file_paths(file_path)
     # Choose wether to train a new model or load an existing one
     #model = init_hf_sentTrans_model()   # new model
     model = load_hf_sentTrans_model(model_path=outpath)      # existing model uses outpath as model path
