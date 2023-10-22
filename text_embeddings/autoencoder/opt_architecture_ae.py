@@ -167,10 +167,10 @@ def get_directories():
 def main(src_path):
     # optuna
     search_space = {
-    'layers_num': list(range(2,5))#10))
+    'layers_num': list(range(2,15))
     }
-    study = optuna.create_study(sampler=optuna.samplers.GridSampler(search_space), direction='minimize', study_name='ae-opt')
-    study.optimize(objective, n_trials=3*3)
+    study = optuna.create_study(sampler=optuna.samplers.GridSampler(search_space), direction='minimize', study_name='ae-opt-infer')
+    study.optimize(objective, n_trials=4*4)
 
     print('Best hyperparams found by Optuna: \n', study.best_params)
 
