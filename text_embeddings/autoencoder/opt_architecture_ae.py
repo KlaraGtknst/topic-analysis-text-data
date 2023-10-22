@@ -1,5 +1,7 @@
+import json
 import os
 import statistics
+from matplotlib import pyplot as plt
 import tensorflow as tf
 import numpy as np
 # from tensorflow.python.keras.models import Sequential, Model
@@ -7,8 +9,9 @@ import numpy as np
 from tensorflow import keras
 from sklearn.model_selection import train_test_split
 from itertools import product
-from elasticSearch.models_aux import get_models, get_tfidf_emb
+from elasticSearch.models_aux import get_models, get_tfidf_emb 
 from elasticSearch.recursive_search import scanRecurse
+from elasticSearch.selected_docs import select_rep_path
 from text_embeddings.InferSent.models import InferSent
 import pandas as pd
 import torch
@@ -30,17 +33,19 @@ class AE(nn.Module):
         self.encoder = nn.ModuleList([
             nn.Sequential(
                 nn.Linear(layer_sizes[i], layer_sizes[i+1]),
-                nn.ReLU()
+                nn.LeakyReLU()
             ) for i in range(len(layer_sizes)-1)
         ])
 
         self.decoder  = nn.ModuleList([
             nn.Sequential(
                 nn.Linear(layer_sizes[-i], layer_sizes[-(i+1)]),
-                nn.ReLU()
-            ) for i in range(1, len(layer_sizes))
+                nn.LeakyReLU() # beim letzten kein LeakyRelu
+            ) for i in range(1, len(layer_sizes)-1)
         ])
-        
+
+        self.decoder.append(nn.Linear(layer_sizes[1], layer_sizes[0]))
+
         self.optimizer = torch.optim.Adam(params=self.parameters(), lr=0.005)
 
 
@@ -52,7 +57,7 @@ class AE(nn.Module):
         # run though decoder
         for layer in self.decoder:
             x = layer(x)
-        
+        #return self.decoder(self.encoder(x))
         return x
 
     
@@ -67,91 +72,138 @@ class AE(nn.Module):
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
+        return loss
 
 
 
-def eval(autoencoder_model, X_test, model_name:str, neurons_per_layer:list):
-    # Evaluate the model
-    loss = autoencoder_model.evaluate(X_test, X_test)
+def eval(X_test, inv_embs):
+    X_test = X_test.detach().numpy()
+    inv_embs = inv_embs.detach().numpy()
 
-    # RSME
-    inv_embs = autoencoder_model.predict(X_test)
     rsme = np.linalg.norm(inv_embs - X_test) / np.sqrt(X_test.shape[0])
-    print('RMSE: ', rsme)
+    #print('RMSE: ', rsme)
     # cosine similarity
+    # print(inv_embs)
+    # print(X_test)
     cos_sim = statistics.mean([np.dot(inverse_emb,embedding)/(np.linalg.norm(inverse_emb)*np.linalg.norm(embedding)) for inverse_emb, embedding in zip(inv_embs, X_test)])
-    print('cosine similarity: ', cos_sim)
+    #print('cosine similarity: ', cos_sim)
     
-    return {'model name': model_name, 'architectur': neurons_per_layer, 'loss': loss, 'rsme':rsme, 'cosine similarity': cos_sim}
+    return {'rsme': rsme, 'cosine_similarity': cos_sim}
 
 
  # Objective function to optimize by OPTUNA
 def objective(trial):
-    n_layer = trial.suggest_int("layers_num", np.arange(2,9))
-    step_size = int((LATENT_SHAPE-INPUT_SHAPE)/n_layer)
-    layer_size = list(np.arange(INPUT_SHAPE, LATENT_SHAPE, step=step_size, dytpe=int))
+    n_layer = trial.suggest_int("layers_num", 2,9)
+    layer_size = get_layer_config(n_layer)
 
     model = AE(layer_size)
-    model.compile(optimizer='adam', loss='mse')
-    # Implement early stopping criterion. 
-    # Training process stops when there is no improvement during 50 iterations
-    callback = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=50)
-    X_train = np.random(4096)
-    history = model.train(X_train)
-    return history.history["loss"][-1]
+
+    # data
+    # infersent
+    baseDir, resDir = get_directories()
+
+    # result dict
+    ae_config_scores = json.load(open(resDir + 'ae_configs.json')) if os.path.exists(resDir + 'ae_configs.json') else {}
+
+    infer_embeddings = get_infer_emb(baseDir)
+    #tfidf_embeddings = get_tfidf_emb(models['tfidf'], docs)
+    print('got embeddings')
+
+    # infersent
+    X_train, X_test = train_test_split(infer_embeddings, test_size=0.2, random_state=42)
+    X_train = torch.from_numpy(X_train)
+    X_test = torch.from_numpy(X_test)
+
+
+    # train
+    N_EPOCHS = 20
+    losses = []
+    for _ in range(N_EPOCHS):
+        for x in X_train:
+            losses.append(model.train(x).detach().numpy())
+    
+    # print(losses, type(losses))
+    # losses = losses
+    # # Defining the Plot Style
+    # plt.style.use('fivethirtyeight')
+    # plt.xlabel('Iterations')
+    # plt.ylabel('Loss')
+    
+    # # Plotting the last 100 values
+    # plt.plot(losses[-min(100, len(losses)):])
+    # plt.show()
+
+    # eval 
+    scores = eval(X_test=X_test, inv_embs=model.forward(X_test))
+    print('infer_' + str(n_layer))
+    print(scores)
+
+    ae_config_scores['infer_' + str(layer_size)] = {'rsme': str(scores['rsme']), 'cosine_similarity': str(scores['cosine_similarity'])}
+
+    out_file = open(resDir + 'ae_configs.json','w+')
+    json.dump(ae_config_scores,out_file)
+
+    return scores['rsme']
+
+def get_layer_config(n_layer):
+    step_size = int((LATENT_SHAPE-INPUT_SHAPE)/n_layer)
+    layer_size = list(range(INPUT_SHAPE, LATENT_SHAPE + 1, step_size))
+    return layer_size
+
+def get_infer_emb(baseDir:str):
+    paths = select_rep_path(baseDir) if baseDir.startswith('/mnt/') else list(scanRecurse(baseDir))
+
+    docs = [pdf_to_str(path) for path in paths]
+    
+    models = get_models(baseDir, model_names = ['infer'])#, 'tfidf'])   
+    print('got models')
+    infer_embeddings = models['infer'].encode(docs, tokenize=True)
+    return infer_embeddings
+
+def get_directories():
+    baseDir = '/mnt/datasets/Bahamas/SAC/0/'
+    resDir = '/mnt/stud/home/kgutekunst/logs/'
+    if os.path.exists('/Users/klara/Documents/uni/bachelorarbeit/data/0/'):
+        baseDir = '/Users/klara/Documents/uni/bachelorarbeit/data/0/'
+        resDir = '/Users/klara/Developer/Uni/topic-analysis-text-data/results/'
+    return baseDir,resDir
 
 
 def main(src_path):
-    # paths = list(scanRecurse(src_path))
-    # docs = [pdf_to_str(path) for path in paths]
-    # print('got paths')
+    # optuna
 
-    # # infersent & tfidf
-    # models = get_models(src_path, model_names = ['infer'])#, 'tfidf'])   
-    # print('got models')
-    # infer_embeddings = models['infer'].encode(docs, tokenize=True)
-    # #tfidf_embeddings = get_tfidf_emb(models['tfidf'], docs)
-    # print('got embeddings')
+    search_space = {
+    'layers_num': list(range(2,5))#10))
+    }
+    study = optuna.create_study(sampler=optuna.samplers.GridSampler(search_space), direction='minimize', study_name='ae-opt')
+    study.optimize(objective, n_trials=3*3)
 
-    # # infersent
-    # X_train, X_test = train_test_split(infer_embeddings, test_size=0.2, random_state=42)
+    print(study.study_name)
+    print(study.get_trials())
+    print(study)
+    print(study.study_name)
 
-    # if os.path.exists('results/score_per_ae_architecture.json'):
-    #     scores = pd.read_json('results/score_per_ae_architecture.json')
-    #     scores = pd.DataFrame(scores)
-    # else:
-    #     scores = pd.DataFrame(columns=['model name', 'architectur', 'loss', 'rsme', 'cosine similarity'])
+    print('Best hyperparams found by Optuna: \n', study.best_params)
 
+    # gridsearch
+    # baseDir, resDir = get_directories()
+    # infer_embeddings = get_infer_emb(baseDir)
+    # infer_embeddings = torch.rand(2,4096)
 
-    # test architectures using grid search
-   
-    
-    params = [{'n_layers': [3000]}]
-
-
-    # init model
-    #grid = GridSearchCV(estimator=AE, param_grid=params)
-    model = AE([4096, 3000, 2048])
-
-    # train model
-    X_train = torch.rand(4096)
-    X_test = torch.rand(4096)
-    print(len(X_train))
-    model.train(X_train)
-
-    # forward pass to get decompressed input
-    print(len(model(X_test)))
+    # param_grid = {
+    # 'layer_sizes': [get_layer_config(n_layer) for n_layer in range(2,5)]#10))
+    # }
+    # grid = GridSearchCV(estimator=lambda layer_sizes: AE(layer_sizes), param_grid=param_grid, n_jobs=-1, cv=3)
+    # grid_result = grid.fit(infer_embeddings, infer_embeddings)
+    # print(grid_result)
 
 
 
-    # for architecture in infer_enc_arch:
-    #     infer_score = train_and_evaluate_autoencoder(neurons_per_layer=architecture, X_train=X_train, X_test=X_test, model_name='infer')
-    #     scores.update(pd.DataFrame(infer_score))
-
-    # if tfidf_embeddings.shape[0] > 2048:
-    #     for architecture in infer_enc_arch:
-    #         tfidf_score = train_and_evaluate_autoencoder(neurons_per_layer=architecture, X_train=X_train, X_test=X_test, model_name='tfidf')
-    #         scores.update(pd.DataFrame(tfidf_score))
-
-
+if(__name__ == "__main__"):
+    layersizes=[10,5]
+    ae = AE(layersizes)
+    x = torch.randn(32,10)
+    res = ae(x)
+    print(res)
+    print(res.shape)
 
