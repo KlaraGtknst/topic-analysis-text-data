@@ -210,7 +210,7 @@ def main(src_path: str, client_addr=CLIENT_ADDR, model_names: list = MODEL_NAMES
     with Pool(processes=num_cpus) as pool:
         for model_name in model_names:  # function und diese parallisieren: run_process(doc_paths)
             print('started with model: ', model_name)
-            pool.map(lambda x : insert_embedding(src_paths = x, src_path=src_path, client_addr=client_addr, model_name = model_name), sub_lists)
+            pool.map(lambda x : insert_embedding(src_paths=x, src_path=src_path, client_addr=client_addr, model_name=model_name), sub_lists)
             print('finished model: ', model_name)
 
     print('finished inserting documents embeddings')
