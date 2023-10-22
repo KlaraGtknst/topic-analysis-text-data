@@ -18,7 +18,8 @@ def select_rep_path(baseDir: str, num_items_per_dir:int=1):
 
     return selected_docs
         
-
+def main(baseDir:str):
+    print(select_rep_path(baseDir, 10))
 
 if __name__ == '__main__':
     baseDir = '/Users/klara/Documents/uni/'
