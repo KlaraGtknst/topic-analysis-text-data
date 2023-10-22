@@ -2,21 +2,13 @@ import json
 import os
 import statistics
 from matplotlib import pyplot as plt
-import tensorflow as tf
 import numpy as np
-# from tensorflow.python.keras.models import Sequential, Model
-# from tensorflow.python.keras.layers import Dense
-from tensorflow import keras
 from sklearn.model_selection import train_test_split
-from itertools import product
 from elasticSearch.models_aux import get_models, get_tfidf_emb 
 from elasticSearch.recursive_search import scanRecurse
 from elasticSearch.selected_docs import select_rep_path
 from text_embeddings.InferSent.models import InferSent
-import pandas as pd
 import torch
-from sklearn.model_selection import GridSearchCV
-
 from text_embeddings.preprocessing.read_pdf import pdf_to_str
 import torch
 import torch.nn as nn
@@ -146,12 +138,15 @@ def plot_losses(losses):
     plt.show()
 
 def get_layer_config(n_layer):
-    step_size = int((LATENT_SHAPE-INPUT_SHAPE)/n_layer)
-    layer_size = list(range(INPUT_SHAPE, LATENT_SHAPE + 1, step_size))
+    step_size = int((LATENT_SHAPE-INPUT_SHAPE)/(n_layer-1))
+    layer_size = list(np.arange(INPUT_SHAPE, LATENT_SHAPE+1, step=step_size))
+    if len(layer_size) > n_layer-1:
+        layer_size = layer_size[:-1]
+    layer_size.append(LATENT_SHAPE)
     return layer_size
 
 def get_infer_emb(baseDir:str):
-    paths = select_rep_path(baseDir) if baseDir.startswith('/mnt/') else list(scanRecurse(baseDir))
+    paths = select_rep_path(baseDir, 10) if baseDir.startswith('/mnt/') else list(scanRecurse(baseDir))
 
     docs = [pdf_to_str(path) for path in paths]
     
