@@ -156,7 +156,7 @@ def get_infer_emb(baseDir:str):
     return infer_embeddings
 
 def get_directories():
-    baseDir = '/mnt/datasets/Bahamas/SAC/0/'
+    baseDir = '/mnt/datasets/Bahamas/'
     resDir = '/mnt/stud/home/kgutekunst/logs/'
     if os.path.exists('/Users/klara/Documents/uni/bachelorarbeit/data/0/'):
         baseDir = '/Users/klara/Documents/uni/bachelorarbeit/data/0/'
