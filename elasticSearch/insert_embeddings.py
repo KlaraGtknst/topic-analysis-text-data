@@ -40,7 +40,7 @@ def generate_models_embedding(src_paths: list, models : dict, client: Elasticsea
             #     'doc': {MODELS2EMB[model_name]: embedding}
             # }
 
-def insert_embedding(src_paths: list, models: dict={}, client_addr=CLIENT_ADDR, client: Elasticsearch=None, model_name: str = 'no_model'):
+def insert_embedding(src_path: str, src_paths: list, models: dict={}, client_addr=CLIENT_ADDR, client: Elasticsearch=None, model_name: str = 'no_model'):
         '''
         :param src_path: path to the directory of the documents to be inserted into the database
         :param client: Elasticsearch client
@@ -53,7 +53,7 @@ def insert_embedding(src_paths: list, models: dict={}, client_addr=CLIENT_ADDR, 
             return
         
         client = client if client else Elasticsearch(client_addr, timeout=1000)
-        models = models if models else get_models(src_paths, [model_name] if model_name else None)
+        models = models if models else get_models(src_path, [model_name] if model_name else None)
 
         try:
             #bulk(client, generate_models_embedding(src_paths, models, model_name), stats_only= True)
@@ -210,7 +210,7 @@ def main(src_path: str, client_addr=CLIENT_ADDR, model_names: list = MODEL_NAMES
     with Pool(processes=num_cpus) as pool:
         for model_name in model_names:  # function und diese parallisieren: run_process(doc_paths)
             print('started with model: ', model_name)
-            pool.map(lambda x : insert_embedding(src_paths = x, client_addr=client_addr, model_name = model_name), sub_lists)
+            pool.map(lambda x : insert_embedding(src_paths = x, src_path=src_path, client_addr=client_addr, model_name = model_name), sub_lists)
             print('finished model: ', model_name)
 
     print('finished inserting documents embeddings using bulk')
