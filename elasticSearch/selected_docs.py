@@ -2,7 +2,6 @@ import os
 import random
 
 def select_rep_path(baseDir: str, num_items_per_dir:int=1):
-    print(baseDir)
     baseDir = baseDir.split('*')[0] if  '*' in baseDir else baseDir
     baseDir = baseDir if baseDir.endswith('/') else baseDir + '/'
     
