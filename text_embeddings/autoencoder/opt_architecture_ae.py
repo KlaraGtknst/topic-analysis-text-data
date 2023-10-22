@@ -82,7 +82,7 @@ def eval(X_test, inv_embs):
 
  # Objective function to optimize by OPTUNA
 def objective(trial):
-    n_layer = trial.suggest_int("layers_num", 2,9)
+    n_layer = trial.suggest_int("layers_num", 2,20)
     layer_size = get_layer_config(n_layer)
 
     model = AE(layer_size)
