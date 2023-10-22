@@ -200,7 +200,7 @@ def insert_precomputed_clusters(src_path: str, image_src_path:str, client_addr:s
     print('finished inserting pca-OPTICS cluster df')
 
 def main(src_path: str, client_addr=CLIENT_ADDR, model_names: list = MODEL_NAMES, num_cpus:int=1):
-    print('start inserting documents embeddings using bulk')
+    print('start inserting documents embeddings')
 
     # all paths
     document_paths = list(scanRecurse(src_path))
@@ -213,4 +213,4 @@ def main(src_path: str, client_addr=CLIENT_ADDR, model_names: list = MODEL_NAMES
             pool.map(lambda x : insert_embedding(src_paths = x, src_path=src_path, client_addr=client_addr, model_name = model_name), sub_lists)
             print('finished model: ', model_name)
 
-    print('finished inserting documents embeddings using bulk')
+    print('finished inserting documents embeddings')
