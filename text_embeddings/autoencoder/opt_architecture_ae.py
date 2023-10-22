@@ -57,7 +57,7 @@ class AE(nn.Module):
         # run though decoder
         for layer in self.decoder:
             x = layer(x)
-        #return self.decoder(self.encoder(x))
+
         return x
 
     
@@ -81,12 +81,9 @@ def eval(X_test, inv_embs):
     inv_embs = inv_embs.detach().numpy()
 
     rsme = np.linalg.norm(inv_embs - X_test) / np.sqrt(X_test.shape[0])
-    #print('RMSE: ', rsme)
+
     # cosine similarity
-    # print(inv_embs)
-    # print(X_test)
     cos_sim = statistics.mean([np.dot(inverse_emb,embedding)/(np.linalg.norm(inverse_emb)*np.linalg.norm(embedding)) for inverse_emb, embedding in zip(inv_embs, X_test)])
-    #print('cosine similarity: ', cos_sim)
     
     return {'rsme': rsme, 'cosine_similarity': cos_sim}
 
@@ -121,29 +118,32 @@ def objective(trial):
     for _ in range(N_EPOCHS):
         for x in X_train:
             losses.append(model.train(x).detach().numpy())
-    
-    # print(losses, type(losses))
-    # losses = losses
-    # # Defining the Plot Style
-    # plt.style.use('fivethirtyeight')
-    # plt.xlabel('Iterations')
-    # plt.ylabel('Loss')
-    
-    # # Plotting the last 100 values
-    # plt.plot(losses[-min(100, len(losses)):])
-    # plt.show()
+
+    # plot_losses(losses)
 
     # eval 
     scores = eval(X_test=X_test, inv_embs=model.forward(X_test))
-    print('infer_' + str(n_layer))
-    print(scores)
 
-    ae_config_scores['infer_' + str(layer_size)] = {'rsme': str(scores['rsme']), 'cosine_similarity': str(scores['cosine_similarity'])}
-
-    out_file = open(resDir + 'ae_configs.json','w+')
-    json.dump(ae_config_scores,out_file)
+    # save results
+    save_results('infer', layer_size, resDir, ae_config_scores, scores)
 
     return scores['rsme']
+
+def save_results(model: str, layer_sizes:list, resDir:str, ae_config_scores:dict, scores:dict):
+    ae_config_scores[model + '_' + str(layer_sizes)] = {'rsme': str(scores['rsme']), 'cosine_similarity': str(scores['cosine_similarity'])}
+
+    out_file = open(resDir + 'ae_configs.json','w+')
+    json.dump(ae_config_scores, out_file)
+
+def plot_losses(losses):
+    losses = losses
+    plt.style.use('fivethirtyeight')
+    plt.xlabel('Iterations')
+    plt.ylabel('Loss')
+    
+    # Plotting the last 100 values
+    plt.plot(losses[-min(100, len(losses)):])
+    plt.show()
 
 def get_layer_config(n_layer):
     step_size = int((LATENT_SHAPE-INPUT_SHAPE)/n_layer)
@@ -171,31 +171,13 @@ def get_directories():
 
 def main(src_path):
     # optuna
-
     search_space = {
     'layers_num': list(range(2,5))#10))
     }
     study = optuna.create_study(sampler=optuna.samplers.GridSampler(search_space), direction='minimize', study_name='ae-opt')
     study.optimize(objective, n_trials=3*3)
 
-    print(study.study_name)
-    print(study.get_trials())
-    print(study)
-    print(study.study_name)
-
     print('Best hyperparams found by Optuna: \n', study.best_params)
-
-    # gridsearch
-    # baseDir, resDir = get_directories()
-    # infer_embeddings = get_infer_emb(baseDir)
-    # infer_embeddings = torch.rand(2,4096)
-
-    # param_grid = {
-    # 'layer_sizes': [get_layer_config(n_layer) for n_layer in range(2,5)]#10))
-    # }
-    # grid = GridSearchCV(estimator=lambda layer_sizes: AE(layer_sizes), param_grid=param_grid, n_jobs=-1, cv=3)
-    # grid_result = grid.fit(infer_embeddings, infer_embeddings)
-    # print(grid_result)
 
 
 
