@@ -84,8 +84,4 @@ def main(file_path, outpath):
     
     encoded_embedding, ae_encoder = autoencoder_emb_model(input_shape=embeddings.shape[1], latent_dim=2048, data=embeddings)
 
-    doc_to_search = file_paths[0]
-    results = search_inferSent_emb_in_db(client, infer_model=infersent, ae_infer_encoder=ae_encoder, path= doc_to_search)
-    # bad results
-    print('results for document: ', doc_to_search) # /Users/klara/Documents/Uni/bachelorarbeit/data/0/SAC53-21.pdf
-    print('results:\n', results) #  {0.5750969: 'SAC86-17.pdf', 0.56992793: 'SAC20-15.pdf', 0.5692922: 'SAC42-1.pdf', 0.5691847: 'SAC16-72.pdf', 0.56910694: 'SAC27-25.pdf', 0.56881595: 'SAC1-11.pdf', 0.5685914: 'SAC92-8.pdf', 0.56838506: 'SAC85-13.pdf', 0.5683696: 'SAC27-22.pdf'}
+    
