@@ -1,6 +1,6 @@
 #!/bin/bash      
 #SBATCH --partition=main        # Partition main
-#SBATCH --job-name=insert-emb  # Job-Name
+#SBATCH --job-name=test-pool  # Job-Name
 #SBATCH --nodes=1       # 1 Node wird benötigt
 #SBATCH --cpus-per-task=90
 #SBATCH --nodelist=cpu-epyc-1
