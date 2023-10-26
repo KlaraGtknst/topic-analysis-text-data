@@ -9,5 +9,5 @@
 #SBATCH --gres=gpu:1
 date;hostname;pwd
 source /mnt/stud/work/kgutekunst/bsc-py/bin/activate
-cd /mnt/stud/home/kgutekunst
+cd /mnt/stud/work/kgutekunst/topic-analysis-text-data
 srun jupyter lab --port=9711 --no-browser
