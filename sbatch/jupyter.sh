@@ -2,9 +2,8 @@
 #SBATCH --job-name=jupyter
 #SBATCH --output=/mnt/stud/home/kgutekunst/logs/jupyter.log
 #SBATCH --ntasks=1
-#SBATCH --mem=32gb
-#SBATCH --time=10:00:00
-#SBATCH --cpus-per-task=10
+#SBATCH --mem=60gb
+#SBATCH --cpus-per-task=1
 #SBATCH --partition=jupyter
 #SBATCH --gres=gpu:1
 date;hostname;pwd
