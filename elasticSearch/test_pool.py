@@ -14,6 +14,7 @@ class wrapper:
 
 def scanRecurse(baseDir: str):
     baseDir = baseDir.split('*')[0] if  '*' in baseDir else baseDir
+    baseDir = baseDir if baseDir.endswith('/') else baseDir + '/'
 
     for entry in os.scandir(baseDir):
         if entry.is_file():
@@ -34,7 +35,8 @@ def temp(x):
 MODEL_NAMES = ['doc2vec', 'universal', 'hugging', 'infer', 'ae', 'tfidf']
 
 def main(src_path: str, model_names: list = MODEL_NAMES, num_cpus:int=1):
-    print('start inserting documents embeddings')
+    src_path = '/mnt/datasets/Bahamas/B/5'
+    print('start inserting documents embeddings on ', src_path)
 
     # all paths
     document_paths = list(scanRecurse(src_path))
