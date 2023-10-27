@@ -19,6 +19,7 @@ from constants import *
 from elasticSearch.models_aux import *
 from elasticSearch.create_documents import *
 from doc_images.convert_pdf2image import *
+import sys
 from elasticSearch.recursive_search import *
 
 class wrapper:
@@ -223,6 +224,7 @@ def main(src_path: str, client_addr=CLIENT_ADDR, model_names: list = MODEL_NAMES
             proc_wrap = wrapper(model_name=model_name, baseDir=src_path)
             print('initialized wrapper')
             print('started with model: ', model_name)
+            sys.stdout.flush()
             pool.map(proc_wrap, sub_lists)
             print('finished model: ', model_name)
 
