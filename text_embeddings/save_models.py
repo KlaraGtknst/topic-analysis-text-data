@@ -77,7 +77,9 @@ def load_model(model_name:str):
             return pickle.load(file)
     
     elif 'infer' in model_name:
-        with open(f'models/infersent_model.pkl', 'rb') as file:  
+        print('entered: load_model() ', model_name)
+        sys.stdout.flush()
+        with open(f'models/infer.pkl', 'rb') as file:  
             return pickle.load(file)    
         
     elif ('ae' in model_name) and not ('tfidf' in model_name):
