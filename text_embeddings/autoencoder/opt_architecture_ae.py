@@ -1,11 +1,12 @@
 import json
+from multiprocessing import Pool
 import os
 import statistics
 from matplotlib import pyplot as plt
 import numpy as np
 from sklearn.model_selection import train_test_split
 from elasticSearch.models_aux import get_models, get_tfidf_emb 
-from elasticSearch.recursive_search import scanRecurse
+from elasticSearch.recursive_search import chunks, scanRecurse
 from elasticSearch.selected_docs import select_rep_path
 from text_embeddings.InferSent.models import InferSent
 import torch
@@ -16,6 +17,18 @@ import optuna
 
 LATENT_SHAPE = 2048
 INPUT_SHAPE = 4096
+class wrapper:
+    def __init__(self, study_name):
+        self.study_name = study_name
+
+    def __call__(self, layers_lst: list):
+        # optuna
+        search_space = {
+        'layers_num': layers_lst
+        }
+        study = optuna.create_study(sampler=optuna.samplers.GridSampler(search_space), direction='minimize', study_name=self.study_name)
+        study.optimize(objective, n_trials=3*3)
+        print('Best hyperparams found by Optuna: \n', study.best_params)
 
 class AE(nn.Module):
     def __init__(self, layer_sizes):
@@ -164,23 +177,28 @@ def get_directories():
     return baseDir,resDir
 
 
-def main(src_path):
-    # optuna
-    search_space = {
-    'layers_num': list(range(2,6))
-    }
-    study = optuna.create_study(sampler=optuna.samplers.GridSampler(search_space), direction='minimize', study_name='ae-opt-infer')
-    study.optimize(objective, n_trials=3*3)
 
-    print('Best hyperparams found by Optuna: \n', study.best_params)
+
+def main(src_path, num_cpus:int):
+    max_layer = 20
+    n_layers = list(range(1,max_layer+1))
+    sub_lists = list(chunks(n_layers, len(n_layers)//num_cpus))
+    print(sub_lists)
+    
+    with Pool(processes=num_cpus) as pool:
+        proc_wrap = wrapper('ae-opt-infer')
+        pool.map(proc_wrap, sub_lists)
+
+        
 
 
 
 if(__name__ == "__main__"):
-    layersizes=[10,5]
-    ae = AE(layersizes)
-    x = torch.randn(32,10)
-    res = ae(x)
-    print(res)
-    print(res.shape)
+    # layersizes=[10,5]
+    # ae = AE(layersizes)
+    # x = torch.randn(32,10)
+    # res = ae(x)
+    # print(res)
+    # print(res.shape)
+    main('', 1)
 

@@ -67,7 +67,7 @@ if __name__ == '__main__':
 
     elif file_to_run[0] == 'opt_architecture_ae.py':
         # python3 main_server.py 'opt_architecture_ae.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
-        opt_architecture_ae.main(file_path)
+        opt_architecture_ae.main(file_path, num_cpus=n_pools)
 
     elif file_to_run[0] == 'selected_docs.py':
         # python3 main_server.py 'selected_docs.py' -d '/Users/klara/Documents/Uni/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
