@@ -32,6 +32,8 @@ class wrapper:
 
 
 def generate_models_embedding(src_paths: list, models : dict, client: Elasticsearch, model_name: str = 'no_model'):  
+    print('started with generate_models_embedding() ')
+    sys.stdout.flush()
     for path in src_paths:
     
         text = pdf_to_str(path)
@@ -58,6 +60,8 @@ def insert_embedding(src_path: str, src_paths: list, models: dict={}, client_add
 
         inserts specific embedding of all documents into the database 'bahamas'.
         '''
+        print('started with insert_embedding() ')
+        sys.stdout.flush()
         if (model_name not in MODEL_NAMES) or (model_name == 'ae') or (model_name == 'none'):
             return
         
