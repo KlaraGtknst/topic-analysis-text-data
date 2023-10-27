@@ -44,12 +44,6 @@ def generate_models_embedding(src_paths: list, models : dict, client: Elasticsea
 
             client.update(index='bahamas', id=id, body={'doc': {MODELS2EMB[model_name]: embedding}})
 
-            # yield {     # vielleicht weg?
-            #     '_op_type': 'update',
-            #     '_index': 'bahamas',
-            #     '_id': id,
-            #     'doc': {MODELS2EMB[model_name]: embedding}
-            # }
 
 def insert_embedding(src_path: str, src_paths: list, models: dict={}, client_addr=CLIENT_ADDR, client: Elasticsearch=None, model_name: str = 'no_model'):
         '''
