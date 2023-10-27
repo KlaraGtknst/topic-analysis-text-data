@@ -180,11 +180,12 @@ def get_directories():
 
 
 def main(src_path, num_cpus:int):
-    max_layer = 20
+    print('ae config on 3 layers')
+    max_layer = 3#20
     n_layers = list(range(1,max_layer+1))
     sub_lists = list(chunks(n_layers, len(n_layers)//num_cpus))
     print(sub_lists)
-    
+
     with Pool(processes=num_cpus) as pool:
         proc_wrap = wrapper('ae-opt-infer')
         pool.map(proc_wrap, sub_lists)

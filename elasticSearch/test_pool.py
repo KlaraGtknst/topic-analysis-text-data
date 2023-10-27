@@ -35,6 +35,7 @@ def temp(x):
 MODEL_NAMES = ['doc2vec', 'universal', 'hugging', 'infer', 'ae', 'tfidf']
 
 def main(src_path: str, model_names: list = MODEL_NAMES, num_cpus:int=1):
+    print('test pool')
     src_path = '/mnt/datasets/Bahamas/B/5'
     print('start inserting documents embeddings on ', src_path)
 
