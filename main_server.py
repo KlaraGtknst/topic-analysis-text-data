@@ -1,7 +1,7 @@
 from constants import CLIENT_ADDR
 from user_interface.cli import *
 from doc_images import convert_pdf2image
-from elasticSearch import db_elasticsearch, create_documents, create_database, insert_embeddings, insert_clusters, selected_docs, test_pool
+from elasticSearch import db_elasticsearch, create_documents, create_database, insert_embeddings, insert_clusters, selected_docs, test_pool, recursive_search
 from doc_images.PCA import PCA_image_clustering
 from text_embeddings.InferSent import own_word2vec
 from text_embeddings.autoencoder import opt_architecture_ae
@@ -76,6 +76,10 @@ if __name__ == '__main__':
     elif file_to_run[0] == 'test_pool.py':
         # python3 main_server.py 'test_pool.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
         test_pool.main(src_path=file_path, model_names=model_names, num_cpus=n_pools)
+
+    elif file_to_run[0] == 'recursive_search.py':
+        # python3 main_server.py 'recursive_search.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
+        recursive_search.main(baseDir=file_path)
 
 
 
