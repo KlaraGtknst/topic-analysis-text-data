@@ -24,7 +24,7 @@ def get_models(src_path: str, model_names: list = MODEL_NAMES):
             print('model loaded: get_models() ')
             sys.stdout.flush()
         except: # model does not exist, create and save it
-            print('model not saved, train model: get_models() ')
+            print('model not saved, train model: get_models() ', model_name)
             sys.stdout.flush()
             model = save_models.train_model(model_name, src_path)
             models[model_name] = model

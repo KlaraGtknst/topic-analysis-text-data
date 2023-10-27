@@ -16,6 +16,7 @@ from tensorflow.python.keras.models import model_from_json
 from gensim.test.utils import get_tmpfile
 from constants import CLIENT_ADDR
 from elasticSearch.recursive_search import *
+import sys
 
 SRC_PATH = '/Users/klara/Documents/uni/bachelorarbeit/data/0/*.pdf'
 DOC_PATH = '/Users/klara/Downloads/*.pdf'
@@ -129,17 +130,29 @@ def train_model(model_name:str, src_path:str, client:Elasticsearch=None):
         return init_hf_sentTrans_model()
     
     elif 'infer' in model_name:
+        print('train_model():  start model training', model_name)
+        sys.stdout.flush()
         # model
         local_model_path = '/Users/klara/Developer/Uni/encoder/infersent1.pkl'
         server_model_path = '/mnt/stud/work/kgutekunst/encoder/infersent1.pkl'
         model_path = local_model_path if os.path.exists(local_model_path) else server_model_path
+
+        print('train_model():  obtained model path', model_path)
+        sys.stdout.flush()
 
         # word2vec embeddings
         # w2v_local_path = '/Users/klara/Developer/Uni/GloVe/glove.840B.300d.txt'
         w2v_local_path = '/Users/klara/Developer/Uni/bahamas_word2vec/bahamas_w2v.txt'
         w2v_server_path = '/mnt/stud/work/kgutekunst/bahamas_word2vec/bahamas_w2v.txt'
         custom_w2v_path = w2v_local_path if os.path.exists(w2v_local_path) else w2v_server_path
+
+        print('train_model():  obtained w2v path', custom_w2v_path)
+        sys.stdout.flush()
+
         inferSent_model, docs = init_infer(model_path=model_path, w2v_path=custom_w2v_path, file_path=src_path, version=1)
+
+        print('train_model():  trained model', custom_w2v_path)
+        sys.stdout.flush()
         return inferSent_model
     
     elif 'tfidf_ae' in model_name:
