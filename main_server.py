@@ -7,6 +7,7 @@ from text_embeddings.InferSent import own_word2vec
 from text_embeddings.autoencoder import opt_architecture_ae
 from constants import MODEL_NAMES
 import db_all_embs as db_all_embs
+import num_pca_comp 
 
 # srun --partition=main --mem=16g -n 1 --cpus-per-task=4 --pty /usr/sbin/sshd -D -f ~/sshd/sshd_config
 
@@ -80,6 +81,10 @@ if __name__ == '__main__':
     elif file_to_run[0] == 'recursive_search.py':
         # python3 main_server.py 'recursive_search.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
         recursive_search.main(baseDir=file_path)
+
+    elif file_to_run[0] == 'num_pca_comp.py':
+        # python3 main_server.py 'num_pca_comp.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
+        num_pca_comp.main()
 
 
 
