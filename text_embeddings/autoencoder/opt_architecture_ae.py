@@ -2,6 +2,7 @@ import json
 from multiprocessing import Pool
 import os
 import statistics
+import sys
 from matplotlib import pyplot as plt
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -151,7 +152,7 @@ def plot_losses(losses):
     plt.show()
 
 def get_layer_config(n_layer):
-    step_size = int((LATENT_SHAPE-INPUT_SHAPE)/(n_layer-1))
+    step_size = int((LATENT_SHAPE-INPUT_SHAPE)/(min(1,n_layer-1)))
     layer_size = list(np.arange(INPUT_SHAPE, LATENT_SHAPE+1, step=step_size))
     if len(layer_size) > n_layer-1:
         layer_size = layer_size[:-1]
@@ -180,14 +181,17 @@ def get_directories():
 
 
 def main(src_path, num_cpus:int):
-    print('ae config on 3 layers')
-    max_layer = 3#20
-    n_layers = list(range(1,max_layer+1))
+    print('ae config on ', num_cpus, ' layers & cpus')
+    max_layer = num_cpus
+    n_layers = list(range(2,max_layer+2))
     sub_lists = list(chunks(n_layers, len(n_layers)//num_cpus))
     print(sub_lists)
+    sys.stdout.flush()
 
     with Pool(processes=num_cpus) as pool:
         proc_wrap = wrapper('ae-opt-infer')
+        print('initialized wrapper')
+        sys.stdout.flush()
         pool.map(proc_wrap, sub_lists)
 
         
