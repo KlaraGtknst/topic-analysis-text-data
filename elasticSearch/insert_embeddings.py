@@ -212,6 +212,7 @@ def main(src_path: str, client_addr=CLIENT_ADDR, model_names: list = MODEL_NAMES
 
     # all paths
     document_paths = list(scanRecurse(src_path))
+    print('number of docs: ', len(document_paths))
     sub_lists = list(chunks(document_paths, int(len(document_paths)/num_cpus)))
 
     print('obtained sublists')
