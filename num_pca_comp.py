@@ -83,7 +83,7 @@ def get_directories():
 
 def main():
     baseDir, resDir = get_directories()
-    paths = list(scanRecurse(baseDir))[:20]#select_rep_path(baseDir, 10) if baseDir.startswith('/mnt/') else list(scanRecurse(baseDir))
+    paths = list(scanRecurse(baseDir))[:2000]#select_rep_path(baseDir, 10) if baseDir.startswith('/mnt/') else list(scanRecurse(baseDir))
     documents_raw = [plt.imread(fp) for fp in paths if fp.endswith(".png")]
     max_w, max_h = get_maximum_height_width(documents_raw)
     print(max_w, max_h)
