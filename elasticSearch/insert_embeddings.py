@@ -37,13 +37,16 @@ class wrapper:
 def generate_models_embedding(src_paths: list, models : dict, client: Elasticsearch, model_name: str = 'no_model'):  
     print('started with generate_models_embedding() ')
     sys.stdout.flush()
+    print('model_name: ', model_name, ' models.keys(): ', models.keys())
     for path in src_paths:
     
         text = pdf_to_str(path)
         id = get_hash_file(path)
 
         if (model_name in models.keys()) and (model_name != 'ae'):
+            print('model_name arrived: ', model_name)
             embedding = get_embedding(models=models, model_name=model_name, text=text)
+            print('embedding: ', embedding)
             client.update(index='bahamas', id=id, body={'doc': {MODELS2EMB[model_name]: embedding}})
 
 
@@ -86,7 +89,10 @@ def get_embedding(models: dict, model_name: str, text: str):
         return embed([text], models['universal'])[0].numpy()
     
     elif model_name in ['huggingface_sent_transformer', 'hugging']:
-        return models['hugging'].encode(text)
+        if type(text) == str:
+            text = [text]
+        print(models['hugging'].encode(sentences=['This framework generates embeddings for each input sentence']))
+        return models['hugging'].encode(sentences=text)
     
     elif model_name in ['inferSent_AE', 'infer']:
         inferSent_embedding = models['infer'].encode([text], tokenize=True)
