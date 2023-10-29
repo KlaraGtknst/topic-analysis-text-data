@@ -28,47 +28,47 @@ if __name__ == '__main__':
 
     if file_to_run[0] == 'convert_pdf2image.py':
         # python3 main_server.py 'convert_pdf2image.py' -i '/Users/klara/Documents/uni/bachelorarbeit/data/0/SAC29-14.pdf' -o '/Users/klara/Downloads/'
-        # python3 main_server.py 'convert_pdf2image.py' -d '/Users/klara/Documents/uni/bachelorarbeit/data/0/*.pdf' -o '/Users/klara/Documents/uni/bachelorarbeit/images/'
+        # python3 main_server.py 'convert_pdf2image.py' -d '//Users/klara/Documents/uni/bachelorarbeit/data/*.pdf' -o '/Users/klara/Documents/uni/bachelorarbeit/images/'
         # python3 main_server.py 'convert_pdf2image.py' -d'/Users/klara/Downloads/*.pdf' -o '/Users/klara/Downloads/'
         # pdf below does not work, pdf schief
         # python3 main_server.py 'convert_pdf2image.py' -i '/Users/klara/Documents/uni/bachelorarbeit/data/0/SAC34-38.pdf' -o '/Users/klara/Downloads/'
         convert_pdf2image.main(file_paths, out_file)
 
     elif file_to_run[0] == 'db_elasticsearch.py':
-        # python3 main_server.py 'db_elasticsearch.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
-        # python3 main_server.py 'db_elasticsearch.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1 -m 'universal'
+        # python3 main_server.py 'db_elasticsearch.py' -d '//Users/klara/Documents/uni/bachelorarbeit/data/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
+        # python3 main_server.py 'db_elasticsearch.py' -d '//Users/klara/Documents/uni/bachelorarbeit/data/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1 -m 'universal'
         db_elasticsearch.main(file_path, image_src_path, client_addr, n_pools, model_names=model_names)
 
     elif file_to_run[0] == 'PCA_image_clustering.py':
-        # python3 main_server.py 'PCA_image_clustering.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/'
+        # python3 main_server.py 'PCA_image_clustering.py' -d '//Users/klara/Documents/uni/bachelorarbeit/data/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/'
         PCA_image_clustering.main(file_paths, image_src_path, outpath=out_file)
 
     elif file_to_run[0] == 'db_all_embs.py':
-        # python3 main_server.py 'db_all_embs.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
+        # python3 main_server.py 'db_all_embs.py' -d '//Users/klara/Documents/uni/bachelorarbeit/data/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
         db_all_embs.main(file_path, image_src_path, client_addr, n_pools, model_names=model_names)
 
     elif file_to_run[0] == 'own_word2vec.py':
-        # python3 main_server.py 'own_word2vec.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
+        # python3 main_server.py 'own_word2vec.py' -d '//Users/klara/Documents/uni/bachelorarbeit/data/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
         own_word2vec.main(file_paths)
 
     elif file_to_run[0] == 'create_database.py':
-        # python3 main_server.py 'create_database.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
+        # python3 main_server.py 'create_database.py' -d '//Users/klara/Documents/uni/bachelorarbeit/data/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
         create_database.main(src_path=file_path, client_addr=client_addr)
 
     elif file_to_run[0] == 'create_documents.py':
-        # python3 main_server.py 'create_documents.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
+        # python3 main_server.py 'create_documents.py' -d '//Users/klara/Documents/uni/bachelorarbeit/data/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
         create_documents.main(src_path=file_path, client_addr=client_addr, num_cpus=n_pools)
 
     elif file_to_run[0] == 'insert_embeddings.py':
-        # python3 main_server.py 'insert_embeddings.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
+        # python3 main_server.py 'insert_embeddings.py' -d '//Users/klara/Documents/uni/bachelorarbeit/data/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
         insert_embeddings.main(src_path=file_path, client_addr=client_addr, model_names=model_names, num_cpus=n_pools)
 
     elif file_to_run[0] == 'insert_clusters.py':
-        # python3 main_server.py 'insert_clusters.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
+        # python3 main_server.py 'insert_clusters.py' -d '//Users/klara/Documents/uni/bachelorarbeit/data/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
         insert_clusters.main(src_path=file_path, client_addr=client_addr, image_src_path=image_src_path)
 
     elif file_to_run[0] == 'opt_architecture_ae.py':
-        # python3 main_server.py 'opt_architecture_ae.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
+        # python3 main_server.py 'opt_architecture_ae.py' -d '//Users/klara/Documents/uni/bachelorarbeit/data/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
         opt_architecture_ae.main(file_path, num_cpus=n_pools)
 
     elif file_to_run[0] == 'selected_docs.py':
@@ -76,19 +76,19 @@ if __name__ == '__main__':
         selected_docs.main(file_path)
 
     elif file_to_run[0] == 'test_pool.py':
-        # python3 main_server.py 'test_pool.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
+        # python3 main_server.py 'test_pool.py' -d '//Users/klara/Documents/uni/bachelorarbeit/data/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
         test_pool.main(src_path=file_path, model_names=model_names, num_cpus=n_pools)
 
     elif file_to_run[0] == 'recursive_search.py':
-        # python3 main_server.py 'recursive_search.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
+        # python3 main_server.py 'recursive_search.py' -d '//Users/klara/Documents/uni/bachelorarbeit/data/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
         recursive_search.main(baseDir=file_path)
 
     elif file_to_run[0] == 'num_pca_comp.py':
-        # python3 main_server.py 'num_pca_comp.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
+        # python3 main_server.py 'num_pca_comp.py' -d '//Users/klara/Documents/uni/bachelorarbeit/data/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
         num_pca_comp.main()
 
     elif file_to_run[0] == 'com_embs.py':
-        # python3 main_server.py 'com_embs.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
+        # python3 main_server.py 'com_embs.py' -d '//Users/klara/Documents/uni/bachelorarbeit/data/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
         com_embs.main(baseDir=file_path)
 
 
