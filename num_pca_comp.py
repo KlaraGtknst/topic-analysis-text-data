@@ -22,6 +22,7 @@ def plot_rec_err(X_train, X_test, n_max=10, save=False, resDir:str='results/'):
 
     # plot reconstruction error
     plt.figure(figsize=(10,6))
+    print(reconstr_err)
     plt.plot(reconstr_err, label="RSME / avg # non white pixel per image")
     plt.title("Reconstruction error on a " +  str(X_train.shape[0]) + '/' +  str(X_test.shape[0]) + ' values train/test set')
     plt.xlabel("Number of components")
@@ -29,6 +30,7 @@ def plot_rec_err(X_train, X_test, n_max=10, save=False, resDir:str='results/'):
     plt.legend()
     if save:
         plt.savefig(resDir + "pca_reconstruction_error.pdf", format="pdf")
+    #plt.show()
     
 
 
@@ -45,6 +47,7 @@ def plot_expl_var(pca, X_train, X_test, save=False, resDir:str='results/'):
     plt.legend()
     if save:
         plt.savefig(resDir + "cumulative_explained_variance.pdf", format="pdf")
+    
 
 def rgb2gray(img):  # not normalized to [0,1]
     return 0.299*img[:,:,0] + 0.587*img[:,:,1] + 0.114*img[:,:,2]
@@ -91,5 +94,5 @@ def main():
     X_train, X_test = train_test_split(eigendocs, random_state=0)
     pca = PCA(n_components=min(len(X_train), len(X_train[0])), whiten=True, svd_solver="randomized")   
     pca.fit(X_train)
-    plot_expl_var(pca, X_train=X_train, X_test=X_test, save=True, resDir=resDir)
-    plot_rec_err(X_train=X_train, X_test=X_test, n_max= min(2,len(X_train),len(X_train[0])), save=True, resDir=resDir)
+    #plot_expl_var(pca, X_train=X_train, X_test=X_test, save=True, resDir=resDir)
+    plot_rec_err(X_train=X_train, X_test=X_test, n_max= min(len(X_train),len(X_train[0])), save=True, resDir=resDir)
