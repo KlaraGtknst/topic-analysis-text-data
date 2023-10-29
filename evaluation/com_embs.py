@@ -72,27 +72,17 @@ def visualize_using_venn(df:pd.DataFrame, save:bool=False, resDir:str='results/'
     '''
     model_names = get_model_names()
     dataset = {}
-    # for i, search_id in enumerate(df.index):
-    #     if i == 6:
-    #         break
-
-    #     print(df.loc[search_id].values.flatten())
-    #     dataset[search_id] = set(df.loc[search_id].values.flatten())
     for model in model_names:
-        dataset[model] = set(df.loc[df.index[0],model])
-
-    print(dataset)
+        dataset[model] = set()
+        for cell in df.loc[:,model].values:
+            dataset[model].update(set(cell))
     labels = venn.get_labels(dataset.values(), fill=['number'])
-    print(labels)
     fig, ax = venn.venn6(labels, names=dataset.keys())
     title = 'Venn diagram of most similar documents'
     plt.title(title)
     if save:
         plt.savefig(resDir + re.sub(' ', '_', string=title), bbox_inches = 'tight')
-    #plt.legend(dataset.keys())
     plt.show()
-    # venn2(subsets = dataset.values(), set_labels = dataset.keys())
-    # plt.show()
 
 def df_str2list(df:pd.DataFrame):
     for row_id, row in df.iterrows():
@@ -177,7 +167,7 @@ def main(baseDir:str):
     #print(res_df)
     
     res_df = encode_lists(res_df)
-    #visualize_using_venn(res_df)
+    visualize_using_venn(res_df)
 
-    create_sim_heatmap(res_df, save=True)
+    #create_sim_heatmap(res_df, save=True)
 
