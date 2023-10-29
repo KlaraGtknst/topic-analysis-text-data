@@ -22,7 +22,7 @@ def save_docs_to_file(baseDir: str, num_docs:int, res_path:str='results/'):
     all_paths = list(scanRecurse(baseDir=baseDir))
     if len(all_paths) < num_docs:
         return
-    with open(res_path + 'selected_doc_paths.txt', 'w') as f:
+    with open(res_path + 'selected_doc_paths2.txt', 'w') as f:
         for line in random.sample(all_paths, num_docs):
             f.write(line)
             f.write('\n')
@@ -33,4 +33,4 @@ def main(baseDir):
     server_model_path = '/mnt/stud/home/kgutekunst/results/'
     if os.path.exists(server_model_path):
         res_path = server_model_path
-    save_docs_to_file(baseDir=baseDir, num_docs=2000, res_path=res_path)
+    save_docs_to_file(baseDir=baseDir, num_docs=200, res_path=res_path)
