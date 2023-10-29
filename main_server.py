@@ -5,6 +5,7 @@ from elasticSearch import db_elasticsearch, create_documents, create_database, i
 from doc_images.PCA import PCA_image_clustering
 from text_embeddings.InferSent import own_word2vec
 from text_embeddings.autoencoder import opt_architecture_ae
+from evaluation import com_embs
 from constants import MODEL_NAMES
 import db_all_embs as db_all_embs
 import num_pca_comp 
@@ -85,6 +86,10 @@ if __name__ == '__main__':
     elif file_to_run[0] == 'num_pca_comp.py':
         # python3 main_server.py 'num_pca_comp.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
         num_pca_comp.main()
+
+    elif file_to_run[0] == 'com_embs.py':
+        # python3 main_server.py 'com_embs.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
+        com_embs.main(baseDir=file_path)
 
 
 
