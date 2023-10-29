@@ -1,7 +1,9 @@
 import hashlib
+from multiprocessing import Pool
 from elasticsearch import ApiError, ConflictError, Elasticsearch
 import base64
 from gensim.utils import simple_preprocess
+from elasticSearch.recursive_search import scanRecurse, chunks
 # own modules
 from text_embeddings.preprocessing.read_pdf import *
 from user_interface.cli import *
