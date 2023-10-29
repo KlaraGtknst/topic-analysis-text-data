@@ -81,7 +81,7 @@ def visualize_using_venn(df:pd.DataFrame, save:bool=False, resDir:str='results/'
     title = 'Venn diagram of most similar documents'
     plt.title(title)
     if save:
-        plt.savefig(resDir + re.sub(' ', '_', string=title), bbox_inches = 'tight')
+        plt.savefig(resDir + re.sub(' ', '_', string=title) + '.pdf', format='pdf', bbox_inches = 'tight')
     plt.show()
 
 def df_str2list(df:pd.DataFrame):
@@ -155,7 +155,7 @@ def create_sim_heatmap(res_df:pd.DataFrame, save:bool=False, resDir:str='results
     plt.title(title)
     plt.yticks(rotation=0) 
     if save:
-        plt.savefig(resDir + re.sub(' ', '_', string=title), bbox_inches = 'tight')
+        plt.savefig(resDir + re.sub(' ', '_', string=title) + '.pdf', format='pdf', bbox_inches = 'tight')
     plt.show()
 
 def main(baseDir:str):
@@ -167,7 +167,7 @@ def main(baseDir:str):
     #print(res_df)
     
     res_df = encode_lists(res_df)
-    visualize_using_venn(res_df)
+    visualize_using_venn(res_df, save=True)
 
-    #create_sim_heatmap(res_df, save=True)
+    create_sim_heatmap(res_df, save=True)
 
