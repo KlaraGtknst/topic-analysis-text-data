@@ -19,6 +19,7 @@ def get_models(src_path: str, model_names: list = MODEL_NAMES):
         model_names = model_names + ['tfidf_ae']
     for model_name in model_names:
         try: # model exists
+            print('try to load model_name: ', model_name)
             model = save_models.load_model(model_name)
             models[model_name] = model
             print('model loaded: get_models() ')

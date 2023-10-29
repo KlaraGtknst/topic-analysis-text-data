@@ -94,6 +94,7 @@ def google_univ_sent_encoding_aux():
     except:
         module_url = "https://tfhub.dev/google/universal-sentence-encoder-large/5"
         model = hub.load(module_url)
+    print ("module %s loaded" % module_url)
     return model
 
 def main(file_paths, outpath):

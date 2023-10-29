@@ -4,6 +4,7 @@ from elasticsearch import ApiError, ConflictError, Elasticsearch
 import base64
 from gensim.utils import simple_preprocess
 from elasticSearch.recursive_search import scanRecurse, chunks
+from elasticSearch.models_aux import get_models
 # own modules
 from text_embeddings.preprocessing.read_pdf import *
 from user_interface.cli import *
@@ -43,7 +44,6 @@ def generate_models_embedding(src_paths: list, models : dict, client: Elasticsea
 
         if (model_name in models.keys()) and (model_name != 'ae'):
             embedding = get_embedding(models=models, model_name=model_name, text=text)
-
             client.update(index='bahamas', id=id, body={'doc': {MODELS2EMB[model_name]: embedding}})
 
 
@@ -66,7 +66,7 @@ def insert_embedding(src_path: str, src_paths: list, models: dict={}, client_add
 
         try:
             #bulk(client, generate_models_embedding(src_paths, models, model_name), stats_only= True)
-            generate_models_embedding(src_paths, models, model_name, client)
+            generate_models_embedding(src_paths=src_paths, models=models, model_name=model_name, client=client)
         except (ConflictError, ApiError,EOFError) as err:
             print('error')
             return
@@ -78,6 +78,7 @@ def get_embedding(models: dict, model_name: str, text: str):
     :param text: text to be embedded
     :return: embedding of the text
     '''
+    print('started with get_embedding() ')
     if model_name == "doc2vec": 
         return models['doc2vec'].infer_vector(simple_preprocess(text))
     

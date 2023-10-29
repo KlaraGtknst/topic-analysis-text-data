@@ -37,7 +37,7 @@ if __name__ == '__main__':
     elif file_to_run[0] == 'db_elasticsearch.py':
         # python3 main_server.py 'db_elasticsearch.py' -d '//Users/klara/Documents/uni/bachelorarbeit/data/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
         # python3 main_server.py 'db_elasticsearch.py' -d '//Users/klara/Documents/uni/bachelorarbeit/data/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1 -m 'universal'
-        db_elasticsearch.main(file_path, image_src_path, client_addr, n_pools, model_names=model_names)
+        db_elasticsearch.main(src_path=file_path, image_src_path=image_src_path, client_addr=client_addr, n_pools=n_pools, model_names=model_names)
 
     elif file_to_run[0] == 'PCA_image_clustering.py':
         # python3 main_server.py 'PCA_image_clustering.py' -d '//Users/klara/Documents/uni/bachelorarbeit/data/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/'
