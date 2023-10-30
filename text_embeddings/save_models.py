@@ -64,7 +64,10 @@ def load_model(model_name:str):
     Loads the model from the models folder.
     '''
     if 'doc2vec' in model_name:
-        return Doc2Vec.load('models/doc2vec_model.pkl')
+        model_path = 'models/doc2vec_model.pkl' # local path
+        if not os.path.exists(model_path):
+            model_path = 'models/doc2vec.pkl'   # server path
+        return Doc2Vec.load(model_path)
     
     elif 'universal' in model_name:
         return google_univ_sent_encoding_aux()
