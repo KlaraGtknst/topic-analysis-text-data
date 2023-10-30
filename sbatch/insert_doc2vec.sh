@@ -4,7 +4,7 @@
 #SBATCH --nodes=1      
 #SBATCH --cpus-per-task=32
 #SBATCH --nodelist=cpu-epyc-7
-#SBATCH --mem=80g
+#SBATCH --mem=100g
 #SBATCH --output=/mnt/stud/home/kgutekunst/logs/%j.out        
 #SBATCH --error=/mnt/stud/home/kgutekunst/error_logs/%j.err    
 # (%N: Nodename, %j: Job-Nr.)
