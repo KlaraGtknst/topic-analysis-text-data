@@ -44,7 +44,7 @@ if __name__ == '__main__':
 
     elif file_to_run[0] == 'infer_pretrained.py':
         # python3 main.py 'infer_pretrained.py' -d '/Users/klara/Downloads/*.pdf' -o '/Users/klara/Downloads/'
-        # python3 main.py 'infer_pretrained.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/0/*.pdf' -o '/Users/klara/Downloads/'
+        # python3 main.py 'infer_pretrained.py' -d '/Users/klara/Documents/Uni/bachelorarbeit/data/*.pdf' -o '/Users/klara/Downloads/'
         infer_pretrained.main(file_paths, out_file)
 
     elif file_to_run[0] == 'db_elasticsearch.py':

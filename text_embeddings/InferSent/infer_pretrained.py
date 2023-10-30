@@ -36,7 +36,7 @@ def init_infer(model_path: str, w2v_path: str, file_path: str, version: int = 1)
     infersent.set_w2v_path(w2v_path)
     docs = get_docs_from_file_paths(file_path)
     infersent.build_vocab(docs, tokenize=True)  # keep only those word vectors in vocab needed
-
+    print('init_infer() done')
     return infersent, docs
 
 # RMSE
@@ -155,19 +155,22 @@ def create_ae_score_plot():
 def main(file_paths, outpath):
 
     # nltk.download('punkt')
-    # V = 1   # trained with GloVe
-    # MODEL_PATH = '/Users/klara/Developer/Uni/encoder/infersent%s.pkl' % V
-    # W2V_PATH = '/Users/klara/Developer/Uni/bahamas_word2vec/bahamas_w2v.txt'
+    V = 1   # trained with GloVe
+    MODEL_PATH = '/Users/klara/Developer/Uni/encoder/infersent%s.pkl' % V
+    W2V_PATH = '/Users/klara/Developer/Uni/bahamas_word2vec/bahamas_w2v.txt'
     # #'/Users/klara/Developer/Uni/GloVe/glove.840B.300d.txt'
 
     # # infersent
-    # infersent, docs = init_infer(model_path=MODEL_PATH, w2v_path=W2V_PATH, file_paths=file_paths, version=V)
+    file_path = '/Users/klara/Documents/uni/bachelorarbeit/data/*.pdf'
+    infersent, docs = init_infer(model_path=MODEL_PATH, w2v_path=W2V_PATH, file_path=file_path, version=V)
     
-    # embeddings = infersent.encode(docs, tokenize=True)
-    # doc = docs[0]
-    # # embdding does not work on singular input
-    # embedding = infersent.encode([doc], tokenize=True)
-    # print(embedding)
+    docs = ['Hallo Leute, ich bin ein Testdokument.']
+    print('init_infer() done')
+    embeddings = infersent.encode(docs, tokenize=True)
+    doc = docs[0]
+    # embdding does not work on singular input
+    embedding = infersent.encode([doc], tokenize=True)
+    print(embedding)
     # # the difference is non zero!
     # #print('difference of embeddings: ', sum((embedding[0] - embeddings[0])**2))
     

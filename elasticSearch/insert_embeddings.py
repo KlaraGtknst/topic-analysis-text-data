@@ -44,9 +44,7 @@ def generate_models_embedding(src_paths: list, models : dict, client: Elasticsea
         id = get_hash_file(path)
 
         if (model_name in models.keys()) and (model_name != 'ae'):
-            print('model_name arrived: ', model_name)
             embedding = get_embedding(models=models, model_name=model_name, text=text)
-            print('embedding: ', embedding)
             client.update(index='bahamas', id=id, body={'doc': {MODELS2EMB[model_name]: embedding}})
 
 
@@ -95,7 +93,9 @@ def get_embedding(models: dict, model_name: str, text: str):
         return models['hugging'].encode(sentences=text)
     
     elif model_name in ['inferSent_AE', 'infer']:
+        print('init start infer emb ')
         inferSent_embedding = models['infer'].encode([text], tokenize=True)
+        print('inferSent_embedding: ', inferSent_embedding)
         return models['ae'].predict(x=inferSent_embedding)[0]
                     
     elif model_name in ['sim_docs_tfidf', 'tfidf']:
