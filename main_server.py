@@ -5,7 +5,7 @@ from elasticSearch import db_elasticsearch, create_documents, create_database, i
 from doc_images.PCA import PCA_image_clustering
 from text_embeddings.InferSent import own_word2vec
 from text_embeddings.autoencoder import opt_architecture_ae
-from evaluation import com_embs
+from evaluation import com_embs, embs_timing
 from constants import MODEL_NAMES
 import db_all_embs as db_all_embs
 import num_pca_comp 
@@ -91,11 +91,9 @@ if __name__ == '__main__':
         # python3 main_server.py 'com_embs.py' -d '/Users/klara/Documents/uni/bachelorarbeit/data/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
         com_embs.main(baseDir=file_path)
 
-    elif file_to_run[0] == 'insert_embeddings_copy.py':
-        # python3 main_server.py 'insert_embeddings_copy.py' -d '/Users/klara/Documents/uni/bachelorarbeit/data/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
-        insert_embeddings_copy.main(src_path=file_path, client_addr=client_addr, model_names=model_names, image_src_path=image_src_path)
-
-
+    elif file_to_run[0] == 'embs_timing.py':
+        # python3 -m cProfile main_server.py 'embs_timing.py' -d '/Users/klara/Documents/uni/bachelorarbeit/data/0/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
+        embs_timing.main(baseDir=file_path)
 
 
         
