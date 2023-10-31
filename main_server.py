@@ -1,7 +1,7 @@
 from constants import CLIENT_ADDR
 from user_interface.cli import *
 from doc_images import convert_pdf2image
-from elasticSearch import db_elasticsearch, create_documents, create_database, insert_embeddings, insert_clusters, selected_docs, test_pool, recursive_search
+from elasticSearch import db_elasticsearch, create_documents, create_database, insert_embeddings, insert_embeddings_copy, insert_clusters, selected_docs, test_pool, recursive_search
 from doc_images.PCA import PCA_image_clustering
 from text_embeddings.InferSent import own_word2vec
 from text_embeddings.autoencoder import opt_architecture_ae
@@ -90,6 +90,11 @@ if __name__ == '__main__':
     elif file_to_run[0] == 'com_embs.py':
         # python3 main_server.py 'com_embs.py' -d '/Users/klara/Documents/uni/bachelorarbeit/data/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
         com_embs.main(baseDir=file_path)
+
+    elif file_to_run[0] == 'insert_embeddings_copy.py':
+        # python3 main_server.py 'insert_embeddings_copy.py' -d '/Users/klara/Documents/uni/bachelorarbeit/data/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
+        insert_embeddings_copy.main(src_path=file_path, client_addr=client_addr, model_names=model_names, image_src_path=image_src_path)
+
 
 
 

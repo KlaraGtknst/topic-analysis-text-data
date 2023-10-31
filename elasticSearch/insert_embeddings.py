@@ -3,8 +3,6 @@ from multiprocessing import Pool
 from elasticsearch import ApiError, ConflictError, Elasticsearch
 import base64
 from gensim.utils import simple_preprocess
-from elasticSearch.recursive_search import scanRecurse, chunks
-from elasticSearch.models_aux import get_models
 # own modules
 from text_embeddings.preprocessing.read_pdf import *
 from user_interface.cli import *
@@ -33,19 +31,41 @@ class wrapper:
     def __call__(self, src_paths):
         insert_embedding(src_path=self.baseDir, src_paths=src_paths, model_name=self.model_name)
 
+def get_src_paths(src_path: str, src_paths: list):
+    if src_paths == []:
+        return scanRecurse(src_path)    # bulk, local
+    else:
+        return src_paths    # parallel, server
 
-def generate_models_embedding(src_paths: list, models : dict, client: Elasticsearch, model_name: str = 'no_model'):  
+def generate_models_embedding(src_path: str, src_paths: list, models : dict, client: Elasticsearch, model_name: str = 'no_model'):  
     print('started with generate_models_embedding() ')
-    sys.stdout.flush()
+    #sys.stdout.flush()
     print('model_name: ', model_name, ' models.keys(): ', models.keys())
-    for path in src_paths:
+    for path in get_src_paths(src_path=src_path, src_paths=src_paths):
     
         text = pdf_to_str(path)
         id = get_hash_file(path)
 
         if (model_name in models.keys()) and (model_name != 'ae'):
-            embedding = get_embedding(models=models, model_name=model_name, text=text)
+            print('hi')
+            try:
+                embedding = get_embedding(models=models, model_name=model_name, text=text)
+            except Exception as e:
+                print('error in embedding: ', path, e)
+                continue
+            # print('hi2')
+            # if src_paths == []: # bulk, local
+            #     print(id)
+            #     yield {     # vielleicht weg?
+            #         '_op_type': 'update',
+            #         '_index': 'bahamas',
+            #         '_id': id,
+            #         'doc': {MODELS2EMB[model_name]: embedding}
+            #     }
+            # else:   # parallel, server
+        
             client.update(index='bahamas', id=id, body={'doc': {MODELS2EMB[model_name]: embedding}})
+            print('hi3')
 
 
 def insert_embedding(src_path: str, src_paths: list, models: dict={}, client_addr=CLIENT_ADDR, client: Elasticsearch=None, model_name: str = 'no_model'):
@@ -58,18 +78,24 @@ def insert_embedding(src_path: str, src_paths: list, models: dict={}, client_add
         inserts specific embedding of all documents into the database 'bahamas'.
         '''
         print('started with insert_embedding() ')
-        sys.stdout.flush()
+        #sys.stdout.flush()
         if (model_name not in MODEL_NAMES) or (model_name == 'ae') or (model_name == 'none'):
             return
         
         client = client if client else Elasticsearch(client_addr, timeout=1000)
         models = models if models else get_models(src_path, [model_name] if model_name else None)
+        print('got models: ', models.values())
 
         try:
-            #bulk(client, generate_models_embedding(src_paths, models, model_name), stats_only= True)
-            generate_models_embedding(src_paths=src_paths, models=models, model_name=model_name, client=client)
+            # if src_paths == []:
+            #     print('entered bulk')
+            #     #generate_models_embedding(src_paths=src_paths, src_path=src_path, models=models, model_name=model_name, client=client)
+            #     bulk(client, generate_models_embedding(src_path=src_path, src_paths=src_paths, models=models, client=client, model_name=model_name), stats_only= True)
+            # else:
+            print('entered parallel')
+            generate_models_embedding(src_paths=src_paths, src_path=src_path, models=models, model_name=model_name, client=client)
         except (ConflictError, ApiError,EOFError) as err:
-            print('error')
+            print('error', err)
             return
 
 def get_embedding(models: dict, model_name: str, text: str):
@@ -79,7 +105,7 @@ def get_embedding(models: dict, model_name: str, text: str):
     :param text: text to be embedded
     :return: embedding of the text
     '''
-    print('started with get_embedding() ')
+    #print('started with get_embedding() ')
     if model_name == "doc2vec": 
         return models['doc2vec'].infer_vector(simple_preprocess(text))
     
@@ -89,20 +115,24 @@ def get_embedding(models: dict, model_name: str, text: str):
     elif model_name in ['huggingface_sent_transformer', 'hugging']:
         if type(text) == str:
             text = [text]
-        print(models['hugging'].encode(sentences=['This framework generates embeddings for each input sentence']))
-        return models['hugging'].encode(sentences=text)
+
+        return models['hugging'].encode(sentences=text)[0]
     
     elif model_name in ['inferSent_AE', 'infer']:
-        print('init start infer emb ')
+        #print('init start infer emb ', len(text), [text], type(text))
+        # TODO
         inferSent_embedding = models['infer'].encode([text], tokenize=True)
-        print('inferSent_embedding: ', inferSent_embedding)
+    
         return models['ae'].predict(x=inferSent_embedding)[0]
                     
     elif model_name in ['sim_docs_tfidf', 'tfidf']:
+        print('entered tfidf    ', [text])
         tfidf_embedding = get_tfidf_emb(models['tfidf'], [text])
+        print('tfidf_embedding before ae: ', tfidf_embedding, tfidf_embedding.shape)
         if len(tfidf_embedding) > 2048:
             tfidf_ae_model = models['tfidf_ae']
             tfidf_embedding = tfidf_embedding.reshape(1, tfidf_embedding.shape[0])
+            print('tfidf_embedding after ae: ', tfidf_embedding, tfidf_embedding.shape)
             return tfidf_ae_model.predict(x=tfidf_embedding)[0]
         return tfidf_embedding
 
@@ -216,23 +246,30 @@ def insert_precomputed_clusters(src_path: str, image_src_path:str, client_addr:s
     print('finished inserting pca-OPTICS cluster df')
 
 def main(src_path: str, client_addr=CLIENT_ADDR, model_names: list = MODEL_NAMES, num_cpus:int=1):
+    src_path = '/Users/klara/Documents/uni/bachelorarbeit/data/*.pdf'
     print('start inserting documents embeddings')
 
-    # all paths
-    document_paths = list(scanRecurse(src_path))
-    print('number of docs: ', len(document_paths))
-    sub_lists = list(chunks(document_paths, int(len(document_paths)/num_cpus)))
-
-    print('obtained sublists')
-
-    # process n_cpus sublists
-    with Pool(processes=num_cpus) as pool:
+    if num_cpus == 1:
         for model_name in model_names:  # function und diese parallisieren: run_process(doc_paths)
-            proc_wrap = wrapper(model_name=model_name, baseDir=src_path)
-            print('initialized wrapper')
             print('started with model: ', model_name)
-            sys.stdout.flush()
-            pool.map(proc_wrap, sub_lists)
+            insert_embedding(src_path = src_path, src_paths=[], client_addr=client_addr, model_name = model_name)
             print('finished model: ', model_name)
+    else:
+        # all paths
+        document_paths = list(scanRecurse(src_path))
+        print('number of docs: ', len(document_paths))
+        sub_lists = list(chunks(document_paths, int(len(document_paths)/num_cpus)))
 
-    print('finished inserting documents embeddings')
+        print('obtained sublists')
+
+        # process n_cpus sublists
+        with Pool(processes=num_cpus) as pool:
+            for model_name in model_names:  # function und diese parallisieren: run_process(doc_paths)
+                proc_wrap = wrapper(model_name=model_name, baseDir=src_path)
+                print('initialized wrapper')
+                print('started with model: ', model_name)
+                #sys.stdout.flush()
+                pool.map(proc_wrap, sub_lists)
+                print('finished model: ', model_name)
+
+        print('finished inserting documents embeddings')

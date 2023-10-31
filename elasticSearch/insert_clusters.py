@@ -57,33 +57,39 @@ def pca_weights_aux(src_path: str, image_root_path:str, max_w:int, max_h:int, pc
     inserts pca weights and argmax clusters of all documents into db
     ''' 
     for path in scanRecurse(src_path):
-      
-        id = get_hash_file(path)
-        img_path = image_root_path + path.split('/')[-1].split('.')[0] + '.png'
-        if not os.path.exists(img_path):
-            print('not existent: ', path)
-            pdf_to_png(file_path= [path], outpath=image_root_path, save= True)
-        if not os.path.exists(img_path):    # some pdf cannot be read
-            document = np.asarray([np.zeros((max_w, max_h)).ravel()])
-        else:
-            document_raw = plt.imread(img_path)
-            new_w = np.minimum(document_raw.shape[0], max_w)
-            new_h = np.minimum(document_raw.shape[1], max_h)
-            document_raw = np.resize(document_raw, (new_w, new_h))
-            
+        if not path.split('/')[-1].startswith('.'):
+        
+            id = get_hash_file(path)
+            img_path = image_root_path + path.split('/')[-1].split('.')[0] + '.png'
+            if not os.path.exists(img_path):
+                print('not existent: ', path)
+                pdf_to_png(file_path= [path], outpath=image_root_path, save= True)
+            # if not os.path.exists(img_path):    # some pdf cannot be read
+            #     document = np.asarray([np.zeros((max_w, max_h)).ravel()])
+            # else:
+            try:
+                document_raw = plt.imread(img_path)
+                new_w = np.minimum(document_raw.shape[0], max_w)
+                new_h = np.minimum(document_raw.shape[1], max_h)
+                document_raw = np.resize(document_raw, (new_w, new_h))
+            except:
+                print('broken: ', path)
+                document = np.asarray([np.zeros((max_w, max_h)).ravel()])
+                
+                
             document = eigendocs.proprocess_docs(raw_documents=[document_raw], max_w=max_w, max_h=max_h)
 
-        reduced_img = pca_model.transform(document)
-       
-        yield {
-            '_op_type': 'update',
-            '_index': 'bahamas',
-            '_id': id,
-            'doc': {
-                "pca_image": reduced_img[0],
-                "argmax_pca_cluster": np.argmax(reduced_img),
-                }
-        }
+            reduced_img = pca_model.transform(document)
+        
+            yield {
+                '_op_type': 'update',
+                '_index': 'bahamas',
+                '_id': id,
+                'doc': {
+                    "pca_image": reduced_img[0],
+                    "argmax_pca_cluster": np.argmax(reduced_img),
+                    }
+            }
         
 def insert_pca_weights(src_path: str, pca_model: decomposition.PCA, img_path:str, max_w:int, max_h:int, client_addr=CLIENT_ADDR, client: Elasticsearch=None):
         '''
@@ -117,6 +123,11 @@ def insert_precomputed_clusters(src_path: str, image_src_path:str, client_addr:s
     results = get_all_docs_in_db(elastic_search_client, src_includes = ['pca_image'])   # _id, pca_image
     result_df = pd.DataFrame.from_dict(results)
     result_df.set_index('_id', inplace=True)
+    result_df = result_df.dropna()
+    print(result_df.head())
+    print(np.array(result_df['pca_image'].values).shape)
+    print(np.array(result_df['pca_image'].values).shape)
+
     
     # clustering
     clt = OPTICS(cluster_method='dbscan', min_samples=2, max_eps=10, eps=0.5)
