@@ -28,7 +28,8 @@ def create_sim_docs_log(baseDir:str, client_addr:str=CLIENT_ADDR, num_rep_docs:i
     logs query results for similar documents
     '''
     model_names = get_model_names()
-    docs_to_search_for = random.sample(list(scanRecurse(baseDir=baseDir)), num_rep_docs)
+    all_paths = list(scanRecurse(baseDir=baseDir))
+    docs_to_search_for = random.sample(all_paths, num_rep_docs) if num_rep_docs < len(all_paths) else all_paths
     ids = [get_hash_file(path) for path in docs_to_search_for]
     client = Elasticsearch(client_addr)
     res_dict = pd.DataFrame(columns=['search_id', *model_names])
@@ -149,7 +150,7 @@ def create_sim_heatmap(res_df:pd.DataFrame, save:bool=False, resDir:str='results
     sim_matr = similarity_matrix(res_df)
     model_names = get_model_names()
     plt.figure(figsize=(8,5))
-    ax = sns.heatmap(sim_matr, annot=True, yticklabels=model_names, xticklabels=model_names)
+    ax = sns.heatmap(sim_matr, annot=True, yticklabels=model_names, xticklabels=model_names, fmt='g')
     ax.set(xlabel="model", ylabel="model")
     title = 'Number of equal query results'
     plt.title(title)
@@ -160,14 +161,14 @@ def create_sim_heatmap(res_df:pd.DataFrame, save:bool=False, resDir:str='results
 
 def main(baseDir:str):
     
-    # res_df = create_sim_docs_log(baseDir=baseDir, num_rep_docs=10, n_res=3)
+    # res_df = create_sim_docs_log(baseDir=baseDir, num_rep_docs=2000, n_res=10)
     # save_to_dir(resDir='results/', df=res_df, file_name='query_res.csv')
 
     res_df = read_from_dir('results/' + 'query_res.csv')
-    #print(res_df)
+    print(res_df)
     
     res_df = encode_lists(res_df)
-    visualize_using_venn(res_df, save=True)
+    # visualize_using_venn(res_df, save=True)
 
     create_sim_heatmap(res_df, save=True)
 
