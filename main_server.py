@@ -1,7 +1,7 @@
 from constants import CLIENT_ADDR
 from user_interface.cli import *
 from doc_images import convert_pdf2image
-from elasticSearch import db_elasticsearch, create_documents, create_database, insert_embeddings, insert_embeddings_copy, insert_clusters, selected_docs, test_pool, recursive_search
+from elasticSearch import db_elasticsearch, create_documents, create_database, insert_embeddings, insert_clusters, selected_docs, test_pool, recursive_search
 from doc_images.PCA import PCA_image_clustering
 from text_embeddings.InferSent import own_word2vec
 from text_embeddings.autoencoder import opt_architecture_ae
