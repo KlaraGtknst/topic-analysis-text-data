@@ -49,11 +49,11 @@ def generate_models_embedding(src_path: str, src_paths: list, models : dict, cli
         if (model_name in models.keys()) and (model_name != 'ae'):
             try:
                 embedding = get_embedding(models=models, model_name=model_name, text=text)
+                client.update(index='bahamas', id=id, body={'doc': {MODELS2EMB[model_name]: embedding}})
             except Exception as e:
                 print('error in embedding: ', path, e)
                 continue
-        
-            client.update(index='bahamas', id=id, body={'doc': {MODELS2EMB[model_name]: embedding}})
+            
 
 
 def insert_embedding(src_path: str, src_paths: list, models: dict={}, client_addr=CLIENT_ADDR, client: Elasticsearch=None, model_name: str = 'no_model'):
