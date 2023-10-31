@@ -47,25 +47,13 @@ def generate_models_embedding(src_path: str, src_paths: list, models : dict, cli
         id = get_hash_file(path)
 
         if (model_name in models.keys()) and (model_name != 'ae'):
-            print('hi')
             try:
                 embedding = get_embedding(models=models, model_name=model_name, text=text)
             except Exception as e:
                 print('error in embedding: ', path, e)
                 continue
-            # print('hi2')
-            # if src_paths == []: # bulk, local
-            #     print(id)
-            #     yield {     # vielleicht weg?
-            #         '_op_type': 'update',
-            #         '_index': 'bahamas',
-            #         '_id': id,
-            #         'doc': {MODELS2EMB[model_name]: embedding}
-            #     }
-            # else:   # parallel, server
         
             client.update(index='bahamas', id=id, body={'doc': {MODELS2EMB[model_name]: embedding}})
-            print('hi3')
 
 
 def insert_embedding(src_path: str, src_paths: list, models: dict={}, client_addr=CLIENT_ADDR, client: Elasticsearch=None, model_name: str = 'no_model'):
@@ -87,12 +75,6 @@ def insert_embedding(src_path: str, src_paths: list, models: dict={}, client_add
         print('got models: ', models.values())
 
         try:
-            # if src_paths == []:
-            #     print('entered bulk')
-            #     #generate_models_embedding(src_paths=src_paths, src_path=src_path, models=models, model_name=model_name, client=client)
-            #     bulk(client, generate_models_embedding(src_path=src_path, src_paths=src_paths, models=models, client=client, model_name=model_name), stats_only= True)
-            # else:
-            print('entered parallel')
             generate_models_embedding(src_paths=src_paths, src_path=src_path, models=models, model_name=model_name, client=client)
         except (ConflictError, ApiError,EOFError) as err:
             print('error', err)
@@ -119,8 +101,7 @@ def get_embedding(models: dict, model_name: str, text: str):
         return models['hugging'].encode(sentences=text)[0]
     
     elif model_name in ['inferSent_AE', 'infer']:
-        #print('init start infer emb ', len(text), [text], type(text))
-        # TODO
+        print('init start infer emb ', len(text), [text], type(text))
         inferSent_embedding = models['infer'].encode([text], tokenize=True)
     
         return models['ae'].predict(x=inferSent_embedding)[0]
@@ -268,7 +249,7 @@ def main(src_path: str, client_addr=CLIENT_ADDR, model_names: list = MODEL_NAMES
                 proc_wrap = wrapper(model_name=model_name, baseDir=src_path)
                 print('initialized wrapper')
                 print('started with model: ', model_name)
-                #sys.stdout.flush()
+                sys.stdout.flush()
                 pool.map(proc_wrap, sub_lists)
                 print('finished model: ', model_name)
 
