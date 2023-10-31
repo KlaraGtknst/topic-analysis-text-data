@@ -129,6 +129,7 @@ def objective(trial):
 
     # eval 
     scores = eval(X_test=X_test, inv_embs=model.forward(X_test))
+    print('layer config: ', layer_size, 'scores: ', scores)
 
     # save results
     save_results('infer', layer_size, resDir, ae_config_scores, scores)
