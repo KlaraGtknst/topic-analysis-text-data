@@ -153,11 +153,14 @@ def plot_losses(losses):
     plt.show()
 
 def get_layer_config(n_layer):
-    step_size = int((LATENT_SHAPE-INPUT_SHAPE)/(min(1,n_layer-1)))
-    layer_size = list(np.arange(INPUT_SHAPE, LATENT_SHAPE+1, step=step_size))
-    if len(layer_size) > n_layer-1:
+    step_size = int((INPUT_SHAPE-LATENT_SHAPE)/(max(1,n_layer-1)))
+    layer_size = list(np.arange(LATENT_SHAPE, INPUT_SHAPE+1, step=step_size))
+    if len(layer_size) > n_layer-1 or layer_size[-1] != INPUT_SHAPE:
         layer_size = layer_size[:-1]
     layer_size.append(LATENT_SHAPE)
+    if layer_size[0] != INPUT_SHAPE:
+        layer_size[0] = INPUT_SHAPE
+    layer_size.reverse()
     return layer_size
 
 def get_infer_emb(baseDir:str):
@@ -194,6 +197,10 @@ def main(src_path, num_cpus:int):
         print('initialized wrapper')
         sys.stdout.flush()
         pool.map(proc_wrap, sub_lists)
+
+    # for n_layer in range(2, 11):
+    #     print(n_layer)
+    #     print(get_layer_config(n_layer), len(get_layer_config(n_layer)))
 
         
 
