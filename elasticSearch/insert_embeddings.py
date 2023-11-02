@@ -132,7 +132,7 @@ def main(src_path: str, client_addr=CLIENT_ADDR, model_names: list = MODEL_NAMES
 
         # process n_cpus sublists
         with Pool(processes=num_cpus) as pool:
-            for model_name in model_names:  # function und diese parallisieren: run_process(doc_paths)
+            for model_name in model_names:
                 print('started with model: ', model_name)
 
                 proc_wrap = wrapper(model_name=model_name, baseDir=src_path)
