@@ -3,7 +3,7 @@
 #SBATCH --job-name=par-ae-config
 #SBATCH --nodes=1    
 #SBATCH --cpus-per-task=8
-#SBATCH --nodelist=cpu-epyc-1
+#SBATCH --nodelist=cpu-epyc-5
 #SBATCH --mem=66g 
 #SBATCH --output=/mnt/stud/home/kgutekunst/logs/%j.out   
 #SBATCH --error=/mnt/stud/home/kgutekunst/error_logs/%j.err    
