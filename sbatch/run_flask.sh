@@ -3,7 +3,7 @@
 #SBATCH --job-name=flask 
 #SBATCH --nodes=1    
 #SBATCH --cpus-per-task=1 
-# --nodelist=cpu-epyc-6
+#SBATCH --nodelist=cpu-epyc-7
 #SBATCH --mem=8g    
 #SBATCH --output=/mnt/stud/home/kgutekunst/logs/%j.out      
 #SBATCH --error=/mnt/stud/home/kgutekunst/error_logs/%j.err   
