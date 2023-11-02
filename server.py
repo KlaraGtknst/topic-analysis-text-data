@@ -9,7 +9,7 @@ from flask_cors import CORS
 from topic_modeling.topic_modeling import TopicModel
 # flask --app server run --debug --port 8000
 
-CLIENT_ADDR = "http://localhost:9200"
+CLIENT_ADDR = "http://localhost:9200" # TODO: server address?
 app = Flask(__name__)
 api = Api(app, version='1.0', title='Topic Analysis of large unstructured document data',
     description='API of the project.')

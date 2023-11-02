@@ -1,0 +1,14 @@
+#!/bin/bash      
+#SBATCH --partition=main        
+#SBATCH --job-name=flask 
+#SBATCH --nodes=1    
+#SBATCH --cpus-per-task=1 
+# --nodelist=cpu-epyc-6
+#SBATCH --mem=8g    
+#SBATCH --output=/mnt/stud/home/kgutekunst/logs/%j.out      
+#SBATCH --error=/mnt/stud/home/kgutekunst/error_logs/%j.err   
+# (%N: Nodename, %j: Job-Nr.)
+
+date;hostname;pwd   
+source /mnt/stud/work/kgutekunst/bsc-py/bin/activate  
+flask run --app server --host=0.0.0.0 --port 8000
