@@ -3,7 +3,8 @@ from elasticsearch import Elasticsearch
 from flask import Flask, make_response, request, send_file, send_from_directory
 from flask_restx import Api, Resource
 from . import constants
-from . import text_visualizations.visualize_texts
+from . import text_visualizations
+from text_visualizations import visualize_texts
 from . import elasticSearch.queries.query_database
 from flask_cors import CORS
 from . import topic_modeling.topic_modeling
