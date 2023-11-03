@@ -2,7 +2,7 @@ import os
 from elasticsearch import Elasticsearch
 from flask import Flask, make_response, request, send_file, send_from_directory
 from flask_restx import Api, Resource
-from constants import DB_FIELDS
+from . import constants
 from text_visualizations import visualize_texts
 from elasticSearch.queries import query_database
 from flask_cors import CORS
