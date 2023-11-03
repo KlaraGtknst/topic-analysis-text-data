@@ -4,12 +4,12 @@ from flask import Flask, make_response, request, send_file, send_from_directory
 from flask_restx import Api, Resource
 from . import constants
 from . import text_visualizations
-from text_visualizations import visualize_texts
+#from text_visualizations import visualize_texts
 from . import elasticSearch
-from elasticSearch.queries import query_database
+#from elasticSearch.queries import query_database
 from flask_cors import CORS
 from . import topic_modeling
-from topic_modeling import topic_modeling
+#from topic_modeling import topic_modeling
 # flask --app server run --debug --port 8000
 
 CLIENT_ADDR = "http://localhost:9200" # TODO: server address?
