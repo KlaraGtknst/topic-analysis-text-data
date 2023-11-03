@@ -20,7 +20,7 @@ cors = CORS(app)
 
 search_doc = {'count': {'description':'Number of documents per page', 'type':'int','default':10}, 
                  'knn_type': {'description':'Type of knn search', 
-                              'enum':DB_FIELDS}}
+                              'enum':constants.DB_FIELDS}}
 knn_source = {'knn_source': 'Document to search for'}
 page_doc = {'page': {'description':'Page number', 'type':'int','default':0}}
 text_doc = {'text': {'description':'Text to search for', 'type':'string'}}
@@ -45,15 +45,15 @@ class Documents(Resource):
         if text:
             # text search
             # http://127.0.0.1:8000/documents?text=bahamas
-            result = query_database.text_search_db(elastic_search_client, text=text, page=page, count=count)
+            result = elasticSearch.queries.query_database.text_search_db(elastic_search_client, text=text, page=page, count=count)
 
         elif knn_type and knn_source:
             # http://127.0.0.1:8000/documents?knn_source=SAC1-6&knn_type=sim_docs_tfidf
-            result = query_database.get_knn_res(doc_to_search_for=knn_source, query_type=knn_type, elastic_search_client=elastic_search_client, n_results=count)
+            result = elasticSearch.queries.query_database.get_knn_res(doc_to_search_for=knn_source, query_type=knn_type, elastic_search_client=elastic_search_client, n_results=count)
 
         else:
             # regular list
-            result = query_database.get_docs_in_db(elastic_search_client, start=page, n_docs=count)
+            result = elasticSearch.queries.query_database.get_docs_in_db(elastic_search_client, start=page, n_docs=count)
 
         return result
 
@@ -65,7 +65,7 @@ class Document(Resource):
     def get(self, id):
         # http://127.0.0.1:8000/documents/SAC1-6
         elastic_search_client = Elasticsearch(CLIENT_ADDR)
-        return query_database.get_doc_meta_data(elastic_search_client, doc_id=id)
+        return elasticSearch.queries.query_database.get_doc_meta_data(elastic_search_client, doc_id=id)
         
 @api.doc(params=id_doc)
 @api.route('/documents/<id>/pdf', endpoint='pdf')
@@ -74,7 +74,7 @@ class PDF(Resource):
     def get(self, id):
         # http://127.0.0.1:8000/documents/SAC1-6.pdf
         elastic_search_client = Elasticsearch(CLIENT_ADDR)
-        resp_path = query_database.get_doc_meta_data(elastic_search_client, doc_id=id)['path']
+        resp_path = elasticSearch.queries.query_database.get_doc_meta_data(elastic_search_client, doc_id=id)['path']
         print('*'*50)
         print(resp_path)    # FIXME: path is not relative under etc. current dir, cannot be displayed
         return send_file(resp_path)
@@ -95,14 +95,14 @@ class WordCloud(Resource):
 
         if knn_type: # multiple documents as input
             # http://127.0.0.1:8000/documents/SAC1-6/wordcloud?knn_source=SAC1-6&knn_type=sim_docs_tfidf
-            sim_docs = query_database.get_knn_res(doc_to_search_for=id, query_type=knn_type, elastic_search_client=elastic_search_client, n_results=count)
+            sim_docs = elasticSearch.queries.query_database.get_knn_res(doc_to_search_for=id, query_type=knn_type, elastic_search_client=elastic_search_client, n_results=count)
             texts = [doc['text'] for doc in sim_docs]
 
         else:   # one document as input
             # get text from document
-            texts = [query_database.get_doc_meta_data(elastic_search_client, id)['text']]
-        img = visualize_texts.get_one_visualization_from_text(option='wordcloud', texts=texts)
-        bytes = visualize_texts.image_to_byte_array(img)
+            texts = [elasticSearch.queries.query_database.get_doc_meta_data(elastic_search_client, id)['text']]
+        img = text_visualizations.visualize_texts.get_one_visualization_from_text(option='wordcloud', texts=texts)
+        bytes = text_visualizations.visualize_texts.image_to_byte_array(img)
         response = make_response(bytes)
         response.headers.set('Content-Type', 'image/png')
         return response
@@ -114,11 +114,11 @@ class TermFrequency(Resource):
     def get(self, id):
         # http://127.0.0.1:8000/documents/SAC1-6/term_frequency
         elastic_search_client = Elasticsearch(CLIENT_ADDR)
-        texts = [query_database.get_doc_meta_data(elastic_search_client, id)['text']]
+        texts = [elasticSearch.queries.query_database.get_doc_meta_data(elastic_search_client, id)['text']]
 
-        img = visualize_texts.get_one_visualization_from_text(option='term_frequency', texts=texts)
+        img = text_visualizations.visualize_texts.get_one_visualization_from_text(option='term_frequency', texts=texts)
         
-        bytes = visualize_texts.image_to_byte_array(img)
+        bytes = text_visualizations.visualize_texts.image_to_byte_array(img)
         response = make_response(bytes)
         response.headers.set('Content-Type', 'image/png')
         return response
@@ -134,7 +134,7 @@ class TopicWordCloud(Resource):
         # http://127.0.0.1:8000/topics/wordcloud?term=bahamas&count=2
 
         elastic_search_client = Elasticsearch(CLIENT_ADDR)
-        texts = query_database.get_all_texts_in_db(elastic_search_client)
+        texts = elasticSearch.queries.query_database.get_all_texts_in_db(elastic_search_client)
 
         # query parameters
         args = request.args
@@ -142,9 +142,9 @@ class TopicWordCloud(Resource):
         term = args.get('term', default=None, type=str)
 
         if count and term:
-            topic_model = TopicModel(texts)
+            topic_model = topic_modeling.topic_modeling.TopicModel(texts)
             img = topic_model.get_wordcloud_of_similar_topics(word=term, num_topics=count)
-            bytes = visualize_texts.image_to_byte_array(img)  
+            bytes = text_visualizations.visualize_texts.image_to_byte_array(img)  
             response = make_response(bytes)
             response.headers.set('Content-Type', 'image/png')
             return response
@@ -158,14 +158,14 @@ class Topics(Resource):
         # http://127.0.0.1:8000/topics?term=bahamas&count=2
 
         elastic_search_client = Elasticsearch(CLIENT_ADDR)
-        texts = query_database.get_all_texts_in_db(elastic_search_client)
+        texts = elasticSearch.queries.query_database.get_all_texts_in_db(elastic_search_client)
 
         # query parameters
         args = request.args
         count = args.get('count', default=3, type=int)
         term = args.get('term', default=None, type=str)
 
-        topic_model = TopicModel(texts)
+        topic_model = topic_modeling.topic_modeling.TopicModel(texts)
 
         if count and term:
             return self.model.query_topics(term, num_topics=count)
