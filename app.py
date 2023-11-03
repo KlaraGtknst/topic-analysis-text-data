@@ -5,9 +5,11 @@ from flask_restx import Api, Resource
 from . import constants
 from . import text_visualizations
 from text_visualizations import visualize_texts
-from . import elasticSearch.queries.query_database
+from . import elasticSearch
+from elasticSearch.queries import query_database
 from flask_cors import CORS
-from . import topic_modeling.topic_modeling
+from . import topic_modeling
+from topic_modeling import topic_modeling
 # flask --app server run --debug --port 8000
 
 CLIENT_ADDR = "http://localhost:9200" # TODO: server address?
