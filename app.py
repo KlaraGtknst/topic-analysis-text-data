@@ -3,10 +3,10 @@ from elasticsearch import Elasticsearch
 from flask import Flask, make_response, request, send_file, send_from_directory
 from flask_restx import Api, Resource
 from . import constants
-from text_visualizations import visualize_texts
-from elasticSearch.queries import query_database
+from . import text_visualizations.visualize_texts
+from . import elasticSearch.queries.query_database
 from flask_cors import CORS
-from topic_modeling.topic_modeling import TopicModel
+from . import topic_modeling.topic_modeling
 # flask --app server run --debug --port 8000
 
 CLIENT_ADDR = "http://localhost:9200" # TODO: server address?
