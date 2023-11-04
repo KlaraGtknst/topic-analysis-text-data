@@ -1,6 +1,7 @@
 import json
 from multiprocessing import Pool
 import os
+import random
 import statistics
 import sys
 from matplotlib import pyplot as plt
@@ -35,6 +36,7 @@ class AE(nn.Module):
     def __init__(self, layer_sizes):
         super(AE, self).__init__()
         self.loss_function = nn.MSELoss()
+        layer_sizes.sort(reverse=True)
         
         self.encoder = nn.ModuleList([
             nn.Sequential(
@@ -164,20 +166,20 @@ def get_layer_config(n_layer):
     return layer_size
 
 def get_infer_emb(baseDir:str):
-    paths = select_rep_path(baseDir, 10) if baseDir.startswith('/mnt/') else list(scanRecurse(baseDir))
-
+    # sample paths
+    paths = random.sample(list(scanRecurse(baseDir)), 2000)
     docs = [pdf_to_str(path) for path in paths]
     
+    # InferSent embedding
     models = get_models(baseDir, model_names = ['infer'])#, 'tfidf'])   
-    print('got models')
     infer_embeddings = models['infer'].encode(docs, tokenize=True)
     return infer_embeddings
 
 def get_directories():
     baseDir = '/mnt/datasets/Bahamas/'
     resDir = '/mnt/stud/home/kgutekunst/logs/'
-    if os.path.exists('/Users/klara/Documents/uni/bachelorarbeit/data/0/'):
-        baseDir = '/Users/klara/Documents/uni/bachelorarbeit/data/0/'
+    if os.path.exists('/Users/klara/Documents/uni/bachelorarbeit/data/'):
+        baseDir = '/Users/klara/Documents/uni/bachelorarbeit/data/'
         resDir = '/Users/klara/Developer/Uni/topic-analysis-text-data/results/'
     return baseDir,resDir
 
@@ -191,6 +193,13 @@ def main(src_path, num_cpus:int):
     sub_lists = list(chunks(n_layers, len(n_layers)//num_cpus))
     print(sub_lists)
     sys.stdout.flush()
+
+    # search_space = {
+    # 'layers_num': [8]
+    # }
+    # study = optuna.create_study(sampler=optuna.samplers.GridSampler(search_space), direction='minimize', study_name='opt ae')
+    # study.optimize(objective, n_trials=3*3)
+    # print('Best hyperparams found by Optuna: \n', study.best_params)
 
     with Pool(processes=num_cpus) as pool:
         proc_wrap = wrapper('ae-opt-infer')
