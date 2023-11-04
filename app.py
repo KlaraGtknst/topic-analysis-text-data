@@ -2,15 +2,12 @@ import os
 from elasticsearch import Elasticsearch
 from flask import Flask, make_response, request, send_file, send_from_directory
 from flask_restx import Api, Resource
-from . import constants
-#from . import text_visualizations
-from text_visualizations import visualize_texts
-#from . import elasticSearch
+from constants import *
+from text_visualizations.visualize_texts import *
 from elasticSearch.queries import query_database
 from flask_cors import CORS
-#from . import topic_modeling
 from topic_modeling import topic_modeling
-# flask --app server run --debug --port 8000
+# flask --app app run --debug --port 8000
 
 CLIENT_ADDR = "http://localhost:9200" # TODO: server address?
 app = Flask(__name__)
@@ -20,7 +17,7 @@ cors = CORS(app)
 
 search_doc = {'count': {'description':'Number of documents per page', 'type':'int','default':10}, 
                  'knn_type': {'description':'Type of knn search', 
-                              'enum':constants.DB_FIELDS}}
+                              'enum': DB_FIELDS}}
 knn_source = {'knn_source': 'Document to search for'}
 page_doc = {'page': {'description':'Page number', 'type':'int','default':0}}
 text_doc = {'text': {'description':'Text to search for', 'type':'string'}}
@@ -101,8 +98,8 @@ class WordCloud(Resource):
         else:   # one document as input
             # get text from document
             texts = [query_database.get_doc_meta_data(elastic_search_client, id)['text']]
-        img = visualize_texts.get_one_visualization_from_text(option='wordcloud', texts=texts)
-        bytes = visualize_texts.image_to_byte_array(img)
+        img = get_one_visualization_from_text(option='wordcloud', texts=texts)
+        bytes = image_to_byte_array(img)
         response = make_response(bytes)
         response.headers.set('Content-Type', 'image/png')
         return response
@@ -116,9 +113,9 @@ class TermFrequency(Resource):
         elastic_search_client = Elasticsearch(CLIENT_ADDR)
         texts = [query_database.get_doc_meta_data(elastic_search_client, id)['text']]
 
-        img = visualize_texts.get_one_visualization_from_text(option='term_frequency', texts=texts)
+        img = get_one_visualization_from_text(option='term_frequency', texts=texts)
         
-        bytes = visualize_texts.image_to_byte_array(img)
+        bytes = image_to_byte_array(img)
         response = make_response(bytes)
         response.headers.set('Content-Type', 'image/png')
         return response
@@ -144,7 +141,7 @@ class TopicWordCloud(Resource):
         if count and term:
             topic_model = topic_modeling.TopicModel(texts)
             img = topic_model.get_wordcloud_of_similar_topics(word=term, num_topics=count)
-            bytes = visualize_texts.image_to_byte_array(img)  
+            bytes = image_to_byte_array(img)  
             response = make_response(bytes)
             response.headers.set('Content-Type', 'image/png')
             return response
