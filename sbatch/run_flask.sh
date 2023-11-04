@@ -12,5 +12,4 @@
 date;hostname;pwd   
 source /mnt/stud/work/kgutekunst/bsc-py/bin/activate  
 cd /mnt/stud/work/kgutekunst/topic-analysis-text-data/
-#$env:FLASK_APP = "server.py"
-flask run --host=0.0.0.0 --port 8000
+flask run --debug --host=0.0.0.0 --port 8000
