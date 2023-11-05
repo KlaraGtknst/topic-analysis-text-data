@@ -123,10 +123,13 @@ def insert_precomputed_clusters(src_paths: list, image_src_path:str, client_addr
     # get all pca weights and id 
     elastic_search_client = Elasticsearch(client_addr, timeout=1000)
     results = get_all_docs_in_db(elastic_search_client, src_includes = ['pca_image'], all=False, from_n=from_n)
+    print('results: ', len(results))
+    sys.stdout.flush()
     result_df = pd.DataFrame.from_dict(results)
     result_df.set_index('_id', inplace=True)
     result_df = result_df.dropna()
     print(np.array(result_df['pca_image'].values).shape)
+    sys.stdout.flush()
 
     
     # clustering
