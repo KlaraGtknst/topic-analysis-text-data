@@ -17,6 +17,14 @@ from elasticSearch.create_documents import *
 from doc_images.convert_pdf2image import *
 from elasticSearch.recursive_search import *
 
+class wrapper:
+    def __init__(self, imgBaseDir:str, client_addr:str=CLIENT_ADDR):
+        self.imgBaseDir = imgBaseDir
+        self.client_addr = client_addr
+
+    def __call__(self, src_paths: list):
+        insert_precomputed_clusters(src_paths=src_paths, image_src_path=self.imgBaseDir, client_addr=self.client_addr)
+
 
 # PCA & OPTICS
 
@@ -46,7 +54,7 @@ def insert_pca_optics(pca_dict: dict, client_addr=CLIENT_ADDR, client: Elasticse
             print('error')
             return
         
-def pca_weights_aux(src_path: str, image_root_path:str, max_w:int, max_h:int, pca_model: decomposition.PCA): 
+def pca_weights_aux(src_paths: list, image_root_path:str, max_w:int, max_h:int, pca_model: decomposition.PCA): 
     '''
     :param src_path: path to the directory of the documents to be inserted into the database
     :param image_root_path: path to the images
@@ -56,29 +64,23 @@ def pca_weights_aux(src_path: str, image_root_path:str, max_w:int, max_h:int, pc
 
     inserts pca weights and argmax clusters of all documents into db
     ''' 
-    for path in scanRecurse(src_path):
+    for path in src_paths:
         if not path.split('/')[-1].startswith('.'):
         
             id = get_hash_file(path)
             img_path = image_root_path + path.split('/')[-1].split('.')[0] + '.png'
             if not os.path.exists(img_path):
-                print('not existent: ', path)
                 pdf_to_png(file_path= [path], outpath=image_root_path, save= True)
-            # if not os.path.exists(img_path):    # some pdf cannot be read
-            #     document = np.asarray([np.zeros((max_w, max_h)).ravel()])
-            # else:
+
             try:
                 document_raw = plt.imread(img_path)
                 new_w = np.minimum(document_raw.shape[0], max_w)
                 new_h = np.minimum(document_raw.shape[1], max_h)
                 document_raw = np.resize(document_raw, (new_w, new_h))
+                document = eigendocs.proprocess_docs(raw_documents=[document_raw], max_w=max_w, max_h=max_h)
             except:
-                print('broken: ', path)
                 document = np.asarray([np.zeros((max_w, max_h)).ravel()])
                 
-                
-            document = eigendocs.proprocess_docs(raw_documents=[document_raw], max_w=max_w, max_h=max_h)
-
             reduced_img = pca_model.transform(document)
         
             yield {
@@ -91,7 +93,7 @@ def pca_weights_aux(src_path: str, image_root_path:str, max_w:int, max_h:int, pc
                     }
             }
         
-def insert_pca_weights(src_path: str, pca_model: decomposition.PCA, img_path:str, max_w:int, max_h:int, client_addr=CLIENT_ADDR, client: Elasticsearch=None):
+def insert_pca_weights(src_paths: list, pca_model: decomposition.PCA, img_path:str, max_w:int, max_h:int, client_addr=CLIENT_ADDR, client: Elasticsearch=None):
         '''
         :param src_path: paths to the directory of the documents to be inserted into the database
         :param client: Elasticsearch client
@@ -102,30 +104,28 @@ def insert_pca_weights(src_path: str, pca_model: decomposition.PCA, img_path:str
         client = client if client else Elasticsearch(client_addr, timeout=1000)
       
         try:
-            bulk(client, pca_weights_aux(src_path=src_path, pca_model=pca_model, image_root_path=img_path, max_w=max_w, max_h=max_h), stats_only= True)
+            bulk(client, pca_weights_aux(src_paths=src_paths, pca_model=pca_model, image_root_path=img_path, max_w=max_w, max_h=max_h), stats_only= True)
         except (ConflictError, ApiError,EOFError) as err:
             print('error')
             return
 
-def insert_precomputed_clusters(src_path: str, image_src_path:str, client_addr:str=CLIENT_ADDR):
+def insert_precomputed_clusters(src_paths: list, image_src_path:str, client_addr:str=CLIENT_ADDR, from_n:int=0):
     # get PCA model
     print('start getting pca model')
     pca_model, max_w, max_h = get_eigendocs_PCA(img_dir_src_path=image_src_path, n_components=NUM_PCA_COMPONENTS)
     print('finished getting pca model')
 
     # save weights and argmax cluster in db
-    insert_pca_weights(src_path=src_path, pca_model=pca_model, img_path=image_src_path, client_addr=client_addr, max_w=max_w, max_h=max_h)
+    insert_pca_weights(src_paths=src_paths, pca_model=pca_model, img_path=image_src_path, client_addr=client_addr, max_w=max_w, max_h=max_h)
     print('finished inserting pca-argmax cluster df')
 
     # OPTICS clusters
     # get all pca weights and id 
     elastic_search_client = Elasticsearch(client_addr, timeout=1000)
-    results = get_all_docs_in_db(elastic_search_client, src_includes = ['pca_image'])   # _id, pca_image
+    results = get_all_docs_in_db(elastic_search_client, src_includes = ['pca_image'], all=False, from_n=from_n)
     result_df = pd.DataFrame.from_dict(results)
     result_df.set_index('_id', inplace=True)
     result_df = result_df.dropna()
-    print(result_df.head())
-    print(np.array(result_df['pca_image'].values).shape)
     print(np.array(result_df['pca_image'].values).shape)
 
     
@@ -137,7 +137,22 @@ def insert_precomputed_clusters(src_path: str, image_src_path:str, client_addr:s
     insert_pca_optics(pca_dict=result_df, client_addr=client_addr)
     print('finished inserting pca-OPTICS cluster df')
 
-def main(src_path: str, image_src_path: str, client_addr=CLIENT_ADDR):
-    print('start inserting documents clusters and PCA weights using bulk')
-    insert_precomputed_clusters(src_path=src_path, image_src_path=image_src_path, client_addr=client_addr)
-    print('finished inserting documents clusters and PCA weights  using bulk')
+def main(src_path: str, image_src_path: str, client_addr=CLIENT_ADDR, num_cpus:int=1):
+    elastic_search_client = Elasticsearch(client_addr, timeout=1000)
+    size= get_number_docs_in_db(elastic_search_client)
+    print('number of documents in db: ', size)
+
+    # all paths
+    document_paths = list(scanRecurse(src_path))
+    sub_lists = list(chunks(document_paths, int(len(document_paths)/num_cpus)))
+   
+    # process n_cpus sublists
+    with Pool(processes=num_cpus) as pool:
+        print('start inserting documents clusters and PCA weights')
+
+        proc_wrap = wrapper(imgBaseDir=image_src_path, client_addr=client_addr)
+        print('initialized wrapper')
+        sys.stdout.flush()
+
+        pool.map(proc_wrap, sub_lists)
+        print('finished inserting documents clusters and PCA weights')

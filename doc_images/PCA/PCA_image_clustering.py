@@ -159,7 +159,8 @@ def get_eigendocs_PCA(img_dir_src_path: str, n_components: int = 13) -> tuple:
     :return: fitted PCA model, maximum width and height of the images
     '''
     documents_raw = []
-    for file_path in scanRecurse(img_dir_src_path):
+    img_paths = list(scanRecurse(img_dir_src_path))
+    for file_path in random.sample(img_paths, min(1000, len(img_paths))):
         if file_path.endswith(".png"):
             documents_raw.extend([plt.imread(file_path)])
             if len(documents_raw) >= 80:

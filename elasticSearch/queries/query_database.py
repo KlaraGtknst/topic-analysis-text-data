@@ -120,14 +120,15 @@ def text_search_db(elastic_search_client: Elasticsearch, text:str, page:int=0, c
 def convert_hits(results):
     return [{'_id': result['_id'], '_score': result['_score'], **result['_source']} for result in results]
 
-def get_all_docs_in_db(elastic_search_client: Elasticsearch, src_includes: list = SRC_INCLUDES) -> list:
+def get_all_docs_in_db(elastic_search_client: Elasticsearch, src_includes: list = SRC_INCLUDES, all: bool= True, from_n: int=0) -> list:
     '''
     :param elastic_search_client: Elasticsearch client
     :return: dictionary of paths and scores of all documents in database
     '''
     results = elastic_search_client.search(
         index='bahamas',
-        size=get_number_docs_in_db(elastic_search_client),
+        from_=(from_n),
+        size=get_number_docs_in_db(elastic_search_client) if all else 10000,
         query={'match_all' : {} },   
         source_includes=src_includes)['hits']['hits']
     return convert_hits(results)

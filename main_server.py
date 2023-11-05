@@ -65,7 +65,7 @@ if __name__ == '__main__':
 
     elif file_to_run[0] == 'insert_clusters.py':
         # python3 main_server.py 'insert_clusters.py' -d '/Users/klara/Documents/uni/bachelorarbeit/data/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
-        insert_clusters.main(src_path=file_path, client_addr=client_addr, image_src_path=image_src_path)
+        insert_clusters.main(src_path=file_path, client_addr=client_addr, image_src_path=image_src_path, num_cpus=n_pools)
 
     elif file_to_run[0] == 'opt_architecture_ae.py':
         # python3 main_server.py 'opt_architecture_ae.py' -d '/Users/klara/Documents/uni/bachelorarbeit/data/*.pdf' -D '/Users/klara/Documents/Uni/bachelorarbeit/images/' -p 1
