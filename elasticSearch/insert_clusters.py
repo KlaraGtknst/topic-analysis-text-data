@@ -18,12 +18,16 @@ from doc_images.convert_pdf2image import *
 from elasticSearch.recursive_search import *
 
 class wrapper:
-    def __init__(self, imgBaseDir:str, client_addr:str=CLIENT_ADDR):
+    def __init__(self, imgBaseDir:str, pca_model, max_w:int, max_h:int, client_addr:str=CLIENT_ADDR):
         self.imgBaseDir = imgBaseDir
         self.client_addr = client_addr
+        self.pca_model = pca_model
+        self.max_w = max_w
+        self.max_h = max_h
 
     def __call__(self, src_paths: list):
-        insert_precomputed_clusters(src_paths=src_paths, image_src_path=self.imgBaseDir, client_addr=self.client_addr)
+        insert_pca_weights_aux(src_paths, self.pca_model, self.max_w, self.max_h, image_src_path=self.imgBaseDir, client_addr=self.client_addr)
+        #insert_precomputed_clusters(src_paths=src_paths, image_src_path=self.imgBaseDir, client_addr=self.client_addr)
 
 
 # PCA & OPTICS
@@ -109,6 +113,10 @@ def insert_pca_weights(src_paths: list, pca_model: decomposition.PCA, img_path:s
             print('error')
             return
 
+def insert_pca_weights_aux(src_paths: list, pca_model, max_w, max_h, image_src_path:str, client_addr:str=CLIENT_ADDR):
+    # save weights and argmax cluster in db
+    insert_pca_weights(src_paths=src_paths, pca_model=pca_model, img_path=image_src_path, client_addr=client_addr, max_w=max_w, max_h=max_h)
+
 def insert_precomputed_clusters(src_paths: list, image_src_path:str, client_addr:str=CLIENT_ADDR, from_n:int=0):
     # get PCA model
     print('start getting pca model')
@@ -118,11 +126,12 @@ def insert_precomputed_clusters(src_paths: list, image_src_path:str, client_addr
     # save weights and argmax cluster in db
     for l in src_paths:
         insert_pca_weights(src_paths=l, pca_model=pca_model, img_path=image_src_path, client_addr=client_addr, max_w=max_w, max_h=max_h)
-        print('finished inserting pca-argmax cluster df')
 
+    print('finished inserting pca-argmax cluster df')
+    elastic_search_client = Elasticsearch(client_addr, timeout=1000)
+    for l in src_paths:
         # OPTICS clusters
         # get all pca weights and id 
-        elastic_search_client = Elasticsearch(client_addr, timeout=1000)
         results = get_all_docs_in_db(elastic_search_client, src_includes = ['pca_image'], all=False, from_n=from_n)
         print('results: ', len(results))
         sys.stdout.flush()
@@ -150,13 +159,17 @@ def main(src_path: str, image_src_path: str, client_addr=CLIENT_ADDR, num_cpus:i
     # all paths
     document_paths = list(scanRecurse(src_path))
     sub_lists = list(chunks(document_paths, 2000))
+
+    print('start getting pca model')
+    pca_model, max_w, max_h = get_eigendocs_PCA(img_dir_src_path=image_src_path, n_components=NUM_PCA_COMPONENTS)
+    print('finished getting pca model')
    
     # process n_cpus sublists
     print('start inserting documents clusters and PCA weights')
+    with Pool(processes=num_cpus) as pool:
+        proc_wrap = wrapper(imgBaseDir=image_src_path, client_addr=client_addr,  pca_model=pca_model, max_w=max_w, max_h=max_h)
+        print('initialized wrapper')
+        sys.stdout.flush()
 
-    proc_wrap = wrapper(imgBaseDir=image_src_path, client_addr=client_addr)
-    print('initialized wrapper')
-    sys.stdout.flush()
-
-    proc_wrap(sub_lists)
-    print('finished inserting documents clusters and PCA weights')
+        pool.map(proc_wrap, sub_lists)
+        print('finished inserting documents clusters and PCA weights')
