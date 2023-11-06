@@ -86,16 +86,17 @@ def pca_weights_aux(src_paths: list, image_root_path:str, max_w:int, max_h:int, 
                 document = np.asarray([np.zeros((max_w, max_h)).ravel()])
                 
             reduced_img = pca_model.transform(document)
-            print(reduced_img)
-            print(reduced_img.shape)
+            print(reduced_img[0])
+            print(reduced_img[0].shape)
+            print(id)
         
             yield {
                 '_op_type': 'update',
                 '_index': 'bahamas',
                 '_id': id,
                 'doc': {
-                    "pca_image": reduced_img[0],
-                    "argmax_pca_cluster": np.argmax(reduced_img),
+                    "pca_image": np.array(reduced_img[0]),
+                    "argmax_pca_cluster": int(np.argmax(reduced_img)),
                     }
             }
         
