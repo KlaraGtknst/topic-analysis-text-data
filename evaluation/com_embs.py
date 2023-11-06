@@ -1,6 +1,7 @@
 
 
 import ast
+import operator
 import os
 import random
 import re
@@ -30,7 +31,7 @@ def create_sim_docs_log(baseDir:str, client_addr:str=CLIENT_ADDR, num_rep_docs:i
 
     logs query results for similar documents
     '''
-    model_names = get_model_names()
+    model_names = ["pca_optics_cluster", "argmax_pca_cluster"]# get_model_names()   #TODO
     all_paths = list(scanRecurse(baseDir=baseDir))
     docs_to_search_for = random.sample(all_paths, num_rep_docs) if num_rep_docs < len(all_paths) else all_paths
     ids = [get_hash_file(path) for path in docs_to_search_for]
@@ -82,8 +83,8 @@ def visualize_using_venn(df:pd.DataFrame, save:bool=False, resDir:str='results/'
     dataset = {}
     for model in model_names:
         dataset[model] = set()
-        for cell in df.loc[:,model].values:
-            dataset[model].update(set(cell))
+        for cell in df.loc[:,model].values: # iterate over all queries 
+            dataset[model].update(set(cell))    # set of all response irrespective of query
     labels = venn.get_labels(dataset.values(), fill=['number'])
     fig, ax = venn.venn6(labels, names=dataset.keys())
     plt.title(title)
@@ -94,7 +95,10 @@ def visualize_using_venn(df:pd.DataFrame, save:bool=False, resDir:str='results/'
 def df_str2list(df:pd.DataFrame):
     for row_id, row in df.iterrows():
         for col_id, cell in row.items():
-            df.loc[row_id, col_id] = [img for img in ast.literal_eval(cell)]
+            if type(cell) == list:
+                return df
+            else:
+                df.loc[row_id, col_id] = [img for img in ast.literal_eval(cell)]
     return df
 
 
@@ -104,19 +108,20 @@ def encode_lists(df:pd.DataFrame):
     :return: df with encoded lists
     '''
     df = df_str2list(df)
-    ids = set()
+    ids = set(df.index)
     for row in list(df.values):
         for cell in row:
             for item in cell:
                 ids.add(item)
     enc = {y: x+1 for x,y in enumerate(sorted(ids))}
 
+    enc_df = pd.DataFrame(columns=df.columns)
     for row_id, row in df.iterrows():
         for col_id, cell in row.items():
-            df.loc[row_id, col_id] = [enc[img] for img in cell]
+            enc_df.loc[row_id, col_id] = [enc[img] for img in cell]
     idx = df.index
-    df.index = idx.map(lambda id: enc[id])
-    return df
+    enc_df.index = idx.map(lambda id: enc[id])
+    return enc_df
 
 def get_model_names():
     '''
@@ -127,7 +132,7 @@ def get_model_names():
         model_names.remove('ae')
     return model_names
 
-def similarity_matrix(df:pd.DataFrame):
+def similarity_matrix(df:pd.DataFrame, normalize:bool=True):
     '''
     :param df: df which stores most similar documents for each model for each query
     :return: matrix
@@ -142,6 +147,8 @@ def similarity_matrix(df:pd.DataFrame):
             for j in range(i, len(model_names)):
                 sim_matr[i, j] += np.sum([df.loc[id, model_names[j]].count(item) for item in df.loc[id, model]])
                 sim_matr[j, i] = sim_matr[i, j]
+    if normalize:
+        sim_matr /= np.array(len(df.index)* len(df.iloc[0,0]))
     return sim_matr
 
 def create_sim_heatmap(res_df:pd.DataFrame, save:bool=False, resDir:str='results/'):
@@ -158,7 +165,7 @@ def create_sim_heatmap(res_df:pd.DataFrame, save:bool=False, resDir:str='results
     plt.figure(figsize=(8,5))
     ax = sns.heatmap(sim_matr, annot=True, yticklabels=model_names, xticklabels=model_names, fmt='g')
     ax.set(xlabel="model", ylabel="model")
-    title = 'Number of equal query results'
+    title = 'Portion of equal query results ({} queries, {} responses/query, 2048 document corpus)'.format(len(res_df.index), len(res_df.iloc[0,0]))
     plt.title(title)
     plt.yticks(rotation=0) 
     if save:
@@ -189,9 +196,10 @@ def create_query_img(query: pd.DataFrame, image_baseDir:str, outpath:str='', cli
         image_path = get_img_path(doc_path=path, image_baseDir=image_baseDir)
 
         # get path to response document images
-        for model in get_model_names():
+        for model in ["pca_optics_cluster", "argmax_pca_cluster"]:# get_model_names():   #TODO
             paths =[image_path]
-            for resp_doc in ast.literal_eval(query.iloc[doc_idx][model]):
+            response_docs = query.iloc[doc_idx][model]
+            for resp_doc in (response_docs if type(response_docs) == list else ast.literal_eval(response_docs)):
                 doc_path = get_doc_meta_data(client, resp_doc)['path']
                 paths.append(get_img_path(doc_path=doc_path, image_baseDir=image_baseDir))
 
@@ -211,11 +219,11 @@ def create_query_img(query: pd.DataFrame, image_baseDir:str, outpath:str='', cli
             title = 'Most similar images found by {}'.format(model)
             plt.title(title)
             if outpath != '':
-                if not os.path.exists(outpath + 'png/'):
-                    os.mkdir(outpath + 'png/')
-                if not os.path.exists(outpath + 'png/' + query.iloc[doc_idx].name):
-                    os.mkdir(outpath + 'png/' + query.iloc[doc_idx].name)
-                plt.savefig(outpath + 'png/' + query.iloc[doc_idx].name + '/' + re.sub(' ', '_', title) + '.png', format="png", bbox_inches="tight", dpi=1200)
+                # if not os.path.exists(outpath + 'png/'):
+                #     os.mkdir(outpath + 'png/')
+                if not os.path.exists(outpath + query.iloc[doc_idx].name):
+                    os.mkdir(outpath + query.iloc[doc_idx].name)
+                plt.savefig(outpath + query.iloc[doc_idx].name + '/' + re.sub(' ', '_', title) + '.pdf', format="pdf", bbox_inches="tight", dpi=1200)
             #plt.show()
 
 def add_broder_around_figure(fig):
@@ -224,21 +232,42 @@ def add_broder_around_figure(fig):
 
 
 
+def same_query_stats(baseDir:str, client_addr:str=CLIENT_ADDR, num_rep_docs:int=10, n_res:int=10):
+    '''
+    :param df: df which stores a set of the most similar documents for each model for each query
+    '''
+    shared_docs = {}
+    for trial in range(31):
+        res_df = create_sim_docs_log(baseDir=baseDir, client_addr=client_addr, num_rep_docs=num_rep_docs, n_res=n_res)
+        similarity_matr = similarity_matrix(res_df, normalize=True)
+        for i, model in enumerate(get_model_names()):
+            model_names = get_model_names()
+            for j in range(i, len(model_names)):
+                shared_docs.setdefault((model, model_names[j]), []).append(similarity_matr[i,j])
+    mu_shared_docs = {}
+    std_shared_docs = {}
+    for key, value in shared_docs.items():
+        mu_shared_docs[key] = np.mean(value).round(2)
+        std_shared_docs[key] = np.std(value).round(2)
+    
+    shared_doc_stats = pd.DataFrame({'model 1': list(map(operator.itemgetter(0), mu_shared_docs)), 'model 2': list(map(operator.itemgetter(1), mu_shared_docs)), 'mean': list(mu_shared_docs.values()), 'std': list(std_shared_docs.values())})
+    shared_doc_stats.set_index(['model 1', 'model 2'], inplace=True)
+    shared_doc_stats.to_csv('results/shared_doc_statistics.csv', index=True)
+    return mu_shared_docs, std_shared_docs
+
+
 def main(baseDir:str):
-    
-    # for num_resp in [3, 5, 10]:
-    #     res_df = create_sim_docs_log(baseDir=baseDir, num_rep_docs=10, n_res=num_resp)
-    #     save_to_dir(resDir='results/', df=res_df, file_name='query_res_{}_resp.csv'.format(num_resp))
+    # same_query_stats(baseDir=baseDir, num_rep_docs=10, n_res=10)
 
-    #     visualize_using_venn(res_df, save=True, title='Venn diagram of {} most similar documents on 2048 document corpus'.format(num_resp))
+    num_queries = 10
+    for num_resp in [5]:#[3, 5, 10]:
+        res_df = create_sim_docs_log(baseDir=baseDir, num_rep_docs=num_queries, n_res=num_resp)
+        # save_to_dir(resDir='results/', df=res_df, file_name='{}_query_res_{}_resp.csv'.format(num_queries, num_resp))
+        # res_df = read_from_dir('results/' + '{}_query_res_{}_resp.csv'.format(num_queries, num_resp))
+        # res_df = encode_lists(res_df)
+        # visualize_using_venn(res_df, save=True, title='Venn diagram ({} queries à {} responses in a 2048 document corpus)'.format(num_queries, num_resp))
+        create_query_img(res_df, image_baseDir='/Users/klara/Documents/uni/bachelorarbeit/images', outpath='results/')
 
-    res_df = read_from_dir('results/' + 'query_res_5_resp.csv')
-    create_query_img(res_df, image_baseDir='/Users/klara/Documents/uni/bachelorarbeit/images', outpath='results/')
     # res_df = read_from_dir('results/' + 'query_res.csv')
-    # print(res_df)
-    
-    # res_df = encode_lists(res_df)
-    # # visualize_using_venn(res_df, save=True)
-
     # create_sim_heatmap(res_df, save=True)
 
