@@ -166,10 +166,11 @@ def main(src_path: str, image_src_path: str, client_addr=CLIENT_ADDR, num_cpus:i
    
     # process n_cpus sublists
     print('start inserting documents clusters and PCA weights')
-    with Pool(processes=num_cpus) as pool:
+    #with Pool(processes=num_cpus) as pool:
+    for l in sub_lists:
         proc_wrap = wrapper(imgBaseDir=image_src_path, client_addr=client_addr,  pca_model=pca_model, max_w=max_w, max_h=max_h)
         print('initialized wrapper')
         sys.stdout.flush()
-
-        pool.map(proc_wrap, sub_lists)
+        proc_wrap(l)
+        #pool.map(proc_wrap, sub_lists)
         print('finished inserting documents clusters and PCA weights')
