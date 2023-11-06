@@ -86,6 +86,8 @@ def pca_weights_aux(src_paths: list, image_root_path:str, max_w:int, max_h:int, 
                 document = np.asarray([np.zeros((max_w, max_h)).ravel()])
                 
             reduced_img = pca_model.transform(document)
+            print(reduced_img)
+            print(reduced_img.shape)
         
             yield {
                 '_op_type': 'update',
