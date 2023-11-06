@@ -95,7 +95,7 @@ def pca_weights_aux(src_paths: list, image_root_path:str, max_w:int, max_h:int, 
                 '_index': 'bahamas',
                 '_id': id,
                 'doc': {
-                    "pca_image": np.array(reduced_img[0]),
+                    "pca_image": reduced_img[0],
                     #"argmax_pca_cluster": int(np.argmax(reduced_img)),
                     }
             }
