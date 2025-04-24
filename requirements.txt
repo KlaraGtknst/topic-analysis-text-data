@@ -48,7 +48,7 @@ google-auth==2.22.0
 google-auth-oauthlib==1.0.0
 google-pasta==0.2.0
 grpcio==1.57.0
-h11==0.14.0
+h11==0.16.0
 h5py==3.9.0
 hdbscan==0.8.33
 httplib2==0.22.0
