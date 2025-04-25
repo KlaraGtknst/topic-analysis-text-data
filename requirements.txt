@@ -156,7 +156,7 @@ threadpoolctl==3.2.0
 tk==0.1.0
 tkPDFViewer==0.1
 tokenizers==0.13.3
-torch==2.0.1
+torch==2.7.0
 torchvision==0.15.2
 tornado==6.3.3
 tqdm==4.66.1
